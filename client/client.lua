@@ -54,7 +54,14 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 title = 'Teleport to Marker',
                 description = 'you must have a marker set before doing this',
                 icon = 'fa-solid fa-fingerprint',
-                event = 'rsg-adminmenu:client:tpm',
+                event = 'RSGCore:Command:GoToMarker',
+                arrow = true
+            },
+            {
+                title = 'Self Revive',
+                description = 'revive yourself from the dead',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-medic:client:adminRevive',
                 arrow = true
             },
         }
@@ -127,9 +134,4 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
     })
     lib.showContext('dev_optionssmenu')
 
-end)
-
--- goto marker
-RegisterNetEvent('rsg-adminmenu:client:tpm', function()
-    TriggerEvent('RSGCore:Command:GoToMarker', source)
 end)
