@@ -31,6 +31,10 @@ end
 
 -----------------------------------------------------------------------
 
+RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
+    local src = source
+    TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
+end, 'admin')
 
 -----------------------------------------------------------------------
 
