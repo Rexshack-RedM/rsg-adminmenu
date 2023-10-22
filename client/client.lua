@@ -64,6 +64,20 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 event = 'rsg-medic:client:adminRevive',
                 arrow = true
             },
+            {
+                title = 'Go Invisible',
+                description = 'toggle invisible on/off',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-adminmenu:client:goinvisible',
+                arrow = true
+            },
+            {
+                title = 'God Mode',
+                description = 'toggle god mode on/off',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-adminmenu:client:godmode',
+                arrow = true
+            },
         }
     })
     lib.showContext('admin_optionsmenu')
@@ -134,4 +148,40 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
     })
     lib.showContext('dev_optionssmenu')
 
+end)
+
+-------------------------------------------------------------------
+-- go invisible
+-------------------------------------------------------------------
+local invisible = false
+RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
+    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
+    if invisible then
+        SetEntityVisible(PlayerPedId(), true)
+        invisible = false
+        lib.notify({ title = 'Invisible On', description = 'as you can see you are invisible!', type = 'inform' })
+    else
+        SetEntityVisible(PlayerPedId(), false)
+        invisible = true
+        lib.notify({ title = 'Invisible Off', description = 'as you can see you are not invisible!', type = 'inform' })
+    end
+end)
+
+-------------------------------------------------------------------
+-- god mode
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:godmode', function()
+    godmode = not godmode
+    if godmode == true then
+        lib.notify({ title = 'God Mode On', description = 'god mode is now on!', type = 'inform' })
+    end
+    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
+    if godmode then
+        while godmode do
+            Wait(0)
+            SetPlayerInvincible(PlayerPedId(), true)
+        end
+        SetPlayerInvincible(PlayerPedId(), false)
+        lib.notify({ title = 'God Mode Off', description = 'god mode is now off!', type = 'inform' })
+    end
 end)
