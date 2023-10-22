@@ -51,10 +51,10 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
         onBack = function() end,
         options = {
             {
-                title = 'title',
-                description = 'description',
+                title = 'Teleport to Marker',
+                description = 'you must have a marker set before doing this',
                 icon = 'fa-solid fa-fingerprint',
-                event = '',
+                event = 'rsg-adminmenu:client:tpm',
                 arrow = true
             },
         }
@@ -127,4 +127,9 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
     })
     lib.showContext('dev_optionssmenu')
 
+end)
+
+-- goto marker
+RegisterNetEvent('rsg-adminmenu:client:tpm', function()
+    TriggerEvent('RSGCore:Command:GoToMarker', source)
 end)
