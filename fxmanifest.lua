@@ -16,6 +16,7 @@ shared_scripts {
 client_scripts {
     'client/client.lua',
     'client/client_troll.lua',
+    'client/client_dev.lua'
 }
 
 server_scripts {
