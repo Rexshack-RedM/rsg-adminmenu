@@ -157,6 +157,22 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
+            {
+                title = 'GoTo Player',
+                description = 'goto a player',
+                icon = 'fa-solid fa-fingerprint',
+                serverEvent = 'rsg-adminmenu:server:gotoplayer',
+                args = { id = data.player },
+                arrow = true
+            },
+            {
+                title = 'Bring Player',
+                description = 'bring a player to you',
+                icon = 'fa-solid fa-fingerprint',
+                serverEvent = 'rsg-adminmenu:server:bringplayer',
+                args = { id = data.player },
+                arrow = true
+            },
         }
     })
     lib.showContext('player_menu')

@@ -36,6 +36,8 @@ local permissions = {
     ["inventory"] = "admin",
     ["kick"] = "admin",
     ["ban"] = "admin",
+    ["goto"] = "admin",
+    ["bring"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
@@ -152,6 +154,35 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
         else
             DropPlayer(player, 'You have been banned:' .. '\n' .. reason .. '\n\nBan expires: ' .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
         end
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- goto player
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:gotoplayer', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['goto']) or IsPlayerAceAllowed(src, 'command') then
+        local admin = GetPlayerPed(src)
+        local coords = GetEntityCoords(GetPlayerPed(player.id))
+        SetEntityCoords(admin, coords)
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- bring player
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:bringplayer', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['bring']) or IsPlayerAceAllowed(src, 'command') then
+        local admin = GetPlayerPed(src)
+        local coords = GetEntityCoords(admin)
+        local target = GetPlayerPed(player.id)
+        SetEntityCoords(target, coords)
     else
         BanPlayer(src)
     end
