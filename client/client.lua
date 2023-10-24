@@ -149,6 +149,14 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
+            {
+                title = 'Ban Player',
+                description = 'ban a player from the server with reason',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-adminmenu:client:banplayer',
+                args = { id = data.player, name = data.name },
+                arrow = true
+            },
         }
     })
     lib.showContext('player_menu')
@@ -246,11 +254,10 @@ end)
 -- kick player reason
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
-    local input = lib.inputDialog('Kick Player', {
+    local input = lib.inputDialog('Kick Player : '..data.name, {
         { 
-            label = 'Kick Player : '..data.name,
-            type = 'input',
             label = 'Reason',
+            type = 'input',
             required = true,
         },
     })
@@ -258,4 +265,54 @@ RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
 
     TriggerServerEvent('rsg-adminmenu:server:kickplayer', data.id, input[1])
 
+end)
+
+-------------------------------------------------------------------
+-- ban player reason
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
+    local input = lib.inputDialog('Ban Player : '..data.name, {
+        { 
+            label = 'Ban Type',
+            type = 'select',
+                options = {
+                    { value = "permanent", label = "Permanent" },
+                    { value = "temporary", label = "Temporary" },
+                },
+            required = true,
+        },
+        { 
+            label = 'Ban Time',
+            type = 'select',
+                options = {
+                    { value = '3600', label = "1 Hour" },
+                    { value = '21600', label = "6 Hours" },
+                    { value = '43200', label = "12 Hours" },
+                    { value = '86400', label = "1 Day" },
+                    { value = '259200', label = "3 Days" },
+                    { value = '604800', label = "1 Week" },
+                    { value = '2678400', label = "1 Month" },
+                    { value = '8035200', label = "3 Months" },
+                    { value = '16070400', label = "6 Months" },
+                    { value = '32140800', label = "1 Year" }
+                },
+            required = true,
+        },
+        { 
+            label = 'Reason',
+            type = 'input',
+            required = true,
+        }
+	})
+
+    if not input then return end
+
+    -- permanent ban
+    if input[1] == 'permanent' then
+        TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
+    end
+    -- temporary ban
+    if input[1] == 'temporary' then
+        TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
+    end
 end)
