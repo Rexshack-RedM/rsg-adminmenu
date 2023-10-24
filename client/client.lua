@@ -294,7 +294,8 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
                     { value = '2678400', label = "1 Month" },
                     { value = '8035200', label = "3 Months" },
                     { value = '16070400', label = "6 Months" },
-                    { value = '32140800', label = "1 Year" }
+                    { value = '32140800', label = "1 Year" },
+                    { value = '99999999999', label = "Permanent" },
                 },
             required = true,
         },
@@ -303,16 +304,18 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
             type = 'input',
             required = true,
         }
-	})
+    })
 
     if not input then return end
 
     -- permanent ban
     if input[1] == 'permanent' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
+        lib.notify({ title = 'Player Banned', description = data.name..' has been banned permanently', type = 'inform' })
     end
     -- temporary ban
     if input[1] == 'temporary' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
+        lib.notify({ title = 'Player Banned', description = data.name..' has a temporary ban set', type = 'inform' })
     end
 end)
