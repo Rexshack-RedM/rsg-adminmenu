@@ -117,7 +117,7 @@ local function BanPlayer(src)
         RSGCore.Functions.GetIdentifier(src, 'discord'),
         RSGCore.Functions.GetIdentifier(src, 'ip'),
         "system banned you",
-        2147483647,
+        2524608000,
         'rsg-adminmenu'
     })
     TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', "system banned you for inappropriate use"), true)
@@ -129,8 +129,8 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
     if RSGCore.Functions.HasPermission(src, permissions['ban']) or IsPlayerAceAllowed(src, 'command') then
         time = tonumber(time)
         local banTime = tonumber(os.time() + time)
-        if banTime > 2147483647 then
-            banTime = 2147483647
+        if banTime > 2524608000 then
+            banTime = 2524608000
         end
         local timeTable = os.date('*t', banTime)
         MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)', {
@@ -147,7 +147,7 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
             args = {GetPlayerName(player), reason}
         })
         TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
-        if banTime >= 2147483647 then
+        if banTime >= 2524608000 then
             DropPlayer(player, 'You have been banned:' .. '\n' .. reason .. '\n\nYour ban is permanent.\n🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
         else
             DropPlayer(player, 'You have been banned:' .. '\n' .. reason .. '\n\nBan expires: ' .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
