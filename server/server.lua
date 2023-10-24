@@ -34,6 +34,7 @@ end
 local permissions = {
     ["revive"] = "admin",
     ["inventory"] = "admin",
+	["kick"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
@@ -81,6 +82,17 @@ RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['inventory']) or IsPlayerAceAllowed(src, 'command') then
         TriggerClientEvent('rsg-adminmenu:client:openinventory', src, player.id)
+    else
+        --BanPlayer(src)
+        TriggerClientEvent('ox_lib:notify', source, {title = 'Not Allowed', description = 'you are not allowed to do that!', type = 'inform' })
+    end
+end)
+
+RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['kick']) or IsPlayerAceAllowed(src, 'command')  then
+        TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Kicked', 'red', string.format('%s was kicked by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
+        DropPlayer(player, 'You have been kicked from the server' .. ':\n' .. reason .. '\n\n' .. '🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
     else
         --BanPlayer(src)
         TriggerClientEvent('ox_lib:notify', source, {title = 'Not Allowed', description = 'you are not allowed to do that!', type = 'inform' })

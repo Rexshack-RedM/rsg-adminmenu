@@ -78,13 +78,6 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 event = 'rsg-adminmenu:client:godmode',
                 arrow = true
             },
-            {
-                title = 'Toggle Names',
-                description = 'toggle names on/off',
-                icon = 'fa-solid fa-fingerprint',
-                event = 'txAdmin:menu:togglePlayerIDs',
-                arrow = true
-            },
         }
     })
     lib.showContext('admin_optionsmenu')
@@ -146,6 +139,14 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 icon = 'fa-solid fa-fingerprint',
                 serverEvent = 'rsg-adminmenu:server:openinventory',
                 args = { id = data.player },
+                arrow = true
+            },
+            {
+                title = 'Kick Player',
+                description = 'kick a player from the server with reason',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-adminmenu:client:kickplayer',
+                args = { id = data.player, name = data.name },
                 arrow = true
             },
         }
@@ -239,4 +240,22 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:openinventory', function(targetPed)
     TriggerServerEvent("inventory:server:OpenInventory", "otherplayer", targetPed)
+end)
+
+-------------------------------------------------------------------
+-- kick player reason
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
+    local input = lib.inputDialog('Kick Player', {
+        { 
+            label = 'Kick Player : '..data.name,
+            type = 'input',
+            label = 'Reason',
+            required = true,
+        },
+    })
+    if not input then return end
+
+    TriggerServerEvent('rsg-adminmenu:server:kickplayer', data.id, input[1])
+
 end)
