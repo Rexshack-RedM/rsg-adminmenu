@@ -40,6 +40,7 @@ local permissions = {
     ["bring"] = "admin",
     ["freeze"] = "admin",
     ["spectate"] = "admin",
+    ["wildattack"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
@@ -220,6 +221,18 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(player)
         local targetped = GetPlayerPed(player.id)
         local coords = GetEntityCoords(targetped)
         TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, player.id, coords)
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- wild attack
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:wildattack', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['wildattack']) or IsPlayerAceAllowed(src, 'command') then
+        TriggerClientEvent('rsg-adminmenu:client:wildattack', src, player.id)
     else
         BanPlayer(src)
     end

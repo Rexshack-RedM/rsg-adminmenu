@@ -22,6 +22,13 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
                 arrow = true
             },
             {
+                title = 'Troll Options',
+                description = 'view troll options',
+                icon = 'fa-solid fa-fingerprint',
+                event = 'rsg-adminmenu:client:playerstroll',
+                arrow = true
+            },
+            {
                 title = 'Manage Server',
                 description = 'view server options',
                 icon = 'fa-solid fa-fingerprint',
