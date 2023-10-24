@@ -38,6 +38,8 @@ local permissions = {
     ["ban"] = "admin",
     ["goto"] = "admin",
     ["bring"] = "admin",
+    ["freeze"] = "admin",
+    ["spectate"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
@@ -183,6 +185,41 @@ RegisterNetEvent('rsg-adminmenu:server:bringplayer', function(player)
         local coords = GetEntityCoords(admin)
         local target = GetPlayerPed(player.id)
         SetEntityCoords(target, coords)
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- freeze player
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['freeze']) or IsPlayerAceAllowed(src, 'command') then
+        local target = GetPlayerPed(player.id)
+        if not frozen then
+            frozen = true
+            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, true)
+            TriggerClientEvent('ox_lib:notify', source, {title = 'Freeze Player On', description = 'you freezed player '..player.name, type = 'inform' })
+        else
+            frozen = false
+            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, false)
+            TriggerClientEvent('ox_lib:notify', source, {title = 'Freeze Player Off', description = 'you unfreezed player '..player.name, type = 'inform' })
+        end
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- spectate player
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['spectate']) or IsPlayerAceAllowed(src, 'command') then
+        local targetped = GetPlayerPed(player.id)
+        local coords = GetEntityCoords(targetped)
+        TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, player.id, coords)
     else
         BanPlayer(src)
     end

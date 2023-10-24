@@ -61,7 +61,7 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 title = 'Self Revive',
                 description = 'revive yourself from the dead',
                 icon = 'fa-solid fa-fingerprint',
-                event = 'rsg-medic:client:adminRevive',
+                event = 'rsg-medic:client:playerRevive',
                 arrow = true
             },
             {
@@ -170,6 +170,22 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 description = 'bring a player to you',
                 icon = 'fa-solid fa-fingerprint',
                 serverEvent = 'rsg-adminmenu:server:bringplayer',
+                args = { id = data.player },
+                arrow = true
+            },
+            {
+                title = 'Toggle Freeze Player',
+                description = 'toggles freeze player on/off',
+                icon = 'fa-solid fa-fingerprint',
+                serverEvent = 'rsg-adminmenu:server:freezeplayer',
+                args = { id = data.player, name = data.name },
+                arrow = true
+            },
+            {
+                title = 'Toggle Spectate Player',
+                description = 'toggles spectate on another player on/off',
+                icon = 'fa-solid fa-fingerprint',
+                serverEvent = 'rsg-adminmenu:server:spectateplayer',
                 args = { id = data.player },
                 arrow = true
             },
@@ -333,5 +349,36 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     if input[1] == 'temporary' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
         lib.notify({ title = 'Player Banned', description = data.name..' has a temporary ban set', type = 'inform' })
+    end
+end)
+
+-------------------------------------------------------------------
+-- spectate player
+-------------------------------------------------------------------
+
+local lastSpectateCoord = nil
+local isSpectating = false
+
+RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
+    local myPed = PlayerPedId()
+    local targetplayer = GetPlayerFromServerId(targetPed)
+    local target = GetPlayerPed(targetplayer)
+    if not isSpectating then
+        isSpectating = true
+        SetEntityVisible(myPed, false) -- Set invisible
+        SetEntityCollision(myPed, false, false) -- Set collision
+        SetEntityInvincible(myPed, true) -- Set invincible
+        NetworkSetEntityInvisibleToNetwork(myPed, true) -- Set invisibility
+        lastSpectateCoord = GetEntityCoords(myPed) -- save my last coords
+        NetworkSetInSpectatorMode(true, target) -- Enter Spectate Mode
+    else
+        isSpectating = false
+        NetworkSetInSpectatorMode(false, target) -- Remove From Spectate Mode
+        NetworkSetEntityInvisibleToNetwork(myPed, false) -- Set Visible
+        SetEntityCollision(myPed, true, true) -- Set collision
+        SetEntityCoords(myPed, lastSpectateCoord) -- Return Me To My Coords
+        SetEntityVisible(myPed, true) -- Remove invisible
+        SetEntityInvincible(myPed, false) -- Remove godmode
+        lastSpectateCoord = nil -- Reset Last Saved Coords
     end
 end)
