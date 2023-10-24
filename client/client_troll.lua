@@ -38,7 +38,7 @@ RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
             {
                 title = 'Wild Attack',
                 description = 'troll player by activating a wild attack',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-paw',
                 serverEvent = 'rsg-adminmenu:server:wildattack',
                 args = { id = data.player },
                 arrow = true

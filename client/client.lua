@@ -10,35 +10,35 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
             {
                 title = 'Admin Options',
                 description = 'view admin options',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-user-secret',
                 event = 'rsg-adminmenu:client:adminoptions',
                 arrow = true
             },
             {
                 title = 'Player Options',
                 description = 'view player options',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-user',
                 event = 'rsg-adminmenu:client:playersoptions',
                 arrow = true
             },
             {
                 title = 'Troll Options',
                 description = 'view troll options',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-regular fa-face-grin-squint-tears',
                 event = 'rsg-adminmenu:client:playerstroll',
                 arrow = true
             },
             {
                 title = 'Manage Server',
                 description = 'view server options',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-server',
                 event = 'rsg-adminmenu:client:serveroptions',
                 arrow = true
             },
             {
                 title = 'Developer Options',
                 description = 'view developer options',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-code',
                 event = 'rsg-adminmenu:client:devoptions',
                 arrow = true
             },
@@ -60,28 +60,28 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
             {
                 title = 'Teleport to Marker',
                 description = 'you must have a marker set before doing this',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-up-down-left-right',
                 event = 'RSGCore:Command:GoToMarker',
                 arrow = true
             },
             {
                 title = 'Self Revive',
                 description = 'revive yourself from the dead',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-heart-pulse',
                 event = 'rsg-medic:client:playerRevive',
                 arrow = true
             },
             {
                 title = 'Go Invisible',
                 description = 'toggle invisible on/off',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-ghost',
                 event = 'rsg-adminmenu:client:goinvisible',
                 arrow = true
             },
             {
                 title = 'God Mode',
                 description = 'toggle god mode on/off',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-book-bible',
                 event = 'rsg-adminmenu:client:godmode',
                 arrow = true
             },
@@ -135,7 +135,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Revive Player',
                 description = 'revive this player',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-briefcase-medical',
                 serverEvent = 'rsg-adminmenu:server:playerrevive',
                 args = { id = data.player },
                 arrow = true
@@ -143,7 +143,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Player Inventory',
                 description = 'open a players inventory, press [I] when open',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-box',
                 serverEvent = 'rsg-adminmenu:server:openinventory',
                 args = { id = data.player },
                 arrow = true
@@ -151,7 +151,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Kick Player',
                 description = 'kick a player from the server with reason',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-socks',
                 event = 'rsg-adminmenu:client:kickplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
@@ -159,7 +159,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Ban Player',
                 description = 'ban a player from the server with reason',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-ban',
                 event = 'rsg-adminmenu:client:banplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
@@ -167,7 +167,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'GoTo Player',
                 description = 'goto a player',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-location-dot',
                 serverEvent = 'rsg-adminmenu:server:gotoplayer',
                 args = { id = data.player },
                 arrow = true
@@ -175,7 +175,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Bring Player',
                 description = 'bring a player to you',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-hand',
                 serverEvent = 'rsg-adminmenu:server:bringplayer',
                 args = { id = data.player },
                 arrow = true
@@ -183,7 +183,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Toggle Freeze Player',
                 description = 'toggles freeze player on/off',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-snowflake',
                 serverEvent = 'rsg-adminmenu:server:freezeplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
@@ -191,7 +191,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             {
                 title = 'Toggle Spectate Player',
                 description = 'toggles spectate on another player on/off',
-                icon = 'fa-solid fa-fingerprint',
+                icon = 'fa-solid fa-eye',
                 serverEvent = 'rsg-adminmenu:server:spectateplayer',
                 args = { id = data.player },
                 arrow = true
