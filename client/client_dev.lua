@@ -5,34 +5,34 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
 
     lib.registerContext({
         id = 'dev_mainmenu',
-        title = 'Developer Menu',
+        title = Lang:t('lang_69'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = 'Copy Vector 2',
-                description = 'copy vector2 coords',
+                title = Lang:t('lang_70'),
+                description = Lang:t('lang_71'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector2',
                 arrow = true
             },
             {
-                title = 'Copy Vector 3',
-                description = 'copy vector3 coords',
-                icon = 'fa-solid fa-clipboard',
+                title = Lang:t('lang_72'),
+                description = Lang:t('lang_73'),
+                icon = Lang:t('lang_0')'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector3',
                 arrow = true
             },
             {
-                title = 'Copy Vector 4',
-                description = 'copy vector4 coords',
+                title = Lang:t('lang_74'),
+                description = Lang:t('lang_75'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector4',
                 arrow = true
             },
             {
-                title = 'Copy Heading',
-                description = 'copy heading',
+                title = Lang:t('lang_76'),
+                description = Lang:t('lang_77'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:copyheading',
                 arrow = true
@@ -56,20 +56,20 @@ end
 
 RegisterNetEvent('rsg-adminmenu:client:vector2', function()
     CopyCoords("vector2")
-    lib.notify({ title = 'Coords Copied', description = 'vector2 coords copied to the clipboard', type = 'inform' })
+    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_79'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:vector3', function()
     CopyCoords("vector3")
-    lib.notify({ title = 'Coords Copied', description = 'vector3 coords copied to the clipboard', type = 'inform' })
+    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_80'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:vector4', function()
     CopyCoords("vector4")
-    lib.notify({ title = 'Coords Copied', description = 'vector4 coords copied to the clipboard', type = 'inform' })
+    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_81'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
     CopyCoords("heading")
-    lib.notify({ title = 'Heading Copied', description = 'heading copied to the clipboard', type = 'inform' })
+    lib.notify({ title = Lang:t('lang_82'), description = Lang:t('lang_83'), type = 'inform' })
 end)

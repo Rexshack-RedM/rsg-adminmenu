@@ -43,7 +43,7 @@ local permissions = {
     ["wildattack"] = "admin",
 }
 
-RSGCore.Commands.Add('admin', 'open the admin menu (Admin Only)', {}, false, function(source)
+RSGCore.Commands.Add('admin', Lang:t('lang_100'), {}, false, function(source)
     local src = source
     TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
 end, 'admin')
@@ -81,7 +81,7 @@ RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
         TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
     else
         --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = 'Not Allowed', description = 'you are not allowed to do that!', type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
@@ -94,7 +94,7 @@ RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
         TriggerClientEvent('rsg-adminmenu:client:openinventory', src, player.id)
     else
         --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = 'Not Allowed', description = 'you are not allowed to do that!', type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
@@ -105,10 +105,10 @@ RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['kick']) or IsPlayerAceAllowed(src, 'command')  then
         TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Kicked', 'red', string.format('%s was kicked by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
-        DropPlayer(player, 'You have been kicked from the server' .. ':\n' .. reason .. '\n\n' .. '🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
+        DropPlayer(player, Lang:t('lang_103') .. ':\n' .. reason .. '\n\n' .. Lang:t('lang_104') .. RSGCore.Config.Server.Discord)
     else
         --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = 'Not Allowed', description = 'you are not allowed to do that!', type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
@@ -126,7 +126,7 @@ local function BanPlayer(src)
         'rsg-adminmenu'
     })
     TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', "system banned you for inappropriate use"), true)
-    DropPlayer(src, 'You were permanently banned by the server for: Exploiting')
+    DropPlayer(src, Lang:t('lang_105'))
 end
 
 RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason)
@@ -153,9 +153,9 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
         })
         TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
         if banTime >= 2524608000 then
-            DropPlayer(player, 'You have been banned:' .. '\n' .. reason .. '\n\nYour ban is permanent.\n🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
+            DropPlayer(player, Lang:t('lang_106') .. '\n' .. reason .. '\n\n'..Lang:t('lang_107')..'\n'..Lang:t('lang_108') .. RSGCore.Config.Server.Discord)
         else
-            DropPlayer(player, 'You have been banned:' .. '\n' .. reason .. '\n\nBan expires: ' .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n🔸 Check our Discord for more information: ' .. RSGCore.Config.Server.Discord)
+            DropPlayer(player, Lang:t('lang_106') .. '\n' .. reason .. '\n\n'..Lang:t('lang_109') .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n' ..('lang_110') .. RSGCore.Config.Server.Discord)
         end
     else
         BanPlayer(src)
@@ -201,11 +201,11 @@ RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
         if not frozen then
             frozen = true
             Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, true)
-            TriggerClientEvent('ox_lib:notify', source, {title = 'Freeze Player On', description = 'you freezed player '..player.name, type = 'inform' })
+            TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_111'), description = Lang:t('lang_112')..player.name, type = 'inform' })
         else
             frozen = false
             Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, false)
-            TriggerClientEvent('ox_lib:notify', source, {title = 'Freeze Player Off', description = 'you unfreezed player '..player.name, type = 'inform' })
+            TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_113'), description = Lang:t('lang_114')..player.name, type = 'inform' })
         end
     else
         BanPlayer(src)
