@@ -21,6 +21,12 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
                 event = 'rsg-adminmenu:client:playersoptions',
                 arrow = true
             },
+            {   title = Lang:t('lang_88'),
+                description = Lang:t('lang_89'),
+                icon = 'fa-solid fa-money-bill',
+                event = 'rsg-adminmenu:client:playersfinances',
+                arrow = true
+            },
             {
                 title = Lang:t('lang_4'),
                 description = Lang:t('lang_5'),
