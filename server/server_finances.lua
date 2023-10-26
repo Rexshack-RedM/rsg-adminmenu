@@ -23,7 +23,7 @@ RegisterNetEvent('rsg-adminmenu:server:financeremove', function(player, money, a
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getPlayerData', function(player, cb)
-    local src = source
+
     local Player     = RSGCore.Functions.GetPlayer(player)
     local bank       = Player.PlayerData.money["bank"]
     local cash       = Player.PlayerData.money["cash"]
