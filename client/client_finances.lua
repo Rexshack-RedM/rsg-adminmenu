@@ -28,33 +28,50 @@ end)
 
 -- finances options menu
 RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
-
-    lib.registerContext({
-        id = 'finances_optionsmenu',
-        title = 'Finances Options Menu',
-        menu = 'finances_menu',
-        onBack = function() end,
-        options = {
-            {
-                title = 'Give Money',
-                description = 'give money to player',
-                icon = 'fa-solid fa-user-plus',
-                event = 'rsg-adminmenu:client:givemoney',
-                args = { id = data.player, name = data.name },
-                arrow = true
-            },
-            {
-                title = 'Remove Money',
-                description = 'remove money from player',
-                icon = 'fa-solid fa-user-minus',
-                event = 'rsg-adminmenu:client:removemoney',
-                args = { id = data.player, name = data.name },
-                arrow = true
-            },
-        }
-    })
-    lib.showContext('finances_optionsmenu')
-
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getPlayerData', function(result)
+        lib.registerContext({
+            id = 'finances_optionsmenu',
+            title = 'Finances Options Menu',
+            menu = 'finances_menu',
+            onBack = function() end,
+            options = {
+                {
+                    title = 'Bank : $'..result.bank,
+                    description = 'current players bank ballance',
+                    readOnly = true
+                },
+                {
+                    title = 'Cash : $'..result.cash,
+                    description = 'current players cash ballance',
+                    readOnly = true
+                },
+                {
+                    title = 'Blood Money : $'..result.bloodmoney,
+                    description = 'current players cash ballance',
+                    readOnly = true
+                },
+                {
+                    title = 'Give Money',
+                    description = 'give money to player',
+                    icon = 'fa-solid fa-user-plus',
+                    event = 'rsg-adminmenu:client:givemoney',
+                    args = { id = data.player, name = data.name },
+                    iconColor = 'green',
+                    arrow = true
+                },
+                {
+                    title = 'Remove Money',
+                    description = 'remove money from player',
+                    icon = 'fa-solid fa-user-minus',
+                    event = 'rsg-adminmenu:client:removemoney',
+                    args = { id = data.player, name = data.name },
+                    iconColor = 'red',
+                    arrow = true
+                },
+            }
+        })
+        lib.showContext('finances_optionsmenu')
+    end, data.player)
 end)
 
 -- give money to player (bank, cash, bloodmoney)
