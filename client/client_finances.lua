@@ -6,8 +6,8 @@ RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = 'ID: '..k..' | '..v.name,
-                description = '',
+                title = Lang:t('lang_19')..k..' | '..v.name,
+                description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:financesoptions',
                 args = { name = v.name, player = k },
@@ -16,7 +16,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
         end
         lib.registerContext({
             id = 'finances_menu',
-            title = 'Player Finances',
+            title = Lang:t('lang_88'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -31,43 +31,41 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getPlayerData', function(result)
         lib.registerContext({
             id = 'finances_optionsmenu',
-            title = 'Finances Options Menu',
+            title = Lang:t('lang_90'),
             menu = 'finances_menu',
             onBack = function() end,
             options = {
-                {
-                    title = 'Bank : $'..result.bank,
-                    description = 'current players bank ballance',
-                    readOnly = true
-                },
-                {
-                    title = 'Cash : $'..result.cash,
-                    description = 'current players cash ballance',
-                    readOnly = true
-                },
-                {
-                    title = 'Blood Money : $'..result.bloodmoney,
-                    description = 'current players cash ballance',
-                    readOnly = true
-                },
-                {
-                    title = 'Give Money',
-                    description = 'give money to player',
-                    icon = 'fa-solid fa-user-plus',
-                    event = 'rsg-adminmenu:client:givemoney',
-                    args = { id = data.player, name = data.name },
-                    iconColor = 'green',
-                    arrow = true
-                },
-                {
-                    title = 'Remove Money',
-                    description = 'remove money from player',
-                    icon = 'fa-solid fa-user-minus',
-                    event = 'rsg-adminmenu:client:removemoney',
-                    args = { id = data.player, name = data.name },
-                    iconColor = 'red',
-                    arrow = true
-                },
+            {
+                title = Lang:t('lang_122')..result.bank,
+                description = Lang:t('lang_119'),
+                readOnly = true
+            },
+            {
+                title = Lang:t('lang_123')..result.cash,
+                description = Lang:t('lang_120'),
+                readOnly = true
+            },
+            {
+                title = Lang:t('lang_124')..result.bloodmoney,
+                description = Lang:t('lang_121'),
+                readOnly = true
+            },
+            {
+                title = Lang:t('lang_91'),
+                description = Lang:t('lang_92'),
+                icon = 'fa-solid fa-user-plus',
+                event = 'rsg-adminmenu:client:givemoney',
+                args = { id = data.player, name = data.name },
+                arrow = true
+            },
+            {
+                title = Lang:t('lang_93'),
+                description = Lang:t('lang_94'),
+                icon = 'fa-solid fa-user-minus',
+                event = 'rsg-adminmenu:client:removemoney',
+                args = { id = data.player, name = data.name },
+                arrow = true
+            },
             }
         })
         lib.showContext('finances_optionsmenu')
@@ -79,8 +77,8 @@ RegisterNetEvent('rsg-adminmenu:client:givemoney', function(data)
 
     local input = lib.inputDialog(data.name, {
         {
-            label = 'Type',
-            description = 'chose the type to give to the player',
+            label = Lang:t('lang_95'),
+            description = Lang:t('lang_96'),
             type = 'select',
             options = {
                 {
@@ -96,8 +94,8 @@ RegisterNetEvent('rsg-adminmenu:client:givemoney', function(data)
             required = true,
         },
         { 
-            label = 'Amount',
-            description = 'how much do you want to give?',
+            label = Lang:t('lang_97'),
+            description = Lang:t('lang_98'),
             type = 'number',
             required = true,
         },
@@ -116,8 +114,8 @@ RegisterNetEvent('rsg-adminmenu:client:removemoney', function(data)
 
     local input = lib.inputDialog(data.name, {
         {
-            label = 'Type',
-            description = 'chose the type to remove from the player',
+            label = Lang:t('lang_95'),
+            description = Lang:t('lang_99'),
             type = 'select',
             options = {
                 {
@@ -133,8 +131,8 @@ RegisterNetEvent('rsg-adminmenu:client:removemoney', function(data)
             required = true,
         },
         { 
-            label = 'Amount',
-            description = 'how much do you want to remove?',
+            label = Lang:t('lang_97'),
+            description = Lang:t('lang_115'),
             type = 'number',
             required = true,
         },
