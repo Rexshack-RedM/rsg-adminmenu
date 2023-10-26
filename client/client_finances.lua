@@ -54,7 +54,7 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
                 title = Lang:t('lang_91'),
                 description = Lang:t('lang_92'),
                 icon = 'fa-solid fa-user-plus',
-				iconColor = 'green',
+                iconColor = 'green',
                 event = 'rsg-adminmenu:client:givemoney',
                 args = { id = data.player, name = data.name },
                 arrow = true
@@ -63,7 +63,7 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
                 title = Lang:t('lang_93'),
                 description = Lang:t('lang_94'),
                 icon = 'fa-solid fa-user-minus',
-				iconColor = 'red',
+                iconColor = 'red',
                 event = 'rsg-adminmenu:client:removemoney',
                 args = { id = data.player, name = data.name },
                 arrow = true
