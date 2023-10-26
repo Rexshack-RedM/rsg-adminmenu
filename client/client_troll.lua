@@ -6,8 +6,8 @@ RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = 'ID: '..k..' | '..v.name,
-                description = '',
+                title = Lang:t('lang_19')..k..' | '..v.name,
+                description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:trolloptions',
                 args = { name = v.name, player = k },
@@ -16,7 +16,7 @@ RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
         end
         lib.registerContext({
             id = 'troll_menu',
-            title = 'Troll Player',
+            title = Lang:t('lang_84'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -31,13 +31,13 @@ RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
 
     lib.registerContext({
         id = 'troll_optionsmenu',
-        title = 'Troll Options Menu',
+        title = Lang:t('lang_85'),
         menu = 'troll_menu',
         onBack = function() end,
         options = {
             {
-                title = 'Wild Attack',
-                description = 'troll player by activating a wild attack',
+                title = Lang:t('lang_86'),
+                description = Lang:t('lang_87'),
                 icon = 'fa-solid fa-paw',
                 serverEvent = 'rsg-adminmenu:server:wildattack',
                 args = { id = data.player },

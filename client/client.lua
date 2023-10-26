@@ -5,39 +5,39 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
 
     lib.registerContext({
         id = 'admin_mainmenu',
-        title = 'Admin Menu',
+        title = Lang:t('lang_0'),
         options = {
             {
-                title = 'Admin Options',
-                description = 'view admin options',
+                title = Lang:t('lang_0'),
+                description = Lang:t('lang_1'),
                 icon = 'fa-solid fa-user-secret',
                 event = 'rsg-adminmenu:client:adminoptions',
                 arrow = true
             },
             {
-                title = 'Player Options',
-                description = 'view player options',
+                title = Lang:t('lang_2'),
+                description = Lang:t('lang_3'),
                 icon = 'fa-solid fa-user',
                 event = 'rsg-adminmenu:client:playersoptions',
                 arrow = true
             },
             {
-                title = 'Troll Options',
-                description = 'view troll options',
+                title = Lang:t('lang_4'),
+                description = Lang:t('lang_5'),
                 icon = 'fa-regular fa-face-grin-squint-tears',
                 event = 'rsg-adminmenu:client:playerstroll',
                 arrow = true
             },
             {
-                title = 'Manage Server',
-                description = 'view server options',
+                title = Lang:t('lang_6'),
+                description = Lang:t('lang_7'),
                 icon = 'fa-solid fa-server',
                 event = 'rsg-adminmenu:client:serveroptions',
                 arrow = true
             },
             {
-                title = 'Developer Options',
-                description = 'view developer options',
+                title = Lang:t('lang_8'),
+                description = Lang:t('lang_9'),
                 icon = 'fa-solid fa-code',
                 event = 'rsg-adminmenu:client:devoptions',
                 arrow = true
@@ -53,34 +53,34 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
 
     lib.registerContext({
         id = 'admin_optionsmenu',
-        title = 'Admin Options Menu',
+        title = Lang:t('lang_10'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = 'Teleport to Marker',
-                description = 'you must have a marker set before doing this',
+                title = Lang:t('lang_11'),
+                description = Lang:t('lang_12'),
                 icon = 'fa-solid fa-up-down-left-right',
                 event = 'RSGCore:Command:GoToMarker',
                 arrow = true
             },
             {
-                title = 'Self Revive',
-                description = 'revive yourself from the dead',
+                title = Lang:t('lang_13'),
+                description = Lang:t('lang_14'),
                 icon = 'fa-solid fa-heart-pulse',
                 event = 'rsg-medic:client:playerRevive',
                 arrow = true
             },
             {
-                title = 'Go Invisible',
-                description = 'toggle invisible on/off',
+                title = Lang:t('lang_15'),
+                description = Lang:t('lang_16'),
                 icon = 'fa-solid fa-ghost',
                 event = 'rsg-adminmenu:client:goinvisible',
                 arrow = true
             },
             {
-                title = 'God Mode',
-                description = 'toggle god mode on/off',
+                title = Lang:t('lang_17'),
+                description = Lang:t('lang_18'),
                 icon = 'fa-solid fa-book-bible',
                 event = 'rsg-adminmenu:client:godmode',
                 arrow = true
@@ -101,8 +101,8 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = 'ID: '..k..' | '..v.name,
-                description = '',
+                title = Lang:t('lang_19') ..k..' | '..v.name,
+                description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:playermenu',
                 args = { name = v.name, player = k },
@@ -111,7 +111,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         end
         lib.registerContext({
             id = 'players_optionssmenu',
-            title = 'Players Menu',
+            title = Lang:t('lang_21'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -133,64 +133,64 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         onBack = function() end,
         options = {
             {
-                title = 'Revive Player',
-                description = 'revive this player',
+                title = Lang:t('lang_22'),
+                description = Lang:t('lang_23'),
                 icon = 'fa-solid fa-briefcase-medical',
                 serverEvent = 'rsg-adminmenu:server:playerrevive',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = 'Player Inventory',
-                description = 'open a players inventory, press [I] when open',
+                title = Lang:t('lang_24'),
+                description = Lang:t('lang_25'),
                 icon = 'fa-solid fa-box',
                 serverEvent = 'rsg-adminmenu:server:openinventory',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = 'Kick Player',
-                description = 'kick a player from the server with reason',
+                title = Lang:t('lang_26'),
+                description = Lang:t('lang_27'),
                 icon = 'fa-solid fa-socks',
                 event = 'rsg-adminmenu:client:kickplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = 'Ban Player',
-                description = 'ban a player from the server with reason',
+                title = Lang:t('lang_28'),
+                description = Lang:t('lang_29') ,
                 icon = 'fa-solid fa-ban',
                 event = 'rsg-adminmenu:client:banplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = 'GoTo Player',
-                description = 'goto a player',
+                title = Lang:t('lang_30'),
+                description = Lang:t('lang_31'),
                 icon = 'fa-solid fa-location-dot',
                 serverEvent = 'rsg-adminmenu:server:gotoplayer',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = 'Bring Player',
-                description = 'bring a player to you',
+                title = Lang:t('lang_32'),
+                description = Lang:t('lang_33'),
                 icon = 'fa-solid fa-hand',
                 serverEvent = 'rsg-adminmenu:server:bringplayer',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = 'Toggle Freeze Player',
-                description = 'toggles freeze player on/off',
+                title = Lang:t('lang_34'),
+                description = Lang:t('lang_35'),
                 icon = 'fa-solid fa-snowflake',
                 serverEvent = 'rsg-adminmenu:server:freezeplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = 'Toggle Spectate Player',
-                description = 'toggles spectate on another player on/off',
+                title = Lang:t('lang_36'),
+                description = Lang:t('lang_37'),
                 icon = 'fa-solid fa-eye',
                 serverEvent = 'rsg-adminmenu:server:spectateplayer',
                 args = { id = data.player },
@@ -207,13 +207,13 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
 
     lib.registerContext({
         id = 'server_optionssmenu',
-        title = 'Server Options Menu',
+        title = Lang:t('lang_38'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = 'title',
-                description = 'description',
+                title = Lang:t('lang_39'),
+                description = Lang:t('lang_40'),
                 icon = 'fa-solid fa-fingerprint',
                 event = '',
                 arrow = true
@@ -229,13 +229,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
 
     lib.registerContext({
         id = 'dev_optionssmenu',
-        title = 'Developer Options Menu',
+        title = Lang:t('lang_41'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = 'title',
-                description = 'description',
+                title = Lang:t('lang_39'),
+                description = Lang:t('lang_40'),
                 icon = 'fa-solid fa-fingerprint',
                 event = '',
                 arrow = true
@@ -255,11 +255,11 @@ RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
     if invisible then
         SetEntityVisible(PlayerPedId(), true)
         invisible = false
-        lib.notify({ title = 'Invisible On', description = 'as you can see you are invisible!', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_42'), description = Lang:t('lang_43'), type = 'inform' })
     else
         SetEntityVisible(PlayerPedId(), false)
         invisible = true
-        lib.notify({ title = 'Invisible Off', description = 'as you can see you are not invisible!', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_44'), description = Lang:t('lang_45'), type = 'inform' })
     end
 end)
 
@@ -269,7 +269,7 @@ end)
 RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     godmode = not godmode
     if godmode == true then
-        lib.notify({ title = 'God Mode On', description = 'god mode is now on!', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_46'), description = Lang:t('lang_47'), type = 'inform' })
     end
     TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
     if godmode then
@@ -278,7 +278,7 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
             SetPlayerInvincible(PlayerPedId(), true)
         end
         SetPlayerInvincible(PlayerPedId(), false)
-        lib.notify({ title = 'God Mode Off', description = 'god mode is now off!', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_48'), description = Lang:t('lang_49'), type = 'inform' })
     end
 end)
 
@@ -293,9 +293,9 @@ end)
 -- kick player reason
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
-    local input = lib.inputDialog('Kick Player : '..data.name, {
+    local input = lib.inputDialog(Lang:t('lang_50')..data.name, {
         { 
-            label = 'Reason',
+            label = Lang:t('lang_51'),
             type = 'input',
             required = true,
         },
@@ -310,9 +310,9 @@ end)
 -- ban player reason
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
-    local input = lib.inputDialog('Ban Player : '..data.name, {
+    local input = lib.inputDialog(Lang:t('lang_52')..data.name, {
         { 
-            label = 'Ban Type',
+            label = Lang:t('lang_53'),
             type = 'select',
                 options = {
                     { value = "permanent", label = "Permanent" },
@@ -321,25 +321,25 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
             required = true,
         },
         { 
-            label = 'Ban Time',
+            label = Lang:t('lang_54'),
             type = 'select',
                 options = {
-                    { value = '3600', label = "1 Hour" },
-                    { value = '21600', label = "6 Hours" },
-                    { value = '43200', label = "12 Hours" },
-                    { value = '86400', label = "1 Day" },
-                    { value = '259200', label = "3 Days" },
-                    { value = '604800', label = "1 Week" },
-                    { value = '2678400', label = "1 Month" },
-                    { value = '8035200', label = "3 Months" },
-                    { value = '16070400', label = "6 Months" },
-                    { value = '32140800', label = "1 Year" },
-                    { value = '99999999999', label = "Permanent" },
+                    { value = '3600', label = Lang:t('lang_55') },
+                    { value = '21600', label = Lang:t('lang_56') },
+                    { value = '43200', label = Lang:t('lang_57') },
+                    { value = '86400', label = Lang:t('lang_58') },
+                    { value = '259200', label = Lang:t('lang_59') },
+                    { value = '604800', label = Lang:t('lang_60') },
+                    { value = '2678400', label = Lang:t('lang_61') },
+                    { value = '8035200', label = Lang:t('lang_62') },
+                    { value = '16070400', label = Lang:t('lang_63') },
+                    { value = '32140800', label = Lang:t('lang_64') },
+                    { value = '99999999999', label = Lang:t('lang_65') },
                 },
             required = true,
         },
         { 
-            label = 'Reason',
+            label = Lang:t('lang_51'),
             type = 'input',
             required = true,
         }
@@ -350,12 +350,12 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     -- permanent ban
     if input[1] == 'permanent' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
-        lib.notify({ title = 'Player Banned', description = data.name..' has been banned permanently', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_66'), description = data.name..Lang:t('lang_67'), type = 'inform' })
     end
     -- temporary ban
     if input[1] == 'temporary' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
-        lib.notify({ title = 'Player Banned', description = data.name..' has a temporary ban set', type = 'inform' })
+        lib.notify({ title = Lang:t('lang_66'), description = data.name..Lang:t('lang_68'), type = 'inform' })
     end
 end)
 
