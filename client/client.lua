@@ -22,8 +22,8 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
                 arrow = true
             },
             {
-                title = 'Player Finances',
-                description = 'adjust player finances',
+                title = Lang:t('lang_88'),
+                description = Lang:t('lang_89'),
                 icon = 'fa-solid fa-money-bill',
                 event = 'rsg-adminmenu:client:playersfinances',
                 arrow = true
