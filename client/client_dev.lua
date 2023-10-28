@@ -10,6 +10,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
         onBack = function() end,
         options = {
             {
+                title = 'Spawn Admin Horse',
+                description = 'spawn a admin horse',
+                icon = 'fa-solid fa-horse-head',
+                event = 'rsg-adminmenu:client:horseoptions',
+                arrow = true
+            },
+            {
                 title = Lang:t('lang_70'),
                 description = Lang:t('lang_71'),
                 icon = 'fa-solid fa-clipboard',
@@ -19,7 +26,7 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
             {
                 title = Lang:t('lang_72'),
                 description = Lang:t('lang_73'),
-                icon = Lang:t('lang_0')'fa-solid fa-clipboard',
+                icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector3',
                 arrow = true
             },
@@ -72,4 +79,47 @@ end)
 RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
     CopyCoords("heading")
     lib.notify({ title = Lang:t('lang_82'), description = Lang:t('lang_83'), type = 'inform' })
+end)
+
+-- spawn admin horse
+RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
+    local option = {}
+    for i = 1, #Config.AdminHorse do
+        local name = Config.AdminHorse[i].horsename
+        local hash = Config.AdminHorse[i].horsehash
+        local content = { value = hash, label = name }
+        option[#option + 1] = content
+    end
+
+    local input = lib.inputDialog("Spawn Admin Horse", {
+        { type = 'select', options = option, required = true, default = 'Arabian White' }
+    })
+    if not input then return end
+    
+    TriggerEvent('rsg-adminmenu:client:spawnhorse', input[1])
+
+end)
+
+-- spawn horse / warp player / set networked
+RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
+    local pos = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 3.0, 0.0)
+    local heading = GetEntityHeading(PlayerPedId())
+    local ped = PlayerPedId()
+    local hash = HorseHash
+    if not IsModelInCdimage(hash) then return end
+    RequestModel(hash)
+    while not HasModelLoaded(hash) do
+        Wait(0)
+    end
+
+    local horsePed = CreatePed(hash, pos.x, pos.y, pos.z -1, heading, true, false)
+    TaskMountAnimal(ped, horsePed, 10000, -1, 1.0, 1, 0, 0)
+    Citizen.InvokeNative(0x283978A15512B2FE, horsePed, true)
+    EnableAttributeOverpower(horsePed, 0, 5000.0) -- health overpower
+    EnableAttributeOverpower(horsePed, 1, 5000.0) -- stamina overpower
+    Citizen.InvokeNative(0xF6A7C08DF2E28B28, horsePed, 0, 5000.0) -- set health with overpower
+    Citizen.InvokeNative(0xF6A7C08DF2E28B28, horsePed, 1, 5000.0) -- set stamina with overpower
+    Citizen.InvokeNative(0xE6D4E435B56D5BD0, ped, horsePed)
+    Citizen.InvokeNative(0xD3A7B003ED343FD9, horsePed, -447673416, true, true, true) -- add saddle
+    NetworkSetEntityInvisibleToNetwork(horsePed, true)
 end)

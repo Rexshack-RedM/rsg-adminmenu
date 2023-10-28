@@ -231,28 +231,6 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
 
 end)
 
--- server options menu
-RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
-
-    lib.registerContext({
-        id = 'dev_optionssmenu',
-        title = Lang:t('lang_41'),
-        menu = 'admin_mainmenu',
-        onBack = function() end,
-        options = {
-            {
-                title = Lang:t('lang_39'),
-                description = Lang:t('lang_40'),
-                icon = 'fa-solid fa-fingerprint',
-                event = '',
-                arrow = true
-            },
-        }
-    })
-    lib.showContext('dev_optionssmenu')
-
-end)
-
 -------------------------------------------------------------------
 -- go invisible
 -------------------------------------------------------------------
