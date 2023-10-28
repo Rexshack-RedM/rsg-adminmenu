@@ -41,7 +41,7 @@ local Translations = {
     lang_38 = 'Menú de opciones del servidor',
     lang_39 = 'título',
     lang_40 = 'descripción',
-    lang_41 = 'Menú de opciones de desarrollo',
+    
     lang_42 = 'Invisible On',
     lang_43 = '¡Como puedes ver eres invisible!',
     lang_44 = 'Invisible Off',
@@ -133,9 +133,11 @@ local Translations = {
     lang_113 = 'Congelar jugador Off',
     lang_114 = 'has descongelado al jugador ',
 
-    --lang_125 = '',
-    --lang_126 = '',
-    --lang_127 = '',
+    lang_41 = 'Spawn Admin Horse',
+    lang_125 = 'spawn a admin horse',
+    lang_126 = "Spawn Admin Horse",
+    lang_127 = 'Arabian White',
+    
     --lang_128 = '',
     --lang_129 = '',
     
