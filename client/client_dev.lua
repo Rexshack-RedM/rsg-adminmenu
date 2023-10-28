@@ -10,8 +10,8 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
         onBack = function() end,
         options = {
             {
-                title = 'Spawn Admin Horse',
-                description = 'spawn a admin horse',
+                title = Lang:t('lang_41'),
+                description = Lang:t('lang_125'),
                 icon = 'fa-solid fa-horse-head',
                 event = 'rsg-adminmenu:client:horseoptions',
                 arrow = true
@@ -91,7 +91,7 @@ RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
         option[#option + 1] = content
     end
 
-    local input = lib.inputDialog("Spawn Admin Horse", {
+    local input = lib.inputDialog(Lang:t('lang_126'), {
         { type = 'select', options = option, required = true, default = 'Arabian White' }
     })
     if not input then return end
