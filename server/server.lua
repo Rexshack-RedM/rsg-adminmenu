@@ -41,6 +41,7 @@ local permissions = {
     ["freeze"] = "admin",
     ["spectate"] = "admin",
     ["wildattack"] = "admin",
+    ["setonfire"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', Lang:t('lang_100'), {}, false, function(source)
@@ -233,6 +234,18 @@ RegisterNetEvent('rsg-adminmenu:server:wildattack', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['wildattack']) or IsPlayerAceAllowed(src, 'command') then
         TriggerClientEvent('rsg-adminmenu:client:wildattack', src, player.id)
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- set player on fire
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:playerfire', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['setonfire']) or IsPlayerAceAllowed(src, 'command') then
+        TriggerClientEvent('rsg-adminmenu:client:playerfire', src, player.id)
     else
         BanPlayer(src)
     end

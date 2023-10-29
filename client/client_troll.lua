@@ -43,6 +43,14 @@ RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
                 args = { id = data.player },
                 arrow = true
             },
+            {
+                title = 'Set Player on Fire',
+                description = 'set a player on fire',
+                icon = 'fa-solid fa-fire',
+                serverEvent = 'rsg-adminmenu:server:playerfire',
+                args = { id = data.player },
+                arrow = true
+            },
         }
     })
     lib.showContext('troll_optionsmenu')
@@ -91,4 +99,13 @@ RegisterNetEvent('rsg-adminmenu:client:wildattack', function(player)
     SetRelationshipBetweenGroups(5, playerGroupHash, animalGroupHash)
     SetModelAsNoLongerNeeded(animalHash)
 
+end)
+
+-------------------------------------------------------------------
+-- set player on fire troll action
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:playerfire', function(player)
+    local targetplayer = GetPlayerFromServerId(player)
+    local playerPed = GetPlayerPed(targetplayer)
+    StartEntityFire(playerPed)
 end)
