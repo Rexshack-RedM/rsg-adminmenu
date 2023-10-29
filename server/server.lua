@@ -42,6 +42,7 @@ local permissions = {
     ["spectate"] = "admin",
     ["wildattack"] = "admin",
     ["setonfire"] = "admin",
+    ["giveitem"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', Lang:t('lang_100'), {}, false, function(source)
@@ -246,6 +247,22 @@ RegisterNetEvent('rsg-adminmenu:server:playerfire', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['setonfire']) or IsPlayerAceAllowed(src, 'command') then
         TriggerClientEvent('rsg-adminmenu:client:playerfire', src, player.id)
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- give item
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['giveitem']) or IsPlayerAceAllowed(src, 'command') then
+        local id = player
+        local Player = RSGCore.Functions.GetPlayer(id)
+        local amount = amount
+        Player.Functions.AddItem(item, amount)
+        TriggerClientEvent('ox_lib:notify', source, {title = 'Item Given', description = 'item successfully sent', type = 'inform' })
     else
         BanPlayer(src)
     end

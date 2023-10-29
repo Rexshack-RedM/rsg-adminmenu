@@ -148,6 +148,14 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 arrow = true
             },
             {
+                title = 'Give Item',
+                description = 'given an item to a player',
+                icon = 'fa-solid fa-gift',
+                event = 'rsg-adminmenu:client:giveitem',
+                args = { id = data.player },
+                arrow = true
+            },
+            {
                 title = Lang:t('lang_24'),
                 description = Lang:t('lang_25'),
                 icon = 'fa-solid fa-box',
@@ -373,4 +381,25 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
         SetEntityInvincible(myPed, false) -- Remove godmode
         lastSpectateCoord = nil -- Reset Last Saved Coords
     end
+end)
+
+-------------------------------------------------------------------
+-- give item
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
+    local option = {}
+
+    for k, v in pairs(RSGCore.Shared.Items) do
+        local content = { value = v.name, label = v.label }
+        option[#option + 1] = content
+    end
+
+    local input = lib.inputDialog("Give Item to Player", {
+        { type = 'select', options = option, label = 'Inventory Item', required = true },
+        { type = 'number', label = 'Amount', required = true }
+    })
+    if not input then return end
+
+    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, input[1], input[2])
+
 end)
