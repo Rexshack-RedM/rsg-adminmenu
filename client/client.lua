@@ -140,8 +140,8 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         onBack = function() end,
         options = {
 			{
-                title = 'Player Info',
-                description = 'get players information',
+                title = Lang:t('lang_137'),
+                description = Lang:t('lang_138'),
                 icon = 'fa-solid fa-briefcase-medical',
                 event = 'rsg-adminmenu:server:playerinfo',
                 args = { id = data.player },
@@ -420,34 +420,34 @@ RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
         lib.registerContext(
             {
                 id = 'adminplayer_info',
-                title = 'Admin Player Info',
+                title = Lang:t('lang_139'),
                 description = '',
                 menu = 'players_optionssmenu',
                 onBack = function() end,
                 position = 'top-right',
                 options = {
                     {
-                        title = 'Name : '..data.firstname..' '..data.lastname,
+                        title = Lang:t('lang_140')..data.firstname..' '..data.lastname,
                         icon = 'user',
                     },
                     {
-                        title = 'Job : '..data.job,
+                        title = Lang:t('lang_141')..data.job,
                         icon = 'user',
                     },
                     {
-                        title = 'Job Grade : '..tostring(data.grade),
+                        title = Lang:t('lang_142')..tostring(data.grade),
                         icon = 'user',
                     },
                     {
-                        title = 'Cash : '..tostring(data.cash),
+                        title = Lang:t('lang_143')..tostring(data.cash),
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
-                        title = 'Bank : '..tostring(data.bank),
+                        title = Lang:t('lang_144')..tostring(data.bank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = 'Blood Money : '..tostring(data.bloodmoney),
+                        title = Lang:t('lang_145')..tostring(data.bloodmoney),
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
