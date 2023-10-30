@@ -148,7 +148,16 @@ local Translations = {
     lang_134 = 'Amount',
     lang_135 = 'Item Given',
     lang_136 = 'item successfully sent',
-    
+
+    lang_137 = 'Player Info',
+    lang_138 = 'get players information',
+    lang_139 = 'Admin Player Info',
+    lang_140 = 'Name : ',
+    lang_141 = 'Job : ',
+    lang_142 = 'Job Grade : ',
+    lang_143 = 'Cash : ',
+    lang_144 = 'Bank : ',
+    lang_145 = 'Blood Money : ',
 }
 
 Lang = Locale:new({
