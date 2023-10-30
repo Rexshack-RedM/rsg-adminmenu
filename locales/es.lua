@@ -138,8 +138,16 @@ local Translations = {
     lang_126 = "Spawn Admin Horse",
     lang_127 = 'Arabian White',
     
-    --lang_128 = '',
-    --lang_129 = '',
+    lang_128 = 'Prender fuego al jugador',
+    lang_129 = 'prende fuego a un jugador',
+
+    lang_130 = 'Dar artículo',
+    lang_131 = 'dado un objeto a un jugador',
+    lang_132 = "Dar artículo al jugador",
+    lang_133 = 'Artículo de inventario',
+    lang_134 = 'Cantidad',
+    lang_135 = 'Artículo dado',
+    lang_136 = 'elemento enviado correctamente',
     
 }
 
