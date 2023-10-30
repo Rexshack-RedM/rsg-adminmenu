@@ -44,8 +44,8 @@ RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
                 arrow = true
             },
             {
-                title = 'Set Player on Fire',
-                description = 'set a player on fire',
+                title = Lang:t('lang_128'),
+                description = Lang:t('lang_129'),
                 icon = 'fa-solid fa-fire',
                 serverEvent = 'rsg-adminmenu:server:playerfire',
                 args = { id = data.player },
