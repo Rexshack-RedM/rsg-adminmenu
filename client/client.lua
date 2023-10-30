@@ -148,8 +148,8 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 arrow = true
             },
             {
-                title = 'Give Item',
-                description = 'given an item to a player',
+                title = Lang:t('lang_130'),
+                description = Lang:t('lang_131'),
                 icon = 'fa-solid fa-gift',
                 event = 'rsg-adminmenu:client:giveitem',
                 args = { id = data.player },
@@ -394,9 +394,9 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
         option[#option + 1] = content
     end
 
-    local input = lib.inputDialog("Give Item to Player", {
-        { type = 'select', options = option, label = 'Inventory Item', required = true },
-        { type = 'number', label = 'Amount', required = true }
+    local input = lib.inputDialog(Lang:t('lang_132'), {
+        { type = 'select', options = option, label = Lang:t('lang_133'), required = true },
+        { type = 'number', label = Lang:t('lang_134')'Amount', required = true }
     })
     if not input then return end
 
