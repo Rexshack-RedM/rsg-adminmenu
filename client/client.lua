@@ -139,7 +139,15 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         menu = 'players_optionssmenu',
         onBack = function() end,
         options = {
-            {
+			{
+                title = 'Player Info',
+                description = 'get players information',
+                icon = 'fa-solid fa-briefcase-medical',
+                event = 'rsg-adminmenu:server:playerinfo',
+                args = { id = data.player },
+                arrow = true
+            },
+			{
                 title = Lang:t('lang_22'),
                 description = Lang:t('lang_23'),
                 icon = 'fa-solid fa-briefcase-medical',
@@ -402,4 +410,57 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
 
     TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, input[1], input[2])
 
+end)
+
+-------------------------------------------------------------------
+-- player info
+-------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayerinfo', function(data)
+        lib.registerContext(
+            {
+                id = 'adminplayer_info',
+                title = 'Admin Player Info',
+                description = '',
+                menu = 'players_optionssmenu',
+                onBack = function() end,
+                position = 'top-right',
+                options = {
+                    {
+                        title = 'Name : '..data.firstname..' '..data.lastname,
+                        icon = 'user',
+                    },
+                    {
+                        title = 'Job : '..data.job,
+                        icon = 'user',
+                    },
+                    {
+                        title = 'Job Grade : '..tostring(data.grade),
+                        icon = 'user',
+                    },
+                    {
+                        title = 'Cash : '..tostring(data.cash),
+                        icon = 'fa-solid fa-money-bill',
+                    },
+                    {
+                        title = 'Bank : '..tostring(data.bank),
+                        icon = 'fa-solid fa-building-columns',
+                    },
+                    {
+                        title = 'Blood Money : '..tostring(data.bloodmoney),
+                        icon = 'fa-solid fa-money-bill',
+                    },
+                    {
+                        title = 'CitizenID : '..data.citizenid,
+                        icon = 'fa-solid fa-id-card',
+                    },
+                    {
+                        title = 'ServerID : '..data.serverid,
+                        icon = 'fa-solid fa-server',
+                    },
+                }
+            }
+        )
+        lib.showContext('adminplayer_info')
+    end, player)
 end)

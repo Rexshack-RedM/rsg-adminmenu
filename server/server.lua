@@ -43,6 +43,7 @@ local permissions = {
     ["wildattack"] = "admin",
     ["setonfire"] = "admin",
     ["giveitem"] = "admin",
+    ["playerinfo"] = "admin",
 }
 
 RSGCore.Commands.Add('admin', Lang:t('lang_100'), {}, false, function(source)
@@ -263,6 +264,42 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
         local amount = amount
         Player.Functions.AddItem(item, amount)
         TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
+    else
+        BanPlayer(src)
+    end
+end)
+
+-----------------------------------------------------------------------
+-- player info
+----------------------------------------------------------------------
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
+        
+        local id = player.id
+        local Player     = RSGCore.Functions.GetPlayer(id)
+        local firstname  = Player.PlayerData.charinfo.firstname
+        local lastname   = Player.PlayerData.charinfo.lastname
+        local job        = Player.PlayerData.job.label
+        local grade      = Player.PlayerData.job.grade.level
+        local cash       = Player.PlayerData.money["cash"]
+        local bank       = Player.PlayerData.money["bank"]
+        local bloodmoney = Player.PlayerData.money["bloodmoney"]
+        local citizenid  = Player.PlayerData.citizenid
+        local serverid   = id
+
+        
+        cb({
+            firstname  = firstname,
+            lastname   = lastname,
+            job        = job, 
+            grade      = grade,
+            cash       = cash,
+            bank       = bank,
+            bloodmoney = bloodmoney,
+            citizenid  = citizenid,
+            serverid   = serverid,
+        })
     else
         BanPlayer(src)
     end
