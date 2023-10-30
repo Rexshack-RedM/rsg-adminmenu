@@ -262,7 +262,7 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
         local Player = RSGCore.Functions.GetPlayer(id)
         local amount = amount
         Player.Functions.AddItem(item, amount)
-        TriggerClientEvent('ox_lib:notify', source, {title = 'Item Given', description = 'item successfully sent', type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
     else
         BanPlayer(src)
     end
