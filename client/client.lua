@@ -404,7 +404,7 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
 
     local input = lib.inputDialog(Lang:t('lang_132'), {
         { type = 'select', options = option, label = Lang:t('lang_133'), required = true },
-        { type = 'number', label = Lang:t('lang_134')'Amount', required = true }
+        { type = 'number', label = Lang:t('lang_134'), required = true }
     })
     if not input then return end
 
