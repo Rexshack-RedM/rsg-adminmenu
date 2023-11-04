@@ -32,6 +32,7 @@ end
 -----------------------------------------------------------------------
 
 local permissions = {
+    ["adminmenu"] = "admin",
     ["revive"] = "admin",
     ["inventory"] = "admin",
     ["kick"] = "admin",
@@ -46,12 +47,9 @@ local permissions = {
     ["playerinfo"] = "admin",
 }
 
-RSGCore.Commands.Add('admin', Lang:t('lang_100'), {}, false, function(source)
-    local src = source
-    TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
-end, 'admin')
-
--- get players
+-----------------------------------------------------------------------
+-- get players function
+-----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayers', function(source, cb)
     local src = source
     local players = {}
@@ -76,47 +74,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayers', function(sou
 end)
 
 -----------------------------------------------------------------------
--- revive player
------------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
-    local src = source
-    if RSGCore.Functions.HasPermission(src, permissions['revive']) or IsPlayerAceAllowed(src, 'command')  then
-        TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
-    else
-        --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
-    end
-end)
-
------------------------------------------------------------------------
--- open players inventory
------------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
-    local src = source
-    if RSGCore.Functions.HasPermission(src, permissions['inventory']) or IsPlayerAceAllowed(src, 'command') then
-        TriggerClientEvent('rsg-adminmenu:client:openinventory', src, player.id)
-    else
-        --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
-    end
-end)
-
------------------------------------------------------------------------
--- kick player
-----------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
-    local src = source
-    if RSGCore.Functions.HasPermission(src, permissions['kick']) or IsPlayerAceAllowed(src, 'command')  then
-        TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Kicked', 'red', string.format('%s was kicked by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
-        DropPlayer(player, Lang:t('lang_103') .. ':\n' .. reason .. '\n\n' .. Lang:t('lang_104') .. RSGCore.Config.Server.Discord)
-    else
-        --BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
-    end
-end)
-
------------------------------------------------------------------------
--- ban player
+-- ban player function
 ----------------------------------------------------------------------
 local function BanPlayer(src)
     MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)', {
@@ -131,6 +89,65 @@ local function BanPlayer(src)
     TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', "system banned you for inappropriate use"), true)
     DropPlayer(src, Lang:t('lang_105'))
 end
+
+-----------------------------------------------------------------------
+-- admin menu command
+-----------------------------------------------------------------------
+RSGCore.Commands.Add('adminmenu', Lang:t('lang_100'), {}, false, function(source)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    local firstname = Player.PlayerData.charinfo.firstname
+    local lastname = Player.PlayerData.charinfo.lastname
+    local citizenid = Player.PlayerData.citizenid
+    
+    if RSGCore.Functions.HasPermission(src, permissions['adminmenu']) or IsPlayerAceAllowed(src, 'command')  then
+        TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
+    else
+        --BanPlayer(src)
+        TriggerEvent('rsg-log:server:CreateLog', 'anticheat', 'Unuthorised use of Admin Menu', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' attempted to use the admin menu', true)
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+    end
+end)
+
+-----------------------------------------------------------------------
+-- revive player
+-----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['revive']) or IsPlayerAceAllowed(src, 'command')  then
+        TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
+    else
+        BanPlayer(src)
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+    end
+end)
+
+-----------------------------------------------------------------------
+-- open players inventory
+-----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['inventory']) or IsPlayerAceAllowed(src, 'command') then
+        TriggerClientEvent('rsg-adminmenu:client:openinventory', src, player.id)
+    else
+        BanPlayer(src)
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+    end
+end)
+
+-----------------------------------------------------------------------
+-- kick player
+----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['kick']) or IsPlayerAceAllowed(src, 'command')  then
+        TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Kicked', 'red', string.format('%s was kicked by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
+        DropPlayer(player, Lang:t('lang_103') .. ':\n' .. reason .. '\n\n' .. Lang:t('lang_104') .. RSGCore.Config.Server.Discord)
+    else
+        BanPlayer(src)
+        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+    end
+end)
 
 RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason)
     local src = source

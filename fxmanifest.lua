@@ -4,7 +4,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-adminmenu'
-version '1.1.2'
+version '1.1.3'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -14,10 +14,7 @@ shared_scripts {
 }
 
 client_scripts {
-    'client/client.lua',
-    'client/client_troll.lua',
-    'client/client_dev.lua',
-    'client/client_finances.lua',
+    'client/*.lua',
 }
 
 server_scripts {
