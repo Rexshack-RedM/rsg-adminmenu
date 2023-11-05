@@ -160,7 +160,10 @@ local Translations = {
     lang_145 = 'Dinero de sangre: ',
 }
 
-Lang = Locale:new({
-    phrases = Translations,
-    warnOnMissing = true
-})
+if GetConvar('rsg_locale', 'en') == 'es' then
+    Lang = Locale:new({
+        phrases = Translations,
+        warnOnMissing = true,
+        fallbackLang = Lang,
+    })
+end
