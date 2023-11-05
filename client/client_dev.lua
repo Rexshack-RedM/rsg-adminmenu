@@ -30,6 +30,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
                 event = 'rsg-adminmenu:client:testanimation',
                 arrow = true
             },
+            {
+                title = 'Entity Hash',
+                description = 'get entity hash',
+                icon = 'fa-solid fa-hashtag',
+                event = 'rsg-adminmenu:client:gethash',
+                arrow = true
+            },
         }
     })
     lib.showContext('dev_mainmenu')
@@ -77,4 +84,22 @@ RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
     Citizen.InvokeNative(0xE6D4E435B56D5BD0, ped, horsePed)
     Citizen.InvokeNative(0xD3A7B003ED343FD9, horsePed, -447673416, true, true, true) -- add saddle
     NetworkSetEntityInvisibleToNetwork(horsePed, true)
+end)
+
+-- get entity hash
+RegisterNetEvent('rsg-adminmenu:client:gethash', function()
+    local input = lib.inputDialog('Get Entity Hash', {
+        { 
+            label = 'entity name',
+            description = 'example : PROVISION_ALLIGATOR_SKIN',
+            type = 'input',
+            required = true,
+        },
+    })
+    if not input then return end
+
+    local hash = joaat(input[1])
+    lib.setClipboard(tostring(hash))
+    lib.notify({ title = 'Entity Hash Copied', description = 'entity hash of '..hash..' has been copied to your clipboard', type = 'inform', duration = 5000 })
+
 end)
