@@ -22,6 +22,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:copycoordsmenu',
                 arrow = true
+            },     
+            {
+                title = 'Boost Fps Menu',
+                description = 'Boost fps',
+                icon = 'fa-solid fa-eye',
+                event = 'rsg-adminmenu:client:boostfpsShowMenu',
+                arrow = true
             },
             {
                 title = 'Animation Tester',
