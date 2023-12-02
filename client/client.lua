@@ -139,7 +139,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         menu = 'players_optionssmenu',
         onBack = function() end,
         options = {
-			{
+            {
                 title = Lang:t('lang_137'),
                 description = Lang:t('lang_138'),
                 icon = 'fa-solid fa-briefcase-medical',
@@ -147,7 +147,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 args = { id = data.player },
                 arrow = true
             },
-			{
+            {
                 title = Lang:t('lang_22'),
                 description = Lang:t('lang_23'),
                 icon = 'fa-solid fa-briefcase-medical',
@@ -237,8 +237,8 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
             {
                 title = Lang:t('lang_39'),
                 description = Lang:t('lang_40'),
-                icon = 'fa-solid fa-fingerprint',
-                event = '',
+                icon = 'fa-solid fa-cloud-sun',
+                event = 'weathersync:openAdminUi',
                 arrow = true
             },
         }

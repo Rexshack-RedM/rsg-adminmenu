@@ -39,8 +39,8 @@ local Translations = {
     lang_36 = 'Toggle Spectate Player',
     lang_37 = 'toggles spectate on another player on/off',
     lang_38 = 'Server Options Menu',
-    lang_39 = 'title',
-    lang_40 = 'description',
+    lang_39 = 'Server Weather',
+    lang_40 = 'adjust server weather',
     
     lang_42 = 'Invisible On',
     lang_43 = 'as you can see you are invisible!',
