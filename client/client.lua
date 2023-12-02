@@ -108,11 +108,11 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19') ..k..' | '..v.name,
+                title = Lang:t('lang_19') ..v.id..' | '..v.name,
                 description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:playermenu',
-                args = { name = v.name, player = k },
+                args = { name = v.name, player = v.id },
                 arrow = true,
             }
         end
