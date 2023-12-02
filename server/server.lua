@@ -358,7 +358,7 @@ end)
 ----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
     local src = source
-    local Player = RSGCore.Functions.GetPlayer(src)
+    local Player = RSGCore.Functions.GetPlayer(player)
     local firstname = Player.PlayerData.charinfo.firstname
     local lastname = Player.PlayerData.charinfo.lastname
     local citizenid = Player.PlayerData.citizenid
