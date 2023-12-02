@@ -358,41 +358,41 @@ end)
 ----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
     local src = source
-    local Player = RSGCore.Functions.GetPlayer(player)
-    local firstname = Player.PlayerData.charinfo.firstname
-    local lastname = Player.PlayerData.charinfo.lastname
-    local citizenid = Player.PlayerData.citizenid
+    local adminPlayer = RSGCore.Functions.GetPlayer(src)
+    local adminfirstname = adminPlayer.PlayerData.charinfo.firstname
+    local adminlastname = adminPlayer.PlayerData.charinfo.lastname
+    local admincitizenid = adminPlayer.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
         
         local id = player.id
-        local Player     = RSGCore.Functions.GetPlayer(id)
-        local firstname  = Player.PlayerData.charinfo.firstname
-        local lastname   = Player.PlayerData.charinfo.lastname
-        local job        = Player.PlayerData.job.label
-        local grade      = Player.PlayerData.job.grade.level
-        local cash       = Player.PlayerData.money["cash"]
-        local bank       = Player.PlayerData.money["bank"]
-        local bloodmoney = Player.PlayerData.money["bloodmoney"]
-        local citizenid  = Player.PlayerData.citizenid
-        local serverid   = id
+        local targetPlayer     = RSGCore.Functions.GetPlayer(id)
+        local targetfirstname  = targetPlayer.PlayerData.charinfo.firstname
+        local targetlastname   = targetPlayer.PlayerData.charinfo.lastname
+        local targetjob        = targetPlayer.PlayerData.job.label
+        local targetgrade      = targetPlayer.PlayerData.job.grade.level
+        local targetcash       = targetPlayer.PlayerData.money["cash"]
+        local targetbank       = targetPlayer.PlayerData.money["bank"]
+        local targetbloodmoney = targetPlayer.PlayerData.money["bloodmoney"]
+        local targetcitizenid  = targetPlayer.PlayerData.citizenid
+        local targetserverid   = id
 
         
         cb({
-            firstname  = firstname,
-            lastname   = lastname,
-            job        = job, 
-            grade      = grade,
-            cash       = cash,
-            bank       = bank,
-            bloodmoney = bloodmoney,
-            citizenid  = citizenid,
-            serverid   = serverid,
+            firstname  = targetfirstname,
+            lastname   = targetlastname,
+            job        = targetjob, 
+            grade      = targetgrade,
+            cash       = targetcash,
+            bank       = targetbank,
+            bloodmoney = targetbloodmoney,
+            citizenid  = targetcitizenid,
+            serverid   = targetserverid,
         })
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using get player info', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', adminfirstname..' '..adminlastname..' with citizen id of '..admincitizenid..' banned for using get player info', true)
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
