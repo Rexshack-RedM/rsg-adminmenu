@@ -252,7 +252,7 @@ end)
 -------------------------------------------------------------------
 local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
-    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
     if invisible then
         SetEntityVisible(PlayerPedId(), true)
         invisible = false
@@ -272,7 +272,7 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     if godmode == true then
         lib.notify({ title = Lang:t('lang_46'), description = Lang:t('lang_47'), type = 'inform' })
     end
-    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
     if godmode then
         while godmode do
             Wait(0)
