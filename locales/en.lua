@@ -73,7 +73,7 @@ local Translations = {
     -- client-dev
     lang_69 = 'Developer Menu',
     lang_70 = 'Copy Vector 2',
-    lang_71 = 'Teleport to Marker',
+    lang_71 = 'copy vector2 coords',
     lang_72 = 'Copy Vector 3',
     lang_73 = 'copy vector3 coords',
     lang_74 = 'Copy Vector 4',
