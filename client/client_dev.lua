@@ -37,6 +37,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
                 event = 'rsg-adminmenu:client:gethash',
                 arrow = true
             },
+            {
+                title = 'Toggle Door IDs on/off',
+                description = 'used to get door ids',
+                icon = 'fa-solid fa-door-open',
+                event = 'rsg-adminmenu:client:toggledoorid',
+                arrow = true
+            },
         }
     })
     lib.showContext('dev_mainmenu')
