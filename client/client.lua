@@ -392,15 +392,24 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
 end)
 
 -------------------------------------------------------------------
+-- sort table function
+-------------------------------------------------------------------
+local function compareNames(a, b)
+    return a.name < b.name
+end
+
+-------------------------------------------------------------------
 -- give item
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
     local option = {}
 
     for k, v in pairs(RSGCore.Shared.Items) do
-        local content = { value = v.name, label = v.label }
+        local content = { name = v.name, label = v.label }
         option[#option + 1] = content
     end
+
+    table.sort(option, compareNames)
 
     local input = lib.inputDialog(Lang:t('lang_132'), {
         { type = 'select', options = option, label = Lang:t('lang_133'), required = true },
