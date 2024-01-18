@@ -23,6 +23,82 @@ Config.AdminHorse = {
     },
 }
 
+Config.AdminPed = {
+    {
+         pedname = 'Doctor 1',
+         pedhash = `cs_sddoctor_01`,
+    },
+    {
+         pedname = 'Doctor 2',
+         pedhash = `u_m_m_rhddoctor_01`,
+    },
+	{
+         pedname = 'Doctor 2',
+         pedhash = `u_m_m_rhddoctor_01`,
+    },
+	{
+         pedname = 'Men 1',
+         pedhash = `a_m_m_blwobesemen_01`,
+    },
+	{
+         pedname = 'Wapity',
+         pedhash = `a_m_m_wapwarriors_01`,
+    },
+	{
+         pedname = 'Women 2',
+         pedhash = `a_f_m_roughtravellers_01`,
+    },
+	{
+         pedname = 'Bear',
+         pedhash = `A_C_Bear_01`,
+    },
+    {
+         pedname = 'Buffalo Tatanka',
+         pedhash = `a_c_buffalo_tatanka_01`,
+    },
+	{
+         pedname = 'Husky',
+         pedhash = `a_c_doghusky_01`,
+    },
+	{
+         pedname = 'Cat',
+         pedhash = `a_c_cat_01`,
+    },
+	{
+         pedname = 'Lion',
+         pedhash = `a_c_lionmangy_01`,
+    },
+	{
+         pedname = 'Panther',
+         pedhash = `A_C_Panther_01`,
+    },
+    {
+         pedname = 'Cougar',
+         pedhash = `A_C_Cougar_01`,
+    },
+	{
+         pedname = 'Wolf',
+         pedhash = `A_C_Wolf`,
+    },
+	{
+         pedname = 'Parrot',
+         pedhash = `A_C_Parrot_01`,
+    },
+	{
+         pedname = 'Carolina Parakeet',
+         pedhash = `A_C_CarolinaParakeet_01`,
+    },
+    {
+         pedname = 'Owl',
+         pedhash = `A_C_Owl_01`,
+    },
+	{
+         pedname = 'Robot',
+         pedhash = `cs_crackpotrobot`,
+    },
+	
+}
+
 -- https://raw.githubusercontent.com/femga/rdr3_discoveries/master/doorHashes/doorhashes.lua
 Config.DoorHashes = {
     [123675751] = {123675751,603318791,"p_door_photo02x",2735.5290527344,-1115.708984375,48.100471496582},
