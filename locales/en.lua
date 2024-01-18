@@ -158,6 +158,7 @@ local Translations = {
     lang_143 = 'Cash : ',
     lang_144 = 'Bank : ',
     lang_145 = 'Blood Money : ',
+    lang_146 = 'Spawn Admin Ped',
 }
 
 Lang = Locale:new({
