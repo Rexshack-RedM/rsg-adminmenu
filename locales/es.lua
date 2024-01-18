@@ -158,6 +158,7 @@ local Translations = {
     lang_143 = 'Efectivo: ',
     lang_144 = 'Banco: ',
     lang_145 = 'Dinero de sangre: ',
+    lang_146 = 'Spawn Admin Ped',
 }
 
 if GetConvar('rsg_locale', 'en') == 'es' then
