@@ -44,13 +44,55 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
                 event = 'rsg-adminmenu:client:toggledoorid',
                 arrow = true
             },
+            {
+                title = 'Ped Admin',
+                description = 'transformed into a human or animal ped',
+                icon = 'fa-solid fa-user-plus',
+                event = 'rsg-adminmenu:client:pedoptions',
+                arrow = true
+            },         
         }
     })
     lib.showContext('dev_mainmenu')
 
 end)
 
+-----------------------------------------------------------------------
+-- spawn admin ped
+-----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:pedoptions', function()
+    local option = {}
+    for i = 1, #Config.AdminPed do
+        local name = Config.AdminPed[i].pedname
+        local hash = Config.AdminPed[i].pedhash
+        local content = { value = hash, label = name }
+        option[#option + 1] = content
+    end
+
+    local input = lib.inputDialog(Lang:t('lang_146'), {
+        { type = 'select', options = option, required = true, default = 'Doctor 1' }
+    })
+    if not input then return end
+    
+    TriggerEvent('rsg-adminmenu:client:spawnped', input[1])
+
+end)
+
+-----------------------------------------------------------------------
+-- spawn ped
+-----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:spawnped', function(PedHash)
+    local model = PedHash
+    RequestModel(model)
+    while not HasModelLoaded(model) do Wait(100) end
+    SetPlayerModel(PlayerId(), model)
+    Citizen.InvokeNative(0x283978A15512B2FE, PlayerPedId(), true)
+    SetModelAsNoLongerNeeded(model)
+end)
+
+-----------------------------------------------------------------------
 -- spawn admin horse
+-----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
     local option = {}
     for i = 1, #Config.AdminHorse do
@@ -69,7 +111,9 @@ RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
 
 end)
 
+-----------------------------------------------------------------------
 -- spawn horse / warp player / set networked
+-----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
     local pos = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 3.0, 0.0)
     local heading = GetEntityHeading(PlayerPedId())
@@ -93,7 +137,9 @@ RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
     NetworkSetEntityInvisibleToNetwork(horsePed, true)
 end)
 
+-----------------------------------------------------------------------
 -- get entity hash
+-----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:gethash', function()
     local input = lib.inputDialog('Get Entity Hash', {
         { 
