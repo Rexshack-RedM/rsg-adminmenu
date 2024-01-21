@@ -331,29 +331,6 @@ RegisterNetEvent('rsg-adminmenu:server:playerfire', function(player)
 end)
 
 -----------------------------------------------------------------------
--- give item
-----------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
-    local src = source
-    local Player = RSGCore.Functions.GetPlayer(src)
-    local firstname = Player.PlayerData.charinfo.firstname
-    local lastname = Player.PlayerData.charinfo.lastname
-    local citizenid = Player.PlayerData.citizenid
-
-    if RSGCore.Functions.HasPermission(src, permissions['giveitem']) or IsPlayerAceAllowed(src, 'command') then
-        local id = player
-        local Player = RSGCore.Functions.GetPlayer(id)
-        local amount = amount
-        Player.Functions.AddItem(item, amount)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
-    else
-        BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using give item', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
-    end
-end)
-
------------------------------------------------------------------------
 -- player info
 ----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
