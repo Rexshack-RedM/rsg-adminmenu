@@ -145,8 +145,8 @@ RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
             description = 'freeze npc/animal on spawn',
             type = 'select',
             options = {
-                { value = 'true', lable = 'True' },
-                { value = 'false', lable = 'False' }
+                { value = 'true', label = 'True' },
+                { value = 'false', label = 'False' }
             },
             required = true,
         },
@@ -155,8 +155,8 @@ RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
             description = 'spawn npc/animal dead',
             type = 'select',
             options = {
-                { value = 'true', lable = 'True' },
-                { value = 'false', lable = 'False' }
+                { value = 'true', label = 'True' },
+                { value = 'false', label = 'False' }
             },
             required = true,
         },
