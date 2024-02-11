@@ -44,6 +44,13 @@ RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
                 event = 'rsg-adminmenu:client:toggledoorid',
                 arrow = true
             },
+            {
+                title = 'Ped Sawner',
+                description = 'used to spawn npc/animals',
+                icon = 'fa-solid fa-paw',
+                event = 'rsg-adminmenu:client:spawnped',
+                arrow = true
+            },
         }
     })
     lib.showContext('dev_mainmenu')
@@ -108,5 +115,72 @@ RegisterNetEvent('rsg-adminmenu:client:gethash', function()
     local hash = joaat(input[1])
     lib.setClipboard(tostring(hash))
     lib.notify({ title = 'Entity Hash Copied', description = 'entity hash of '..hash..' has been copied to your clipboard', type = 'inform', duration = 5000 })
+end)
 
+-- npc/amimal spawner
+RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
+    local input = lib.inputDialog('Spawn Ped/Animal', {
+        { 
+            label = 'ped name',
+            description = 'example : mp_a_c_wolf_01',
+            type = 'input',
+            required = true,
+        },
+        { 
+            label = 'outfit',
+            description = 'outfit number for ped/animal',
+            type = 'number',
+            default = 0,
+            required = true,
+        },
+        { 
+            label = 'distance',
+            description = 'spawn distrance away from you',
+            type = 'number',
+            default = 5,
+            required = true,
+        },
+        { 
+            label = 'freeze',
+            description = 'freeze npc/animal on spawn',
+            type = 'select',
+            options = {
+                { value = 'true', lable = 'True' },
+                { value = 'false', lable = 'False' }
+            },
+            required = true,
+        },
+        { 
+            label = 'spawn dead',
+            description = 'spawn npc/animal dead',
+            type = 'select',
+            options = {
+                { value = 'true', lable = 'True' },
+                { value = 'false', lable = 'False' }
+            },
+            required = true,
+        },
+    })
+    if not input then return end
+    local hash = joaat(input[1])
+    TriggerEvent('rsg-adminmenu:client:dospawnped', hash, input[2], input[3], input[4], input[5])
+end)
+
+RegisterNetEvent('rsg-adminmenu:client:dospawnped', function(hash, outfit, distance, freeze, dead)
+    local player = PlayerPedId()
+    local playerCoords = GetEntityCoords(player)
+    RequestModel(hash)
+    while not HasModelLoaded(hash) do
+        Wait(10)
+    end
+    spawnped = CreatePed(hash, playerCoords.x + distance, playerCoords.y + distance, playerCoords.z, true, true, true)
+    Citizen.InvokeNative(0x77FF8D35EEC6BBC4, spawnped, outfit, false)
+    Wait(1000)
+    if not dead then
+        SetEntityHealth(spawnped, 0)
+    end
+    if not freeze then
+        FreezeEntityPosition(spawnped, true)
+    end
+    SetModelAsNoLongerNeeded(spawnped)
 end)
