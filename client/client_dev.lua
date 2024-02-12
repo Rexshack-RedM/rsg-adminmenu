@@ -175,11 +175,10 @@ RegisterNetEvent('rsg-adminmenu:client:dospawnped', function(hash, outfit, dista
     end
     spawnped = CreatePed(hash, playerCoords.x + distance, playerCoords.y + distance, playerCoords.z, true, true, true)
     Citizen.InvokeNative(0x77FF8D35EEC6BBC4, spawnped, outfit, false)
-    Wait(1000)
-    if not dead then
+    if dead == 'true' then
         SetEntityHealth(spawnped, 0)
     end
-    if not freeze then
+    if freeze == 'true' then
         FreezeEntityPosition(spawnped, true)
     end
     SetModelAsNoLongerNeeded(spawnped)
