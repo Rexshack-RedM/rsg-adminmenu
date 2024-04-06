@@ -78,9 +78,8 @@ end)
 
 -- spawn horse / warp player / set networked
 RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
-    local pos = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0.0, 3.0, 0.0)
-    local heading = GetEntityHeading(PlayerPedId())
-    local ped = PlayerPedId()
+    local pos = GetOffsetFromEntityInWorldCoords(cache.ped, 0.0, 3.0, 0.0)
+    local heading = GetEntityHeading(cache.ped)
     local hash = HorseHash
     if not IsModelInCdimage(hash) then return end
     RequestModel(hash)
@@ -89,14 +88,14 @@ RegisterNetEvent('rsg-adminmenu:client:spawnhorse', function(HorseHash)
     end
 
     local horsePed = CreatePed(hash, pos.x, pos.y, pos.z -1, heading, true, false)
-    TaskMountAnimal(ped, horsePed, 10000, -1, 1.0, 1, 0, 0)
-    Citizen.InvokeNative(0x283978A15512B2FE, horsePed, true)
+    TaskMountAnimal(cache.ped, horsePed, 10000, -1, 1.0, 1, 0, 0)
+    SetRandomOutfitVariation(horsePed, true)
     EnableAttributeOverpower(horsePed, 0, 5000.0) -- health overpower
     EnableAttributeOverpower(horsePed, 1, 5000.0) -- stamina overpower
-    Citizen.InvokeNative(0xF6A7C08DF2E28B28, horsePed, 0, 5000.0) -- set health with overpower
-    Citizen.InvokeNative(0xF6A7C08DF2E28B28, horsePed, 1, 5000.0) -- set stamina with overpower
-    Citizen.InvokeNative(0xE6D4E435B56D5BD0, ped, horsePed)
-    Citizen.InvokeNative(0xD3A7B003ED343FD9, horsePed, -447673416, true, true, true) -- add saddle
+    EnableAttributeOverpower(horsePed, 0, 5000.0) -- set health with overpower
+    EnableAttributeOverpower(horsePed, 1, 5000.0) -- set stamina with overpower
+    SetPlayerOwnsMount(cache.ped, horsePed)
+    ApplyShopItemToPed(horsePed, -447673416, true, true, true) -- add saddle
     NetworkSetEntityInvisibleToNetwork(horsePed, true)
 end)
 
@@ -167,14 +166,13 @@ RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:dospawnped', function(hash, outfit, distance, freeze, dead)
-    local player = PlayerPedId()
-    local playerCoords = GetEntityCoords(player)
+    local playerCoords = GetEntityCoords(cache.ped)
     RequestModel(hash)
     while not HasModelLoaded(hash) do
         Wait(10)
     end
     spawnped = CreatePed(hash, playerCoords.x + distance, playerCoords.y + distance, playerCoords.z, true, true, true)
-    Citizen.InvokeNative(0x77FF8D35EEC6BBC4, spawnped, outfit, false)
+    EquipMetaPedOutfitPreset(spawnped, outfit, false)
     if dead == 'true' then
         SetEntityHealth(spawnped, 0)
     end

@@ -2,7 +2,6 @@ local showdoorid = false
 
 function DrawText3D(x, y, z, text)
     local onScreen, _x, _y =GetScreenCoordFromWorldCoord(x, y, z)
-
     SetTextScale(0.35, 0.35)
     SetTextFontForCurrentCommand(1)
     SetTextColor(255, 255, 255, 215)
@@ -31,7 +30,7 @@ Citizen.CreateThread(function()
         local sleep = 1000
         if showdoorid then
             for k, v in pairs(Config.DoorHashes) do
-                if #(GetEntityCoords(PlayerPedId()) - vector3(v[4], v[5], v[6])) < 2 then
+                if #(GetEntityCoords(cache.ped) - vector3(v[4], v[5], v[6])) < 2 then
                     sleep = 8
                     DrawText3D(v[4], v[5], v[6]+1.25, "DoorID:"..tostring(v[1]).."\n OBJECT: "..tostring(v[3]).." \nX: "..tostring(round(v[4], 2)).."\nY: "..tostring(round(v[5], 2)).."\nZ: "..tostring(round(v[6], 2)).."")
                 end

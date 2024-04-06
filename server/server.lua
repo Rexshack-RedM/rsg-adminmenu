@@ -257,11 +257,11 @@ RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
         local target = GetPlayerPed(player.id)
         if not frozen then
             frozen = true
-            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, true)
+            FreezeEntityPosition(target, true)
             TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_111'), description = Lang:t('lang_112')..player.name, type = 'inform' })
         else
             frozen = false
-            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, false)
+            FreezeEntityPosition(target, false)
             TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_113'), description = Lang:t('lang_114')..player.name, type = 'inform' })
         end
     else

@@ -254,11 +254,11 @@ local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
     TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
     if invisible then
-        SetEntityVisible(PlayerPedId(), true)
+        SetEntityVisible(cache.ped, true)
         invisible = false
         lib.notify({ title = Lang:t('lang_42'), description = Lang:t('lang_43'), type = 'inform' })
     else
-        SetEntityVisible(PlayerPedId(), false)
+        SetEntityVisible(cache.ped, false)
         invisible = true
         lib.notify({ title = Lang:t('lang_44'), description = Lang:t('lang_45'), type = 'inform' })
     end
@@ -276,9 +276,9 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     if godmode then
         while godmode do
             Wait(0)
-            SetPlayerInvincible(PlayerPedId(), true)
+            SetPlayerInvincible(cache.ped, true)
         end
-        SetPlayerInvincible(PlayerPedId(), false)
+        SetPlayerInvincible(cache.ped, false)
         lib.notify({ title = Lang:t('lang_48'), description = Lang:t('lang_49'), type = 'inform' })
     end
 end)
@@ -368,25 +368,24 @@ local lastSpectateCoord = nil
 local isSpectating = false
 
 RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
-    local myPed = PlayerPedId()
     local targetplayer = GetPlayerFromServerId(targetPed)
     local target = GetPlayerPed(targetplayer)
     if not isSpectating then
         isSpectating = true
-        SetEntityVisible(myPed, false) -- Set invisible
-        SetEntityCollision(myPed, false, false) -- Set collision
-        SetEntityInvincible(myPed, true) -- Set invincible
-        NetworkSetEntityInvisibleToNetwork(myPed, true) -- Set invisibility
-        lastSpectateCoord = GetEntityCoords(myPed) -- save my last coords
+        SetEntityVisible(cache.ped, false) -- Set invisible
+        SetEntityCollision(cache.ped, false, false) -- Set collision
+        SetEntityInvincible(cache.ped, true) -- Set invincible
+        NetworkSetEntityInvisibleToNetwork(cache.ped, true) -- Set invisibility
+        lastSpectateCoord = GetEntityCoords(cache.ped) -- save my last coords
         NetworkSetInSpectatorMode(true, target) -- Enter Spectate Mode
     else
         isSpectating = false
         NetworkSetInSpectatorMode(false, target) -- Remove From Spectate Mode
-        NetworkSetEntityInvisibleToNetwork(myPed, false) -- Set Visible
-        SetEntityCollision(myPed, true, true) -- Set collision
-        SetEntityCoords(myPed, lastSpectateCoord) -- Return Me To My Coords
-        SetEntityVisible(myPed, true) -- Remove invisible
-        SetEntityInvincible(myPed, false) -- Remove godmode
+        NetworkSetEntityInvisibleToNetwork(cache.ped, false) -- Set Visible
+        SetEntityCollision(cache.ped, true, true) -- Set collision
+        SetEntityCoords(cache.ped, lastSpectateCoord) -- Return Me To My Coords
+        SetEntityVisible(cache.ped, true) -- Remove invisible
+        SetEntityInvincible(cache.ped, false) -- Remove godmode
         lastSpectateCoord = nil -- Reset Last Saved Coords
     end
 end)

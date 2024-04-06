@@ -86,7 +86,7 @@ RegisterNetEvent('rsg-adminmenu:client:wildattack', function(player)
 
     -- creating animal
     animalPed = CreatePed(animalHash, coordsBehindPlayer.x, coordsBehindPlayer.y, groundZ, playerHeading, true, false)
-    Citizen.InvokeNative(0x77FF8D35EEC6BBC4, animalPed, 1, 0) --EquipMetaPedOutfitPreset
+    EquipMetaPedOutfitPreset(animalPed, 1, 0)
 
     -- setting player as enemy
     SetPedFleeAttributes(animalPed, 0, 0)
