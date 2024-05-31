@@ -345,11 +345,11 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
         local Player = RSGCore.Functions.GetPlayer(id)
         local amount = amount
         Player.Functions.AddItem(item, amount)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using give item', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
