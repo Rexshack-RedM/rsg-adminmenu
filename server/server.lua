@@ -13,14 +13,14 @@ local function CheckVersion()
     PerformHttpRequest('https://raw.githubusercontent.com/Rexshack-RedM/rsg-adminmenu/main/version.txt', function(err, text, headers)
         local currentVersion = GetResourceMetadata(GetCurrentResourceName(), 'version')
 
-        if not text then 
+        if not text then
             versionCheckPrint('error', 'Currently unable to run a version check.')
-            return 
+            return
         end
 
         --versionCheckPrint('success', ('Current Version: %s'):format(currentVersion))
         --versionCheckPrint('success', ('Latest Version: %s'):format(text))
-        
+
         if text == currentVersion then
             versionCheckPrint('success', 'You are running the latest version.')
         else
@@ -364,7 +364,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
     local admincitizenid = adminPlayer.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
-        
+
         local id = player.id
         local targetPlayer     = RSGCore.Functions.GetPlayer(id)
         local targetfirstname  = targetPlayer.PlayerData.charinfo.firstname
@@ -377,11 +377,11 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
         local targetcitizenid  = targetPlayer.PlayerData.citizenid
         local targetserverid   = id
 
-        
+
         cb({
             firstname  = targetfirstname,
             lastname   = targetlastname,
-            job        = targetjob, 
+            job        = targetjob,
             grade      = targetgrade,
             cash       = targetcash,
             bank       = targetbank,

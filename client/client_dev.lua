@@ -71,7 +71,7 @@ RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
         { type = 'select', options = option, required = true, default = 'Arabian White' }
     })
     if not input then return end
-    
+
     TriggerEvent('rsg-adminmenu:client:spawnhorse', input[1])
 
 end)
@@ -102,7 +102,7 @@ end)
 -- get entity hash
 RegisterNetEvent('rsg-adminmenu:client:gethash', function()
     local input = lib.inputDialog('Get Entity Hash', {
-        { 
+        {
             label = 'entity name',
             description = 'example : PROVISION_ALLIGATOR_SKIN',
             type = 'input',
@@ -119,27 +119,27 @@ end)
 -- npc/amimal spawner
 RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
     local input = lib.inputDialog('Spawn Ped/Animal', {
-        { 
+        {
             label = 'ped name',
             description = 'example : mp_a_c_wolf_01',
             type = 'input',
             required = true,
         },
-        { 
+        {
             label = 'outfit',
             description = 'outfit number for ped/animal',
             type = 'number',
             default = 0,
             required = true,
         },
-        { 
+        {
             label = 'distance',
             description = 'spawn distrance away from you',
             type = 'number',
             default = 5,
             required = true,
         },
-        { 
+        {
             label = 'freeze',
             description = 'freeze npc/animal on spawn',
             type = 'select',
@@ -149,7 +149,7 @@ RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
             },
             required = true,
         },
-        { 
+        {
             label = 'spawn dead',
             description = 'spawn npc/animal dead',
             type = 'select',

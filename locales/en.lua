@@ -41,7 +41,7 @@ local Translations = {
     lang_38 = 'Server Options Menu',
     lang_39 = 'Server Weather',
     lang_40 = 'adjust server weather',
-    
+
     lang_42 = 'Invisible On',
     lang_43 = 'as you can see you are invisible!',
     lang_44 = 'Invisible Off',
@@ -92,7 +92,7 @@ local Translations = {
     lang_85 = 'Troll Options Menu',
     lang_86 = 'Wild Attack',
     lang_87 = 'troll player by activating a wild attack',
-    
+
     lang_88 = 'Player Finances',
     lang_89 = 'adjust player finances',
     lang_90 = 'Finances Options Menu',

@@ -4,7 +4,7 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(players)
         local options = {}
-        for k, v in pairs(players) do
+        for _, v in pairs(players) do
             options[#options + 1] = {
                 title = Lang:t('lang_19')..v.id..' | '..v.name,
                 description = Lang:t('lang_20'),
@@ -95,14 +95,14 @@ RegisterNetEvent('rsg-adminmenu:client:givemoney', function(data)
             },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_97'),
             description = Lang:t('lang_98'),
             type = 'number',
             required = true,
         },
     })
-    
+
     if not input then
         return
     end
@@ -132,14 +132,14 @@ RegisterNetEvent('rsg-adminmenu:client:removemoney', function(data)
             },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_97'),
             description = Lang:t('lang_115'),
             type = 'number',
             required = true,
         },
     })
-    
+
     if not input then
         return
     end
