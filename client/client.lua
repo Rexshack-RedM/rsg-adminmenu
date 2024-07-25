@@ -295,7 +295,7 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
     local input = lib.inputDialog(Lang:t('lang_50')..data.name, {
-        { 
+        {
             label = Lang:t('lang_51'),
             type = 'input',
             required = true,
@@ -312,7 +312,7 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     local input = lib.inputDialog(Lang:t('lang_52')..data.name, {
-        { 
+        {
             label = Lang:t('lang_53'),
             type = 'select',
                 options = {
@@ -321,7 +321,7 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
                 },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_54'),
             type = 'select',
                 options = {
@@ -339,7 +339,7 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
                 },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_51'),
             type = 'input',
             required = true,

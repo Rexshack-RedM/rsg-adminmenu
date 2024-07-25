@@ -9,7 +9,7 @@ end)
 -- remove money
 RegisterNetEvent('rsg-adminmenu:server:financeremove', function(player, money, amount)
     local Player = RSGCore.Functions.GetPlayer(player)
-    
+
     if money == 'bank' and Player.PlayerData.money.bank >= amount then
         Player.Functions.RemoveMoney(money, amount)
     elseif money == 'cash' and Player.PlayerData.money.cash >= amount then
@@ -19,7 +19,7 @@ RegisterNetEvent('rsg-adminmenu:server:financeremove', function(player, money, a
     else
         TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_116'), description = Lang:t('lang_117')..money..Lang:t('lang_118'), type = 'error' })
     end
-    
+
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getPlayerData', function(player, cb)

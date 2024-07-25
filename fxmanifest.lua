@@ -9,8 +9,8 @@ version '1.3.1'
 shared_scripts {
     '@ox_lib/init.lua',
     '@rsg-core/shared/locale.lua',
-    'locales/en.lua', 
-    'locales/*.lua', 
+    'locales/en.lua',
+    'locales/*.lua',
     'config.lua',
 }
 
