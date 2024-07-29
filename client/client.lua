@@ -82,7 +82,9 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 title = Lang:t('lang_15'),
                 description = Lang:t('lang_16'),
                 icon = 'fa-solid fa-ghost',
-                event = 'rsg-adminmenu:client:goinvisible',
+                onSelect = function()
+                    ExecuteCommand('txAdmin:menu:noClipToggle')
+                end,
                 arrow = true
             },
             {
