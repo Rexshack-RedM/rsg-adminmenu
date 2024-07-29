@@ -88,6 +88,15 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 arrow = true
             },
             {
+                title = Lang:t('lang_146'),
+                description = Lang:t('lang_147'),
+                icon = 'fa-solid fa-id-card-clip',
+                onSelect = function()
+                    ExecuteCommand('txAdmin:menu:togglePlayerIDs')
+                end,
+                arrow = true
+            },
+            {
                 title = Lang:t('lang_17'),
                 description = Lang:t('lang_18'),
                 icon = 'fa-solid fa-book-bible',

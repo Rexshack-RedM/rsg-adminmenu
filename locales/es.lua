@@ -158,6 +158,8 @@ local Translations = {
     lang_143 = 'Efectivo: ',
     lang_144 = 'Banco: ',
     lang_145 = 'Dinero de sangre: ',
+    lang_146 = 'Toggle IDs',
+    lang_147 = 'Toggle Player IDs on/off',
 }
 
 if GetConvar('rsg_locale', 'en') == 'es' then

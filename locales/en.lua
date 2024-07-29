@@ -158,6 +158,8 @@ local Translations = {
     lang_143 = 'Cash : ',
     lang_144 = 'Bank : ',
     lang_145 = 'Blood Money : ',
+    lang_146 = 'Toggle IDs',
+    lang_147 = 'Toggle Player IDs on/off',
 }
 
 Lang = Locale:new({
