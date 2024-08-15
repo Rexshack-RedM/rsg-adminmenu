@@ -1,5 +1,8 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+local coordsList = {}
+local printListEnabled = false
+
 RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
 
     lib.registerContext({
@@ -36,6 +39,20 @@ RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
                 event = 'rsg-adminmenu:client:copyheading',
                 arrow = true
             },
+            {
+                title = 'Print List On',
+                description = 'Enable printing of coordinates to a list',
+                icon = 'fa-solid fa-list',
+                event = 'rsg-adminmenu:client:printlist_on',
+                arrow = true
+            },
+            {
+                title = 'Print List Full',
+                description = 'Print the full list of coordinates',
+                icon = 'fa-solid fa-list',
+                event = 'rsg-adminmenu:client:printlist_full',
+                arrow = true
+            },
         }
     })
     lib.showContext('coords_mainmenu')
@@ -50,7 +67,12 @@ local function CopyCoords(data)
     local format = formats[data]
 
     local values = {coords.x, coords.y, coords.z, heading}
-    lib.setClipboard(string.format(format, table.unpack(values, 1, #format)))
+    if printListEnabled then
+        local coordString = string.format(format, table.unpack(values, 1, #values))
+        table.insert(coordsList, coordString)
+    else
+        lib.setClipboard(string.format(format, table.unpack(values, 1, #format)))
+    end
 end
 
 RegisterNetEvent('rsg-adminmenu:client:vector2', function()
@@ -71,4 +93,22 @@ end)
 RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
     CopyCoords("heading")
     lib.notify({ title = Lang:t('lang_82'), description = Lang:t('lang_83'), type = 'inform' })
+end)
+
+RegisterNetEvent('rsg-adminmenu:client:printlist_on', function()
+    printListEnabled = true
+    coordsList = {}
+    lib.notify({ title = 'Print List', description = 'List printing enabled. Coordinates will be added to the list.', type = 'inform' })
+end)
+
+RegisterNetEvent('rsg-adminmenu:client:printlist_full', function()
+    printListEnabled = false
+    if #coordsList > 0 then
+        local listString = table.concat(coordsList, '\n')
+        lib.setClipboard(listString)
+        -- print(listString) -- confirm list coords
+        lib.notify({ title = 'Print List', description = 'List copied to clipboard.', type = 'inform' })
+    else
+        lib.notify({ title = 'Print List', description = 'The list is empty.', type = 'inform' })
+    end
 end)
