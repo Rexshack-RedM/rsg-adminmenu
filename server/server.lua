@@ -110,7 +110,7 @@ RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
     local citizenid = Player.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['inventory']) or IsPlayerAceAllowed(src, 'command') then
-        TriggerClientEvent('rsg-adminmenu:client:openinventory', src, player.id)
+        exports['rsg-inventory']:OpenInventoryById(src, tonumber(player.id))
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using open inventory', true)

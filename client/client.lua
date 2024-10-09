@@ -295,13 +295,6 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
 end)
 
 -------------------------------------------------------------------
--- open player inventory
--------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:client:openinventory', function(targetPed)
-    TriggerServerEvent("inventory:server:OpenInventory", "otherplayer", targetPed)
-end)
-
--------------------------------------------------------------------
 -- kick player reason
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
