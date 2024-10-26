@@ -1,5 +1,6 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+-- Variable global para almacenar la lista de coordenadas
 local coordsList = {}
 local printListEnabled = false
 
@@ -67,6 +68,7 @@ local function CopyCoords(data)
     local format = formats[data]
 
     local values = {coords.x, coords.y, coords.z, heading}
+
     if printListEnabled then
         local coordString = string.format(format, table.unpack(values, 1, #values))
         table.insert(coordsList, coordString)
@@ -95,18 +97,24 @@ RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
     lib.notify({ title = Lang:t('lang_82'), description = Lang:t('lang_83'), type = 'inform' })
 end)
 
+RegisterCommand("printcoords", function()
+    CopyCoords("vector3")
+end, false)
+
+-- Habilitar la impresión en lista
 RegisterNetEvent('rsg-adminmenu:client:printlist_on', function()
     printListEnabled = true
-    coordsList = {}
+    coordsList = {} -- Limpiar la lista cuando se activa el modo de lista
     lib.notify({ title = 'Print List', description = 'List printing enabled. Coordinates will be added to the list.', type = 'inform' })
 end)
 
+-- Imprimir lista completa
 RegisterNetEvent('rsg-adminmenu:client:printlist_full', function()
     printListEnabled = false
     if #coordsList > 0 then
         local listString = table.concat(coordsList, '\n')
         lib.setClipboard(listString)
-        -- print(listString) -- confirm list coords
+        print(listString)
         lib.notify({ title = 'Print List', description = 'List copied to clipboard.', type = 'inform' })
     else
         lib.notify({ title = 'Print List', description = 'The list is empty.', type = 'inform' })

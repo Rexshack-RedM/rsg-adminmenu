@@ -1,5 +1,17 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+-----------------------------------------------------------------------------------
+-- ACCES FOR KEY PGUP
+-----------------------------------------------------------------------------------
+CreateThread(function()
+    while true do
+        Wait(0)
+        if IsControlJustReleased(0, RSGCore.Shared.Keybinds['PGUP']) then
+            ExecuteCommand("adminmenu")
+        end
+    end
+end)
+
 -- main admin base menu
 RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
 
@@ -192,7 +204,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
             },
             {
                 title = Lang:t('lang_28'),
-                description = Lang:t('lang_29') ,
+                description = Lang:t('lang_29'),
                 icon = 'fa-solid fa-ban',
                 event = 'rsg-adminmenu:client:banplayer',
                 args = { id = data.player, name = data.name },

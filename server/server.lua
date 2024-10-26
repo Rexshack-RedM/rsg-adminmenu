@@ -3,19 +3,19 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 -----------------------------------------------------------------------
 
 local permissions = {
-    ["adminmenu"] = "admin",
-    ["revive"] = "admin",
-    ["inventory"] = "admin",
-    ["kick"] = "admin",
-    ["ban"] = "admin",
-    ["goto"] = "admin",
-    ["bring"] = "admin",
-    ["freeze"] = "admin",
-    ["spectate"] = "admin",
-    ["wildattack"] = "admin",
-    ["setonfire"] = "admin",
-    ["giveitem"] = "admin",
-    ["playerinfo"] = "admin",
+    ['adminmenu'] = 'admin',
+    ['revive'] = 'admin',
+    ['inventory'] = 'admin',
+    ['kick'] = 'admin',
+    ['ban'] = 'admin',
+    ['goto'] = 'admin',
+    ['bring'] = 'admin',
+    ['freeze'] = 'admin',
+    ['spectate'] = 'admin',
+    ['wildattack'] = 'admin',
+    ['setonfire'] = 'admin',
+    ['giveitem'] = 'admin',
+    ['playerinfo'] = 'admin',
 }
 
 -----------------------------------------------------------------------
@@ -53,11 +53,11 @@ local function BanPlayer(src)
         RSGCore.Functions.GetIdentifier(src, 'license'),
         RSGCore.Functions.GetIdentifier(src, 'discord'),
         RSGCore.Functions.GetIdentifier(src, 'ip'),
-        "system banned you",
+        'system banned you',
         2524608000,
         'rsg-adminmenu'
     })
-    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', "system banned you for inappropriate use"), true)
+    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', 'system banned you for inappropriate use'), true)
     DropPlayer(src, Lang:t('lang_105'))
 end
 
@@ -335,24 +335,24 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
     local admincitizenid = adminPlayer.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
-
+        
         local id = player.id
         local targetPlayer     = RSGCore.Functions.GetPlayer(id)
         local targetfirstname  = targetPlayer.PlayerData.charinfo.firstname
         local targetlastname   = targetPlayer.PlayerData.charinfo.lastname
         local targetjob        = targetPlayer.PlayerData.job.label
         local targetgrade      = targetPlayer.PlayerData.job.grade.level
-        local targetcash       = targetPlayer.PlayerData.money["cash"]
-        local targetbank       = targetPlayer.PlayerData.money["bank"]
-        local targetbloodmoney = targetPlayer.PlayerData.money["bloodmoney"]
+        local targetcash       = targetPlayer.PlayerData.money['cash']
+        local targetbank       = targetPlayer.PlayerData.money['bank']
+        local targetbloodmoney = targetPlayer.PlayerData.money['bloodmoney']
         local targetcitizenid  = targetPlayer.PlayerData.citizenid
         local targetserverid   = id
 
-
+        
         cb({
             firstname  = targetfirstname,
             lastname   = targetlastname,
-            job        = targetjob,
+            job        = targetjob, 
             grade      = targetgrade,
             cash       = targetcash,
             bank       = targetbank,
