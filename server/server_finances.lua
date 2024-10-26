@@ -24,10 +24,6 @@ RegisterNetEvent('rsg-adminmenu:server:financeremove', function(player, money, a
         Player.Functions.RemoveMoney(money, amount)
     elseif money == 'bloodmoney' and Player.PlayerData.money.bloodmoney >= amount then
         Player.Functions.RemoveMoney(money, amount)
-    elseif money == 'experience' and Player.PlayerData.money.experience >= amount then
-        Player.Functions.RemoveMoney(money, amount)
-    elseif money == 'goldcoin' and Player.PlayerData.money.goldcoin >= amount then
-        Player.Functions.RemoveMoney(money, amount)
     else
         TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_finan_116'), description = locale('sv_finan_117') ..' '..money.. ' '.. locale('sv_finan_118'), type = 'error' })
     end
@@ -43,8 +39,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getPlayerData', function(
     local armbank    = Player.PlayerData.money['armbank']
     local cash       = Player.PlayerData.money['cash']
     local bloodmoney = Player.PlayerData.money['bloodmoney']
-    local experience = Player.PlayerData.money['experience']
-    local goldcoin   = Player.PlayerData.money['goldcoin']
 
     cb({
         bank       = bank,
@@ -54,8 +48,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getPlayerData', function(
         armbank    = armbank,
         cash       = cash,
         bloodmoney = bloodmoney,
-        experience = experience,
-        goldcoin   = goldcoin,
     })
 
 end)

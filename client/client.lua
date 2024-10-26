@@ -471,14 +471,6 @@ RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
-                        title = locale('cl_client_145')..': '..tostring(data.experience),
-                        icon = 'fa-solid fa-money-bill',
-                    },
-                    {
-                        title = locale('cl_client_152')..': '..tostring(data.goldcoin),
-                        icon = 'fa-solid fa-money-bill',
-                    },
-                    {
                         title = locale('cl_client_153')..': '..tostring(data.bank),
                         icon = 'fa-solid fa-building-columns',
                     },

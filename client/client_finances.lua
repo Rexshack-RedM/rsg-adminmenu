@@ -71,16 +71,6 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
                 readOnly = true
             },
             {
-                title = locale('cl_finan_123_b')..result.experience,
-                description = locale('cl_finan_120'),
-                readOnly = true
-            },
-            {
-                title = locale('cl_finan_123_c')..result.goldcoin,
-                description = locale('cl_finan_120'),
-                readOnly = true
-            },
-            {
                 title = locale('cl_finan_91'),
                 description = locale('cl_finan_92'),
                 icon = 'fa-solid fa-user-plus',
@@ -119,8 +109,6 @@ RegisterNetEvent('rsg-adminmenu:client:givemoney', function(data)
                 { label = locale('cl_finan_2d'), value = 'armbank' },
                 { label = locale('cl_finan_3'), value = 'cash' },
                 { label = locale('cl_finan_3a'), value = 'bloodmoney' },
-                { label = locale('cl_finan_3b'), value = 'experience' },
-                { label = locale('cl_finan_3c'), value = 'goldcoin' },
             },
             required = true,
         },
@@ -153,8 +141,6 @@ RegisterNetEvent('rsg-adminmenu:client:removemoney', function(data)
                 { label = locale('cl_finan_2d'), value = 'armbank' },
                 { label = locale('cl_finan_3'), value = 'cash' },
                 { label = locale('cl_finan_3a'), value = 'bloodmoney' },
-                { label = locale('cl_finan_3b'), value = 'experience' },
-                { label = locale('cl_finan_3c'), value = 'goldcoin' },
             },
             required = true,
         },

@@ -342,8 +342,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
         local targetgrade      = targetPlayer.PlayerData.job.grade.level
         local targetcash       = targetPlayer.PlayerData.money['cash']
         local targetbloodmoney = targetPlayer.PlayerData.money['bloodmoney']
-        local targetexp        = targetPlayer.PlayerData.money['experience']
-        local targetgoldcoin   = targetPlayer.PlayerData.money['goldcoin']
         local targetbank       = targetPlayer.PlayerData.money['bank']
         local targetvalbank    = targetPlayer.PlayerData.money['valbank']
         local targetrhobank    = targetPlayer.PlayerData.money['rhobank']
@@ -359,8 +357,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
             grade      = targetgrade,
             cash       = targetcash,
             bloodmoney = targetbloodmoney,
-            experience = targetexp,
-            goldcoin   = targetgoldcoin,
             bank       = targetbank,
             valbank    = targetvalbank,
             rhobank    = targetrhobank,
