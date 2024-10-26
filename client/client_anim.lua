@@ -1,4 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 
 -- example:
 -- dict = 'ai_gestures@gen_male@standing@speaker'
@@ -6,7 +7,7 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 -- flag = 15
 -- length = 10000
 
-function LoadAnimationDic(dict)
+local function LoadAnimationDic(dict)
   if not HasAnimDictLoaded(dict) then
       RequestAnimDict(dict)
       while not HasAnimDictLoaded(dict) do
@@ -17,24 +18,24 @@ end
 
 -- anim input
 RegisterNetEvent('rsg-adminmenu:client:testanimation', function()
-    local input = lib.inputDialog('Animation Tester', {
+    local input = lib.inputDialog(locale('cl_anim_test'), {
         {
-            label = 'animDictionary',
+            label = locale('cl_anim_dictionary'),
             type = 'input',
             required = true,
         },
         {
-            label = 'animationName',
+            label = locale('cl_anim_name'),
             type = 'input',
             required = true,
         },
         {
-            label = 'flag',
+            label = locale('cl_anim_flag'),
             type = 'number',
             required = true,
         },
         {
-            label = 'length : in milliseconds',
+            label = locale('cl_anim_length'),
             type = 'number',
 			default = 10000,
             required = true,

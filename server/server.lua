@@ -1,6 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-
------------------------------------------------------------------------
+lib.locale()
 
 local permissions = {
     ['adminmenu'] = 'admin',
@@ -57,14 +56,14 @@ local function BanPlayer(src)
         2524608000,
         'rsg-adminmenu'
     })
-    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(src), 'rsg-adminmenu', 'system banned you for inappropriate use'), true)
-    DropPlayer(src, Lang:t('lang_105'))
+    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', Lang:t('sv_a'), 'red', string.format(Lang:t('sv_b'), GetPlayerName(src), 'rsg-adminmenu', Lang:t('sv_c')), true)
+    DropPlayer(src, locale('sv_105'))
 end
 
 -----------------------------------------------------------------------
 -- admin menu command
 -----------------------------------------------------------------------
-RSGCore.Commands.Add('adminmenu', Lang:t('lang_100'), {}, false, function(source)
+RSGCore.Commands.Add('adminmenu', locale('sv_100'), {}, false, function(source)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     local firstname = Player.PlayerData.charinfo.firstname
@@ -75,8 +74,8 @@ RSGCore.Commands.Add('adminmenu', Lang:t('lang_100'), {}, false, function(source
         TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
     else
         --BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised use of Admin Menu', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' attempted to use the admin menu', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', Lang:t('sv_d'), 'red', firstname .. ' ' .. lastname .. ' ' .. Lang:t('sv_e') .. ' '..citizenid..' '.. Lang:t('sv_f'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -94,8 +93,8 @@ RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
         TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
     else
         BanPlayer(src)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using admin revive', true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' '.. locale('sv_i'), true)
     end
 end)
 
@@ -113,8 +112,8 @@ RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
         exports['rsg-inventory']:OpenInventoryById(src, tonumber(player.id))
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using open inventory', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' '.. locale('sv_j'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -129,12 +128,12 @@ RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
     local citizenid = Player.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['kick']) or IsPlayerAceAllowed(src, 'command')  then
-        TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Kicked', 'red', string.format('%s was kicked by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
-        DropPlayer(player, Lang:t('lang_103') .. ':\n' .. reason .. '\n\n' .. Lang:t('lang_104') .. RSGCore.Config.Server.Discord)
+        TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_kicked'), 'red', string.format(locale('sv_kicked_a'), GetPlayerName(player), GetPlayerName(src), reason), true)
+        DropPlayer(player, locale('sv_103') .. ':\n' .. reason .. '\n\n' .. locale('sv_104') .. RSGCore.Config.Server.Discord)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using kick player', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' '.. locale('sv_kicked_b'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -157,14 +156,14 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
             GetPlayerName(src)
         })
         TriggerClientEvent('chat:addMessage', -1, {
-            template = "<div class=chat-message server'><strong>ANNOUNCEMENT | {0} has been banned:</strong> {1}</div>",
+            template = "<div class=chat-message server'><strong>".. locale('sv_ban') .. " | {0}" .. locale('sv_ban_a') .. ":</strong> {1}</div>",
             args = {GetPlayerName(player), reason}
         })
-        TriggerEvent('rsg-log:server:CreateLog', 'bans', 'Player Banned', 'red', string.format('%s was banned by %s for %s', GetPlayerName(player), GetPlayerName(src), reason), true)
+        TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_a'), 'red', string.format(locale('sv_b'), GetPlayerName(player), GetPlayerName(src), reason), true)
         if banTime >= 2524608000 then
-            DropPlayer(player, Lang:t('lang_106') .. '\n' .. reason .. '\n\n'..Lang:t('lang_107')..'\n'..Lang:t('lang_108') .. RSGCore.Config.Server.Discord)
+            DropPlayer(player, locale('sv_106') .. '\n' .. reason .. '\n\n'..locale('sv_107')..'\n'..locale('sv_108') .. RSGCore.Config.Server.Discord)
         else
-            DropPlayer(player, Lang:t('lang_106') .. '\n' .. reason .. '\n\n'..Lang:t('lang_109') .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n' ..('lang_110') .. RSGCore.Config.Server.Discord)
+            DropPlayer(player, locale('sv_106') .. '\n' .. reason .. '\n\n'..locale('sv_109') .. timeTable['day'] .. '/' .. timeTable['month'] .. '/' .. timeTable['year'] .. ' ' .. timeTable['hour'] .. ':' .. timeTable['min'] .. '\n' ..locale('sv_110') .. RSGCore.Config.Server.Discord)
         end
     else
         BanPlayer(src)
@@ -187,8 +186,8 @@ RegisterNetEvent('rsg-adminmenu:server:gotoplayer', function(player)
         SetEntityCoords(admin, coords)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using go to player', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_c'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -209,8 +208,8 @@ RegisterNetEvent('rsg-adminmenu:server:bringplayer', function(player)
         SetEntityCoords(target, coords)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using bring player', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_d'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -229,16 +228,16 @@ RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
         if not frozen then
             frozen = true
             FreezeEntityPosition(target, true)
-            TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_111'), description = Lang:t('lang_112')..player.name, type = 'inform' })
+            TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_111'), description = locale('sv_112')..player.name, type = 'inform' })
         else
             frozen = false
             FreezeEntityPosition(target, false)
-            TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_113'), description = Lang:t('lang_114')..player.name, type = 'inform' })
+            TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_113'), description = locale('sv_114')..player.name, type = 'inform' })
         end
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using freeze player', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' ' .. citizenid .. ' ' .. locale('sv_ban_e'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -258,8 +257,8 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(player)
         TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, player.id, coords)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using spectate player', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_f'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -277,8 +276,8 @@ RegisterNetEvent('rsg-adminmenu:server:wildattack', function(player)
         TriggerClientEvent('rsg-adminmenu:client:wildattack', src, player.id)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using wild attack', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_g'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -296,8 +295,8 @@ RegisterNetEvent('rsg-adminmenu:server:playerfire', function(player)
         TriggerClientEvent('rsg-adminmenu:client:playerfire', src, player.id)
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using set on fire', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_h'), true)
+        TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -313,14 +312,14 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
 
     if RSGCore.Functions.HasPermission(src, permissions['giveitem']) or IsPlayerAceAllowed(src, 'command') then
         local id = player
-        local Player = RSGCore.Functions.GetPlayer(id)
-        local amount = amount
-        Player.Functions.AddItem(item, amount)
-        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
+        local Player_a = RSGCore.Functions.GetPlayer(id)
+        local amount_a = amount
+        Player_a.Functions.AddItem(item, amount_a)
+        TriggerClientEvent('ox_lib:notify', src, {title = locale('sv_135'), description = locale('sv_136'), type = 'inform' })
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using give item', true)
-        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_i'), true)
+        TriggerClientEvent('ox_lib:notify', src, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
 
@@ -330,12 +329,11 @@ end)
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
     local src = source
     local adminPlayer = RSGCore.Functions.GetPlayer(src)
-    local adminfirstname = adminPlayer.PlayerData.charinfo.firstname
-    local adminlastname = adminPlayer.PlayerData.charinfo.lastname
-    local admincitizenid = adminPlayer.PlayerData.citizenid
+    local firstname = adminPlayer.PlayerData.charinfo.firstname
+    local lastname = adminPlayer.PlayerData.charinfo.lastname
+    local citizenid = adminPlayer.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
-        
         local id = player.id
         local targetPlayer     = RSGCore.Functions.GetPlayer(id)
         local targetfirstname  = targetPlayer.PlayerData.charinfo.firstname
@@ -343,26 +341,37 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
         local targetjob        = targetPlayer.PlayerData.job.label
         local targetgrade      = targetPlayer.PlayerData.job.grade.level
         local targetcash       = targetPlayer.PlayerData.money['cash']
-        local targetbank       = targetPlayer.PlayerData.money['bank']
         local targetbloodmoney = targetPlayer.PlayerData.money['bloodmoney']
+        local targetexp        = targetPlayer.PlayerData.money['experience']
+        local targetgoldcoin   = targetPlayer.PlayerData.money['goldcoin']
+        local targetbank       = targetPlayer.PlayerData.money['bank']
+        local targetvalbank    = targetPlayer.PlayerData.money['valbank']
+        local targetrhobank    = targetPlayer.PlayerData.money['rhobank']
+        local targetblkbank    = targetPlayer.PlayerData.money['blkbank']
+        local targetarmbank    = targetPlayer.PlayerData.money['armbank']
         local targetcitizenid  = targetPlayer.PlayerData.citizenid
         local targetserverid   = id
 
-        
         cb({
             firstname  = targetfirstname,
             lastname   = targetlastname,
-            job        = targetjob, 
+            job        = targetjob,
             grade      = targetgrade,
             cash       = targetcash,
-            bank       = targetbank,
             bloodmoney = targetbloodmoney,
+            experience = targetexp,
+            goldcoin   = targetgoldcoin,
+            bank       = targetbank,
+            valbank    = targetvalbank,
+            rhobank    = targetrhobank,
+            blkbank    = targetblkbank,
+            armbank    = targetarmbank,
             citizenid  = targetcitizenid,
             serverid   = targetserverid,
         })
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', adminfirstname..' '..adminlastname..' with citizen id of '..admincitizenid..' banned for using get player info', true)
-        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red', firstname..' '..lastname..' ' .. locale('sv_h') .. ' '..citizenid..' ' .. locale('sv_ban_j'), true)
+        TriggerClientEvent('ox_lib:notify', src, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)

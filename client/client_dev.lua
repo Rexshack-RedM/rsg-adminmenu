@@ -1,52 +1,53 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 
 -- main admin base menu
 RegisterNetEvent('rsg-adminmenu:client:devoptions', function()
 
     lib.registerContext({
         id = 'dev_mainmenu',
-        title = Lang:t('lang_69'),
+        title = locale('cl_dev_menu'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_41'),
-                description = Lang:t('lang_125'),
+                title = locale('cl_dev_menu_a'),
+                description = locale('cl_dev_menu_b'),
                 icon = 'fa-solid fa-horse-head',
                 event = 'rsg-adminmenu:client:horseoptions',
                 arrow = true
             },
             {
-                title = 'Copy Coords Menu',
-                description = 'copy coords to clipboard',
+                title = locale('cl_dev_menu_c'),
+                description = locale('cl_dev_menu_d'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:copycoordsmenu',
                 arrow = true
             },
             {
-                title = 'Animation Tester',
-                description = 'test animations',
+                title = locale('cl_dev_menu_e'),
+                description = locale('cl_dev_menu_f'),
                 icon = 'fa-solid fa-person-walking',
                 event = 'rsg-adminmenu:client:testanimation',
                 arrow = true
             },
             {
-                title = 'Entity Hash',
-                description = 'get entity hash',
+                title = locale('cl_dev_menu_g'),
+                description = locale('cl_dev_menu_h'),
                 icon = 'fa-solid fa-hashtag',
                 event = 'rsg-adminmenu:client:gethash',
                 arrow = true
             },
             {
-                title = 'Toggle Door IDs on/off',
-                description = 'used to get door ids',
+                title = locale('cl_dev_menu_i'),
+                description = locale('cl_dev_menu_j'),
                 icon = 'fa-solid fa-door-open',
                 event = 'rsg-adminmenu:client:toggledoorid',
                 arrow = true
             },
             {
-                title = 'Ped Sawner',
-                description = 'used to spawn npc/animals',
+                title = locale('cl_dev_menu_l'),
+                description = locale('cl_dev_menu_m'),
                 icon = 'fa-solid fa-paw',
                 event = 'rsg-adminmenu:client:spawnped',
                 arrow = true
@@ -67,7 +68,7 @@ RegisterNetEvent('rsg-adminmenu:client:horseoptions', function()
         option[#option + 1] = content
     end
 
-    local input = lib.inputDialog(Lang:t('lang_126'), {
+    local input = lib.inputDialog(locale('cl_dev_126'), {
         { type = 'select', options = option, required = true, default = 'Arabian White' }
     })
     if not input then return end
@@ -101,10 +102,10 @@ end)
 
 -- get entity hash
 RegisterNetEvent('rsg-adminmenu:client:gethash', function()
-    local input = lib.inputDialog('Get Entity Hash', {
+    local input = lib.inputDialog(locale('cl_dev_127'), {
         {
-            label = 'entity name',
-            description = 'example : PROVISION_ALLIGATOR_SKIN',
+            label = locale('cl_dev_128'),
+            description = locale('cl_dev_129'),
             type = 'input',
             required = true,
         },
@@ -113,49 +114,49 @@ RegisterNetEvent('rsg-adminmenu:client:gethash', function()
 
     local hash = joaat(input[1])
     lib.setClipboard(tostring(hash))
-    lib.notify({ title = 'Entity Hash Copied', description = 'entity hash of '..hash..' has been copied to your clipboard', type = 'inform', duration = 5000 })
+    lib.notify({ title = locale('cl_dev_copy'), description = locale('cl_dev_copy_a') ..' '..hash..' ' .. locale('cl_dev_copy_b'), type = 'inform', duration = 5000 })
 end)
 
 -- npc/amimal spawner
 RegisterNetEvent('rsg-adminmenu:client:spawnped', function()
-    local input = lib.inputDialog('Spawn Ped/Animal', {
+    local input = lib.inputDialog(locale('cl_dev_spawnped'), {
         {
-            label = 'ped name',
-            description = 'example : mp_a_c_wolf_01',
+            label = locale('cl_dev_spawnped1'),
+            description = locale('cl_dev_spawnped2'),
             type = 'input',
             required = true,
         },
         {
-            label = 'outfit',
-            description = 'outfit number for ped/animal',
+            label = locale('cl_dev_spawnped3'),
+            description = locale('cl_dev_spawnped4'),
             type = 'number',
             default = 0,
             required = true,
         },
         {
-            label = 'distance',
-            description = 'spawn distrance away from you',
+            label = locale('cl_dev_spawnped5'),
+            description = locale('cl_dev_spawnped6'),
             type = 'number',
             default = 5,
             required = true,
         },
         {
-            label = 'freeze',
-            description = 'freeze npc/animal on spawn',
+            label = locale('cl_dev_spawnped7'),
+            description = locale('cl_dev_spawnped8'),
             type = 'select',
             options = {
-                { value = 'true', label = 'True' },
-                { value = 'false', label = 'False' }
+                { value = 'true', label = locale('cl_dev_spawnped9') },
+                { value = 'false', label = locale('cl_dev_spawnped10') }
             },
             required = true,
         },
         {
-            label = 'spawn dead',
-            description = 'spawn npc/animal dead',
+            label = locale('cl_dev_spawnped11'),
+            description = locale('cl_dev_spawnped12'),
             type = 'select',
             options = {
-                { value = 'true', label = 'True' },
-                { value = 'false', label = 'False' }
+                { value = 'true', label = locale('cl_dev_spawnped9') },
+                { value = 'false', label = locale('cl_dev_spawnped10') }
             },
             required = true,
         },

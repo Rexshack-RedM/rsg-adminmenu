@@ -1,4 +1,5 @@
 local showdoorid = false
+lib.locale()
 
 function DrawText3D(x, y, z, text)
     local onScreen, _x, _y =GetScreenCoordFromWorldCoord(x, y, z)
@@ -18,10 +19,10 @@ end
 RegisterNetEvent('rsg-adminmenu:client:toggledoorid', function()
     if not showdoorid then
         showdoorid = true
-        lib.notify({ title = 'Door IDs On', type = 'inform', duration = 7000 })
+        lib.notify({ title = locale('cl_door_on'), type = 'inform', duration = 7000 })
     else
         showdoorid = false
-        lib.notify({ title = 'Door IDs Off', type = 'inform', duration = 7000 })
+        lib.notify({ title = locale('cl_door_off'), type = 'inform', duration = 7000 })
     end
 end)
 
@@ -32,7 +33,7 @@ Citizen.CreateThread(function()
             for k, v in pairs(Config.DoorHashes) do
                 if #(GetEntityCoords(cache.ped) - vector3(v[4], v[5], v[6])) < 2 then
                     sleep = 8
-                    DrawText3D(v[4], v[5], v[6]+1.25, "DoorID:"..tostring(v[1]).."\n OBJECT: "..tostring(v[3]).." \nX: "..tostring(round(v[4], 2)).."\nY: "..tostring(round(v[5], 2)).."\nZ: "..tostring(round(v[6], 2)).."")
+                    DrawText3D(v[4], v[5], v[6]+1.25, locale('cl_door_id') .. tostring( v[1] ) .. "\n".. locale('cl_door_o').. ': '..tostring(v[3]).." \nX: "..tostring(round(v[4], 2)).."\nY: "..tostring(round(v[5], 2)).."\nZ: "..tostring(round(v[6], 2)).."")
                 end
             end
         end

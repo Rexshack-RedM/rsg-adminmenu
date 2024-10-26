@@ -3,53 +3,54 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 -- Variable global para almacenar la lista de coordenadas
 local coordsList = {}
 local printListEnabled = false
+lib.locale()
 
 RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
 
     lib.registerContext({
         id = 'coords_mainmenu',
-        title = 'Copy Coords',
+        title = locale('cl_coords_menu'),
         menu = 'dev_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_70'),
-                description = Lang:t('lang_71'),
+                title = locale('cl_coords_70'),
+                description = locale('cl_coords_71'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector2',
                 arrow = true
             },
             {
-                title = Lang:t('lang_72'),
-                description = Lang:t('lang_73'),
+                title = locale('cl_coords_72'),
+                description = locale('cl_coords_73'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector3',
                 arrow = true
             },
             {
-                title = Lang:t('lang_74'),
-                description = Lang:t('lang_75'),
+                title = locale('cl_coords_74'),
+                description = locale('cl_coords_75'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:vector4',
                 arrow = true
             },
             {
-                title = Lang:t('lang_76'),
-                description = Lang:t('lang_77'),
+                title = locale('cl_coords_76'),
+                description = locale('cl_coords_77'),
                 icon = 'fa-solid fa-clipboard',
                 event = 'rsg-adminmenu:client:copyheading',
                 arrow = true
             },
             {
-                title = 'Print List On',
-                description = 'Enable printing of coordinates to a list',
+                title = locale('cl_coords_print_list'),
+                description = locale('cl_coords_print_list_a'),
                 icon = 'fa-solid fa-list',
                 event = 'rsg-adminmenu:client:printlist_on',
                 arrow = true
             },
             {
-                title = 'Print List Full',
-                description = 'Print the full list of coordinates',
+                title = locale('cl_coords_print_full'),
+                description = locale('cl_coords_print_full_a'),
                 icon = 'fa-solid fa-list',
                 event = 'rsg-adminmenu:client:printlist_full',
                 arrow = true
@@ -79,44 +80,41 @@ end
 
 RegisterNetEvent('rsg-adminmenu:client:vector2', function()
     CopyCoords("vector2")
-    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_79'), type = 'inform' })
+    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_79'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:vector3', function()
     CopyCoords("vector3")
-    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_80'), type = 'inform' })
+    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_80'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:vector4', function()
     CopyCoords("vector4")
-    lib.notify({ title = Lang:t('lang_78'), description = Lang:t('lang_81'), type = 'inform' })
+    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_81'), type = 'inform' })
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
     CopyCoords("heading")
-    lib.notify({ title = Lang:t('lang_82'), description = Lang:t('lang_83'), type = 'inform' })
+    lib.notify({ title = locale('cl_coords_82'), description = locale('cl_coords_83'), type = 'inform' })
 end)
 
-RegisterCommand("printcoords", function()
-    CopyCoords("vector3")
-end, false)
-
--- Habilitar la impresión en lista
+----------------------
+-- print list
+----------------------
 RegisterNetEvent('rsg-adminmenu:client:printlist_on', function()
     printListEnabled = true
-    coordsList = {} -- Limpiar la lista cuando se activa el modo de lista
-    lib.notify({ title = 'Print List', description = 'List printing enabled. Coordinates will be added to the list.', type = 'inform' })
+    coordsList = {}
+    lib.notify({ title = locale('cl_coords_printlist'), description = locale('cl_coords_printlist_a'), type = 'inform' })
 end)
 
--- Imprimir lista completa
 RegisterNetEvent('rsg-adminmenu:client:printlist_full', function()
     printListEnabled = false
     if #coordsList > 0 then
         local listString = table.concat(coordsList, '\n')
         lib.setClipboard(listString)
         print(listString)
-        lib.notify({ title = 'Print List', description = 'List copied to clipboard.', type = 'inform' })
+        lib.notify({ title = locale('cl_coords_printlist'), description = locale('cl_coords_printlist_b'), type = 'inform' })
     else
-        lib.notify({ title = 'Print List', description = 'The list is empty.', type = 'inform' })
+        lib.notify({ title = locale('cl_coords_printlist'), description = locale('cl_coords_printlist_c'), type = 'inform' })
     end
 end)

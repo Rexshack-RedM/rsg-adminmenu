@@ -1,4 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 
 -- finances players menu
 RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
@@ -6,8 +7,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19')..v.id..' | '..v.name,
-                description = Lang:t('lang_20'),
+                title = locale('cl_finan_19') .. ' ' .. v.id .. ' | ' .. v.name,
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:financesoptions',
                 args = { name = v.name, player = v.id },
@@ -16,7 +16,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersfinances', function()
         end
         lib.registerContext({
             id = 'finances_menu',
-            title = Lang:t('lang_88'),
+            title = locale('cl_finan_menu'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -31,28 +31,58 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getPlayerData', function(result)
         lib.registerContext({
             id = 'finances_optionsmenu',
-            title = Lang:t('lang_90'),
+            title = locale('cl_finan_90'),
             menu = 'finances_menu',
             onBack = function() end,
             options = {
             {
-                title = Lang:t('lang_122')..result.bank,
-                description = Lang:t('lang_119'),
+                title = locale('cl_finan_122')..result.bank,
+                description = locale('cl_finan_119'),
                 readOnly = true
             },
             {
-                title = Lang:t('lang_123')..result.cash,
-                description = Lang:t('lang_120'),
+                title = locale('cl_finan_122_a')..result.valbank,
+                description = locale('cl_finan_119'),
                 readOnly = true
             },
             {
-                title = Lang:t('lang_124')..result.bloodmoney,
-                description = Lang:t('lang_121'),
+                title = locale('cl_finan_122_b')..result.rhobank,
+                description = locale('cl_finan_119'),
                 readOnly = true
             },
             {
-                title = Lang:t('lang_91'),
-                description = Lang:t('lang_92'),
+                title = locale('cl_finan_122_c')..result.blkbank,
+                description = locale('cl_finan_119'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_122_d')..result.armbank,
+                description = locale('cl_finan_119'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_123')..result.cash,
+                description = locale('cl_finan_120'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_123_a')..result.bloodmoney,
+                description = locale('cl_finan_121'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_123_b')..result.experience,
+                description = locale('cl_finan_120'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_123_c')..result.goldcoin,
+                description = locale('cl_finan_120'),
+                readOnly = true
+            },
+            {
+                title = locale('cl_finan_91'),
+                description = locale('cl_finan_92'),
                 icon = 'fa-solid fa-user-plus',
                 iconColor = 'green',
                 event = 'rsg-adminmenu:client:givemoney',
@@ -60,8 +90,8 @@ RegisterNetEvent('rsg-adminmenu:client:financesoptions', function(data)
                 arrow = true
             },
             {
-                title = Lang:t('lang_93'),
-                description = Lang:t('lang_94'),
+                title = locale('cl_finan_93'),
+                description = locale('cl_finan_94'),
                 icon = 'fa-solid fa-user-minus',
                 iconColor = 'red',
                 event = 'rsg-adminmenu:client:removemoney',
@@ -76,36 +106,33 @@ end)
 
 -- give money to player (bank, cash, bloodmoney)
 RegisterNetEvent('rsg-adminmenu:client:givemoney', function(data)
-
     local input = lib.inputDialog(data.name, {
         {
-            label = Lang:t('lang_95'),
-            description = Lang:t('lang_96'),
+            label = locale('cl_finan_95'),
+            description = locale('cl_finan_96'),
             type = 'select',
             options = {
-                {
-                    label = 'Bank', value = 'bank'
-                },
-                {
-                    label = 'Cash', value = 'cash'
-                },
-                {
-                    label = 'Blood Money', value = 'bloodmoney'
-                },
+                { label = locale('cl_finan_2'), value = 'bank' },
+                { label = locale('cl_finan_2a'), value = 'valbank' },
+                { label = locale('cl_finan_2b'), value = 'rhobank' },
+                { label = locale('cl_finan_2c'), value = 'blkbank' },
+                { label = locale('cl_finan_2d'), value = 'armbank' },
+                { label = locale('cl_finan_3'), value = 'cash' },
+                { label = locale('cl_finan_3a'), value = 'bloodmoney' },
+                { label = locale('cl_finan_3b'), value = 'experience' },
+                { label = locale('cl_finan_3c'), value = 'goldcoin' },
             },
             required = true,
         },
         {
-            label = Lang:t('lang_97'),
-            description = Lang:t('lang_98'),
+            label = locale('cl_finan_97'),
+            description = locale('cl_finan_98'),
             type = 'number',
             required = true,
         },
     })
-    if not input then
-        return
-    end
 
+    if not input then return end
     TriggerServerEvent('rsg-adminmenu:server:financeadd', data.id, input[1], input[2])
 
 end)
@@ -115,34 +142,31 @@ RegisterNetEvent('rsg-adminmenu:client:removemoney', function(data)
 
     local input = lib.inputDialog(data.name, {
         {
-            label = Lang:t('lang_95'),
-            description = Lang:t('lang_99'),
+            label = locale('cl_finan_95'),
+            description = locale('cl_finan_99'),
             type = 'select',
             options = {
-                {
-                    label = 'Bank', value = 'bank'
-                },
-                {
-                    label = 'Cash', value = 'cash'
-                },
-                {
-                    label = 'Blood Money', value = 'bloodmoney'
-                },
+                { label = locale('cl_finan_2'), value = 'bank' },
+                { label = locale('cl_finan_2a'), value = 'valbank' },
+                { label = locale('cl_finan_2b'), value = 'rhobank' },
+                { label = locale('cl_finan_2c'), value = 'blkbank' },
+                { label = locale('cl_finan_2d'), value = 'armbank' },
+                { label = locale('cl_finan_3'), value = 'cash' },
+                { label = locale('cl_finan_3a'), value = 'bloodmoney' },
+                { label = locale('cl_finan_3b'), value = 'experience' },
+                { label = locale('cl_finan_3c'), value = 'goldcoin' },
             },
             required = true,
         },
         {
-            label = Lang:t('lang_97'),
-            description = Lang:t('lang_115'),
+            label = locale('cl_finan_97'),
+            description = locale('cl_finan_115'),
             type = 'number',
             required = true,
         },
     })
 
-    if not input then
-        return
-    end
-
+    if not input then return end
     TriggerServerEvent('rsg-adminmenu:server:financeremove', data.id, input[1], input[2])
 
 end)
