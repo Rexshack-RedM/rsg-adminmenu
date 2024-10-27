@@ -1,4 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 
 -- troll players menu
 RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
@@ -6,8 +7,7 @@ RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19')..v.id..' | '..v.name,
-                description = Lang:t('lang_20'),
+                title = locale('cl_troll_19') .. ': ' .. v.id..' | '..v.name,
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:trolloptions',
                 args = { name = v.name, player = v.id },
@@ -16,7 +16,7 @@ RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
         end
         lib.registerContext({
             id = 'troll_menu',
-            title = Lang:t('lang_84'),
+            title = locale('cl_troll_84'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -31,21 +31,21 @@ RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
 
     lib.registerContext({
         id = 'troll_optionsmenu',
-        title = Lang:t('lang_85'),
+        title = locale('cl_troll_85'),
         menu = 'troll_menu',
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_86'),
-                description = Lang:t('lang_87'),
+                title = locale('cl_troll_86'),
+                description = locale('cl_troll_87'),
                 icon = 'fa-solid fa-paw',
                 serverEvent = 'rsg-adminmenu:server:wildattack',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_128'),
-                description = Lang:t('lang_129'),
+                title = locale('cl_troll_128'),
+                description = locale('cl_troll_129'),
                 icon = 'fa-solid fa-fire',
                 serverEvent = 'rsg-adminmenu:server:playerfire',
                 args = { id = data.player },
@@ -60,7 +60,6 @@ end)
 -------------------------------------------------------------------
 -- wild attack troll action
 -------------------------------------------------------------------
-
 local attackAnimals = {
     joaat("a_c_wolf_small"),
     joaat("a_c_bearblack_01"),

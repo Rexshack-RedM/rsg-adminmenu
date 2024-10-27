@@ -1,50 +1,65 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+lib.locale()
 
+-------------------------------
+-- ACCES FOR KEY PGUP
+-------------------------------
+CreateThread(function()
+    while true do
+        Wait(0)
+        if IsControlJustReleased(0, RSGCore.Shared.Keybinds['PGUP']) then
+            ExecuteCommand("adminmenu")
+        end
+    end
+end)
+
+-------------------------------
 -- main admin base menu
+-------------------------------
 RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
 
     lib.registerContext({
         id = 'admin_mainmenu',
-        title = Lang:t('lang_0'),
+        title = locale('cl_client_0'),
         options = {
             {
-                title = Lang:t('lang_0'),
-                description = Lang:t('lang_1'),
+                title = locale('cl_client_0'),
+                description = locale('cl_client_1'),
                 icon = 'fa-solid fa-user-secret',
                 event = 'rsg-adminmenu:client:adminoptions',
                 arrow = true
             },
             {
-                title = Lang:t('lang_2'),
-                description = Lang:t('lang_3'),
+                title = locale('cl_client_2'),
+                description = locale('cl_client_3'),
                 icon = 'fa-solid fa-user',
                 event = 'rsg-adminmenu:client:playersoptions',
                 arrow = true
             },
             {
-                title = Lang:t('lang_88'),
-                description = Lang:t('lang_89'),
+                title = locale('cl_client_88'),
+                description = locale('cl_client_89'),
                 icon = 'fa-solid fa-money-bill',
                 event = 'rsg-adminmenu:client:playersfinances',
                 arrow = true
             },
             {
-                title = Lang:t('lang_4'),
-                description = Lang:t('lang_5'),
+                title = locale('cl_client_4'),
+                description = locale('cl_client_5'),
                 icon = 'fa-regular fa-face-grin-squint-tears',
                 event = 'rsg-adminmenu:client:playerstroll',
                 arrow = true
             },
             {
-                title = Lang:t('lang_6'),
-                description = Lang:t('lang_7'),
+                title = locale('cl_client_6'),
+                description = locale('cl_client_7'),
                 icon = 'fa-solid fa-server',
                 event = 'rsg-adminmenu:client:serveroptions',
                 arrow = true
             },
             {
-                title = Lang:t('lang_8'),
-                description = Lang:t('lang_9'),
+                title = locale('cl_client_8'),
+                description = locale('cl_client_9'),
                 icon = 'fa-solid fa-code',
                 event = 'rsg-adminmenu:client:devoptions',
                 arrow = true
@@ -60,27 +75,27 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
 
     lib.registerContext({
         id = 'admin_optionsmenu',
-        title = Lang:t('lang_10'),
+        title = locale('cl_client_10'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_11'),
-                description = Lang:t('lang_12'),
+                title = locale('cl_client_11'),
+                description = locale('cl_client_12'),
                 icon = 'fa-solid fa-up-down-left-right',
                 event = 'RSGCore:Command:GoToMarker',
                 arrow = true
             },
             {
-                title = Lang:t('lang_13'),
-                description = Lang:t('lang_14'),
+                title = locale('cl_client_13'),
+                description = locale('cl_client_14'),
                 icon = 'fa-solid fa-heart-pulse',
                 event = 'rsg-medic:client:playerRevive',
                 arrow = true
             },
             {
-                title = Lang:t('lang_15'),
-                description = Lang:t('lang_16'),
+                title = locale('cl_client_15'),
+                description = locale('cl_client_16'),
                 icon = 'fa-solid fa-ghost',
                 onSelect = function()
                     ExecuteCommand('txAdmin:menu:noClipToggle')
@@ -88,8 +103,8 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 arrow = true
             },
             {
-                title = Lang:t('lang_146'),
-                description = Lang:t('lang_147'),
+                title = locale('cl_client_146'),
+                description = locale('cl_client_147'),
                 icon = 'fa-solid fa-id-card-clip',
                 onSelect = function()
                     ExecuteCommand('txAdmin:menu:togglePlayerIDs')
@@ -97,8 +112,8 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 arrow = true
             },
             {
-                title = Lang:t('lang_17'),
-                description = Lang:t('lang_18'),
+                title = locale('cl_client_17'),
+                description = locale('cl_client_18'),
                 icon = 'fa-solid fa-book-bible',
                 event = 'rsg-adminmenu:client:godmode',
                 arrow = true
@@ -109,18 +124,15 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
 
 end)
 
------------------------------------------------------------------------------------
+----------------------------------------
 -- player options
------------------------------------------------------------------------------------
-
--- players options menu
+----------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(players)
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19') ..v.id..' | '..v.name,
-                description = Lang:t('lang_20'),
+                title = locale('cl_client_19') .. ' ' ..v.id..' | '..v.name,
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:playermenu',
                 args = { name = v.name, player = v.id },
@@ -129,7 +141,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         end
         lib.registerContext({
             id = 'players_optionssmenu',
-            title = Lang:t('lang_21'),
+            title = locale('cl_client_21'),
             menu = 'admin_mainmenu',
             onBack = function() end,
             position = 'top-right',
@@ -139,9 +151,9 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
     end)
 end)
 
------------------------------------------------------------------------------------
-
+--------------------------------------
 -- player menu
+--------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
 
     lib.registerContext({
@@ -151,80 +163,80 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_137'),
-                description = Lang:t('lang_138'),
+                title = locale('cl_client_137'),
+                description = locale('cl_client_138'),
                 icon = 'fa-solid fa-briefcase-medical',
                 event = 'rsg-adminmenu:server:playerinfo',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_22'),
-                description = Lang:t('lang_23'),
+                title = locale('cl_client_22'),
+                description = locale('cl_client_23'),
                 icon = 'fa-solid fa-briefcase-medical',
                 serverEvent = 'rsg-adminmenu:server:playerrevive',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_130'),
-                description = Lang:t('lang_131'),
+                title = locale('cl_client_130'),
+                description = locale('cl_client_131'),
                 icon = 'fa-solid fa-gift',
                 event = 'rsg-adminmenu:client:giveitem',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_24'),
-                description = Lang:t('lang_25'),
+                title = locale('cl_client_24'),
+                description = locale('cl_client_25'),
                 icon = 'fa-solid fa-box',
                 serverEvent = 'rsg-adminmenu:server:openinventory',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_26'),
-                description = Lang:t('lang_27'),
+                title = locale('cl_client_26'),
+                description = locale('cl_client_27'),
                 icon = 'fa-solid fa-socks',
                 event = 'rsg-adminmenu:client:kickplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = Lang:t('lang_28'),
-                description = Lang:t('lang_29') ,
+                title = locale('cl_client_28'),
+                description = locale('cl_client_29'),
                 icon = 'fa-solid fa-ban',
                 event = 'rsg-adminmenu:client:banplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = Lang:t('lang_30'),
-                description = Lang:t('lang_31'),
+                title = locale('cl_client_30'),
+                description = locale('cl_client_31'),
                 icon = 'fa-solid fa-location-dot',
                 serverEvent = 'rsg-adminmenu:server:gotoplayer',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_32'),
-                description = Lang:t('lang_33'),
+                title = locale('cl_client_32'),
+                description = locale('cl_client_33'),
                 icon = 'fa-solid fa-hand',
                 serverEvent = 'rsg-adminmenu:server:bringplayer',
                 args = { id = data.player },
                 arrow = true
             },
             {
-                title = Lang:t('lang_34'),
-                description = Lang:t('lang_35'),
+                title = locale('cl_client_34'),
+                description = locale('cl_client_35'),
                 icon = 'fa-solid fa-snowflake',
                 serverEvent = 'rsg-adminmenu:server:freezeplayer',
                 args = { id = data.player, name = data.name },
                 arrow = true
             },
             {
-                title = Lang:t('lang_36'),
-                description = Lang:t('lang_37'),
+                title = locale('cl_client_36'),
+                description = locale('cl_client_37'),
                 icon = 'fa-solid fa-eye',
                 serverEvent = 'rsg-adminmenu:server:spectateplayer',
                 args = { id = data.player },
@@ -241,13 +253,13 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
 
     lib.registerContext({
         id = 'server_optionssmenu',
-        title = Lang:t('lang_38'),
+        title = locale('cl_client_38'),
         menu = 'admin_mainmenu',
         onBack = function() end,
         options = {
             {
-                title = Lang:t('lang_39'),
-                description = Lang:t('lang_40'),
+                title = locale('cl_client_39'),
+                description = locale('cl_client_40'),
                 icon = 'fa-solid fa-cloud-sun',
                 event = 'weathersync:openAdminUi',
                 arrow = true
@@ -263,15 +275,15 @@ end)
 -------------------------------------------------------------------
 local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_a'))
     if invisible then
         SetEntityVisible(cache.ped, true)
         invisible = false
-        lib.notify({ title = Lang:t('lang_42'), description = Lang:t('lang_43'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_42'), description = locale('cl_client_43'), type = 'inform' })
     else
         SetEntityVisible(cache.ped, false)
         invisible = true
-        lib.notify({ title = Lang:t('lang_44'), description = Lang:t('lang_45'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_44'), description = locale('cl_client_45'), type = 'inform' })
     end
 end)
 
@@ -281,26 +293,26 @@ end)
 RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     godmode = not godmode
     if godmode == true then
-        lib.notify({ title = Lang:t('lang_46'), description = Lang:t('lang_47'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_46'), description = locale('cl_client_47'), type = 'inform' })
     end
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_b'))
     if godmode then
         while godmode do
             Wait(0)
             SetPlayerInvincible(cache.ped, true)
         end
         SetPlayerInvincible(cache.ped, false)
-        lib.notify({ title = Lang:t('lang_48'), description = Lang:t('lang_49'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_48'), description = locale('cl_client_49'), type = 'inform' })
     end
 end)
 
--------------------------------------------------------------------
+------------------------
 -- kick player reason
--------------------------------------------------------------------
+------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
-    local input = lib.inputDialog(Lang:t('lang_50')..data.name, {
+    local input = lib.inputDialog(locale('cl_client_50') .. ': '..data.name, {
         {
-            label = Lang:t('lang_51'),
+            label = locale('cl_client_51'),
             type = 'input',
             required = true,
         },
@@ -311,40 +323,40 @@ RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
 
 end)
 
--------------------------------------------------------------------
+----------------------
 -- ban player reason
--------------------------------------------------------------------
+----------------------
 RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
-    local input = lib.inputDialog(Lang:t('lang_52')..data.name, {
+    local input = lib.inputDialog(locale('cl_client_52').. ': '..data.name, {
         {
-            label = Lang:t('lang_53'),
+            label = locale('cl_client_53'),
             type = 'select',
                 options = {
-                    { value = "permanent", label = "Permanent" },
-                    { value = "temporary", label = "Temporary" },
+                    { value = "permanent", label = locale('cl_client_53_a') },
+                    { value = "temporary", label = locale('cl_client_53_b') },
                 },
             required = true,
         },
         {
-            label = Lang:t('lang_54'),
+            label = locale('cl_client_54'),
             type = 'select',
                 options = {
-                    { value = '3600', label = Lang:t('lang_55') },
-                    { value = '21600', label = Lang:t('lang_56') },
-                    { value = '43200', label = Lang:t('lang_57') },
-                    { value = '86400', label = Lang:t('lang_58') },
-                    { value = '259200', label = Lang:t('lang_59') },
-                    { value = '604800', label = Lang:t('lang_60') },
-                    { value = '2678400', label = Lang:t('lang_61') },
-                    { value = '8035200', label = Lang:t('lang_62') },
-                    { value = '16070400', label = Lang:t('lang_63') },
-                    { value = '32140800', label = Lang:t('lang_64') },
-                    { value = '99999999999', label = Lang:t('lang_65') },
+                    { value = '3600', label = locale('cl_client_55') },
+                    { value = '21600', label = locale('cl_client_56') },
+                    { value = '43200', label = locale('cl_client_57') },
+                    { value = '86400', label = locale('cl_client_58') },
+                    { value = '259200', label = locale('cl_client_59') },
+                    { value = '604800', label = locale('cl_client_60') },
+                    { value = '2678400', label = locale('cl_client_61') },
+                    { value = '8035200', label = locale('cl_client_62') },
+                    { value = '16070400', label = locale('cl_client_63') },
+                    { value = '32140800', label = locale('cl_client_64') },
+                    { value = '99999999999', label = locale('cl_client_65') },
                 },
             required = true,
         },
         {
-            label = Lang:t('lang_51'),
+            label = locale('cl_client_51'),
             type = 'input',
             required = true,
         }
@@ -355,18 +367,18 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     -- permanent ban
     if input[1] == 'permanent' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
-        lib.notify({ title = Lang:t('lang_66'), description = data.name..Lang:t('lang_67'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_66'), description = data.name..locale('cl_client_67'), type = 'inform' })
     end
     -- temporary ban
     if input[1] == 'temporary' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
-        lib.notify({ title = Lang:t('lang_66'), description = data.name..Lang:t('lang_68'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_66'), description = data.name..locale('cl_client_68'), type = 'inform' })
     end
 end)
 
--------------------------------------------------------------------
+--------------------
 -- spectate player
--------------------------------------------------------------------
+--------------------
 
 local lastSpectateCoord = nil
 local isSpectating = false
@@ -394,16 +406,16 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
     end
 end)
 
--------------------------------------------------------------------
+-----------------------
 -- sort table function
--------------------------------------------------------------------
+-----------------------
 local function compareNames(a, b)
     return a.value < b.value
 end
 
--------------------------------------------------------------------
+---------------------
 -- give item
--------------------------------------------------------------------
+---------------------
 RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
     local option = {}
 
@@ -414,9 +426,9 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
 
     table.sort(option, compareNames)
 
-    local item = lib.inputDialog(Lang:t('lang_132'), {
-        { type = 'select', options = option, label = Lang:t('lang_133'), required = true },
-        { type = 'number', label = Lang:t('lang_134'), required = true }
+    local item = lib.inputDialog(locale('cl_client_132'), {
+        { type = 'select', options = option, label = locale('cl_client_133'), required = true },
+        { type = 'number', label = locale('cl_client_134'), required = true }
     })
     if not item then return end
 
@@ -424,43 +436,59 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
 
 end)
 
--------------------------------------------------------------------
+-------------------------
 -- player info
--------------------------------------------------------------------
+-------------------------
 RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayerinfo', function(data)
         lib.registerContext(
             {
                 id = 'adminplayer_info',
-                title = Lang:t('lang_139'),
+                title = locale('cl_client_139'),
                 description = '',
                 menu = 'players_optionssmenu',
                 onBack = function() end,
                 position = 'top-right',
                 options = {
                     {
-                        title = Lang:t('lang_140')..data.firstname..' '..data.lastname,
+                        title = locale('cl_client_140')..': '..data.firstname..' '..data.lastname,
                         icon = 'user',
                     },
                     {
-                        title = Lang:t('lang_141')..data.job,
+                        title = locale('cl_client_141')..': '..data.job,
                         icon = 'user',
                     },
                     {
-                        title = Lang:t('lang_142')..tostring(data.grade),
+                        title = locale('cl_client_142')..': '..tostring(data.grade),
                         icon = 'user',
                     },
                     {
-                        title = Lang:t('lang_143')..tostring(data.cash),
+                        title = locale('cl_client_143')..': '..tostring(data.cash),
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
-                        title = Lang:t('lang_144')..tostring(data.bank),
+                        title = locale('cl_client_144')..': '..tostring(data.bloodmoney),
+                        icon = 'fa-solid fa-money-bill',
+                    },
+                    {
+                        title = locale('cl_client_153')..': '..tostring(data.bank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = Lang:t('lang_145')..tostring(data.bloodmoney),
-                        icon = 'fa-solid fa-money-bill',
+                        title = locale('cl_client_148')..': '..tostring(data.valbank),
+                        icon = 'fa-solid fa-building-columns',
+                    },
+                    {
+                        title = locale('cl_client_149')..': '..tostring(data.rhobank),
+                        icon = 'fa-solid fa-building-columns',
+                    },
+                    {
+                        title = locale('cl_client_150')..': '..tostring(data.blkbank),
+                        icon = 'fa-solid fa-building-columns',
+                    },
+                    {
+                        title = locale('cl_client_151')..': '..tostring(data.armbank),
+                        icon = 'fa-solid fa-building-columns',
                     },
                     {
                         title = 'CitizenID : '..data.citizenid,
