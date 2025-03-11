@@ -5,6 +5,39 @@ local coordsList = {}
 local printListEnabled = false
 lib.locale()
 
+---@param data string # type of coord to fetch
+local function CopyCoords(data)
+    local coords = GetEntityCoords(cache.ped)
+    local heading = GetEntityHeading(cache.ped)
+    local formats = {
+        vector2 = "vec2(%.2f, %.2f)",
+        vector3 = "vec3(%.2f, %.2f, %.2f)",
+        vector4 = "vec4(%.2f, %.2f, %.2f, %.2f)",
+        heading = "%.2f"
+    }
+    local format = formats[data]
+
+    local values = { coords.x, coords.y, coords.z, heading }
+
+    if printListEnabled then
+        local coordString = string.format(format, table.unpack(values, 1, #values))
+        table.insert(coordsList, coordString)
+    else
+        lib.setClipboard(string.format(format, table.unpack(values, 1, #format)))
+    end
+
+    local notificationData = {
+        vector2 = { locale('cl_coords_78'), locale('cl_coords_79') },
+        vector3 = { locale('cl_coords_78'), locale('cl_coords_80') },
+        vector4 = { locale('cl_coords_78'), locale('cl_coords_81') },
+        heading = { locale('cl_coords_82'), locale('cl_coords_83') }
+    }
+
+    lib.notify({ title = notificationData[data][1], description = notificationData[data][2], type = 'inform' })
+
+    print(notificationData[data][1])
+end
+
 RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
 
     lib.registerContext({
@@ -17,28 +50,36 @@ RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
                 title = locale('cl_coords_70'),
                 description = locale('cl_coords_71'),
                 icon = 'fa-solid fa-clipboard',
-                event = 'rsg-adminmenu:client:vector2',
+                onSelect = function()
+                    CopyCoords("vector2")
+                end,
                 arrow = true
             },
             {
                 title = locale('cl_coords_72'),
                 description = locale('cl_coords_73'),
                 icon = 'fa-solid fa-clipboard',
-                event = 'rsg-adminmenu:client:vector3',
+                onSelect = function()
+                    CopyCoords("vector3")
+                end,
                 arrow = true
             },
             {
                 title = locale('cl_coords_74'),
                 description = locale('cl_coords_75'),
                 icon = 'fa-solid fa-clipboard',
-                event = 'rsg-adminmenu:client:vector4',
+                onSelect = function()
+                    CopyCoords("vector4")
+                end,
                 arrow = true
             },
             {
                 title = locale('cl_coords_76'),
                 description = locale('cl_coords_77'),
                 icon = 'fa-solid fa-clipboard',
-                event = 'rsg-adminmenu:client:copyheading',
+                onSelect = function()
+                    CopyCoords("heading")
+                end,
                 arrow = true
             },
             {
@@ -59,43 +100,6 @@ RegisterNetEvent('rsg-adminmenu:client:copycoordsmenu', function()
     })
     lib.showContext('coords_mainmenu')
 
-end)
-
--- Copy Coordinates
-local function CopyCoords(data)
-    local coords = GetEntityCoords(cache.ped)
-    local heading = GetEntityHeading(cache.ped)
-    local formats = { vector2 = "%.2f, %.2f", vector3 = "%.2f, %.2f, %.2f", vector4 = "%.2f, %.2f, %.2f, %.2f", heading = "%.2f" }
-    local format = formats[data]
-
-    local values = {coords.x, coords.y, coords.z, heading}
-
-    if printListEnabled then
-        local coordString = string.format(format, table.unpack(values, 1, #values))
-        table.insert(coordsList, coordString)
-    else
-        lib.setClipboard(string.format(format, table.unpack(values, 1, #format)))
-    end
-end
-
-RegisterNetEvent('rsg-adminmenu:client:vector2', function()
-    CopyCoords("vector2")
-    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_79'), type = 'inform' })
-end)
-
-RegisterNetEvent('rsg-adminmenu:client:vector3', function()
-    CopyCoords("vector3")
-    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_80'), type = 'inform' })
-end)
-
-RegisterNetEvent('rsg-adminmenu:client:vector4', function()
-    CopyCoords("vector4")
-    lib.notify({ title = locale('cl_coords_78'), description = locale('cl_coords_81'), type = 'inform' })
-end)
-
-RegisterNetEvent('rsg-adminmenu:client:copyheading', function()
-    CopyCoords("heading")
-    lib.notify({ title = locale('cl_coords_82'), description = locale('cl_coords_83'), type = 'inform' })
 end)
 
 ----------------------
