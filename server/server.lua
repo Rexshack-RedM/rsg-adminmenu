@@ -56,7 +56,7 @@ local function BanPlayer(src)
         2524608000,
         'rsg-adminmenu'
     })
-    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', Lang:t('sv_a'), 'red', string.format(Lang:t('sv_b'), GetPlayerName(src), 'rsg-adminmenu', Lang:t('sv_c')), true)
+    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_a'), 'red', string.format(locale('sv_b'), GetPlayerName(src), 'rsg-adminmenu', locale('sv_c')), true)
     DropPlayer(src, locale('sv_105'))
 end
 
@@ -72,9 +72,9 @@ RSGCore.Commands.Add('adminmenu', locale('sv_100'), {}, false, function(source)
 
     if RSGCore.Functions.HasPermission(src, permissions['adminmenu']) or IsPlayerAceAllowed(src, 'command')  then
         TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src)
-    else
+   else
         --BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', Lang:t('sv_d'), 'red', firstname .. ' ' .. lastname .. ' ' .. Lang:t('sv_e') .. ' '..citizenid..' '.. Lang:t('sv_f'), true)
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_d'), 'red', firstname .. ' ' .. lastname .. ' ' .. locale('sv_e') .. ' '..citizenid..' '.. locale('sv_f'), true)
         TriggerClientEvent('ox_lib:notify', source, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
