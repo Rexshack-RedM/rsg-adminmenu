@@ -383,7 +383,7 @@ end)
 local lastSpectateCoord = nil
 local isSpectating = false
 
-RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
+RegisterNetEvent('rsg-adminmenu:client:spectateplayer', function(targetPed)
     local targetplayer = GetPlayerFromServerId(targetPed)
     local target = GetPlayerPed(targetplayer)
     if not isSpectating then
