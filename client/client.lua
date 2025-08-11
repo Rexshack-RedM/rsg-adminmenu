@@ -417,23 +417,61 @@ end
 -- give item
 ---------------------
 RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
-    local option = {}
+    local items = RSGCore.Shared.Items
 
-    for k, v in pairs(RSGCore.Shared.Items) do
-        local content = { value = v.name, label = v.label }
-        option[#option + 1] = content
+    local searchInput = lib.inputDialog('Search and Give Item', {
+        {
+            type = 'input',
+            label = 'Search Item',
+            placeholder = 'e.g. revolver, bandage...',
+            required = true
+        }
+    })
+
+    if not searchInput then return end
+    local keyword = searchInput[1]:lower()
+
+    -- 2. Filter matching items
+    local options = {}
+    for _, item in pairs(items) do
+        local label = item.label or item.name
+        if label:lower():find(keyword, 1, true) then
+            options[#options+1] = {
+                value = item.name,
+                label = label
+            }
+        end
     end
 
-    table.sort(option, compareNames)
+    if #options == 0 then
+        return lib.notify({ type = 'error', description = 'No item found for "'..keyword..'"' })
+    end
 
-    local item = lib.inputDialog(locale('cl_client_132'), {
-        { type = 'select', options = option, label = locale('cl_client_133'), required = true },
-        { type = 'number', label = locale('cl_client_134'), required = true }
+    local result = lib.inputDialog('Select and Confirm', {
+        {
+            type = 'select',
+            label = 'Item to Give',
+            options = options,
+            required = true,
+            search = true
+        },
+        {
+            type = 'number',
+            label = 'Quantity',
+            required = true
+        }
     })
-    if not item then return end
 
-    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, item[1], item[2])
+    if not result then return end
 
+    local selectedItem = result[1]
+    local quantity = tonumber(result[2])
+
+    if not selectedItem or not quantity or quantity <= 0 then
+        return lib.notify({ type = 'error', description = 'Invalid input.' })
+    end
+
+    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, selectedItem, quantity)
 end)
 
 -------------------------
