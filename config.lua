@@ -1,5 +1,13 @@
 Config = {}
 
+Config.Reports = {
+    Cooldown = 30000, -- 30 secondes entre chaque report
+    PlayerReportWebhook = 'YOUR_DISCORD_WEBHOOK_HERE',
+    BugReportWebhook = 'YOUR_DISCORD_WEBHOOK_HERE',
+    PlayerReportRoles = '<@&YOUR_ROLE_ID>',
+    BugReportRoles = '<@&YOUR_ROLE_ID>',
+}
+
 Config.AdminHorse = {
     {
          horsename = 'Arabian White',

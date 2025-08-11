@@ -44,6 +44,13 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
                 arrow = true
             },
             {
+                title = locale('cl_client_reports'),
+                description = locale('cl_client_reports_desc'),
+                icon = 'fa-solid fa-flag',
+                event = 'rsg-adminmenu:client:reportsystem', 
+                arrow = true
+            },
+            {
                 title = locale('cl_client_4'),
                 description = locale('cl_client_5'),
                 icon = 'fa-regular fa-face-grin-squint-tears',
@@ -240,6 +247,14 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 icon = 'fa-solid fa-eye',
                 serverEvent = 'rsg-adminmenu:server:spectateplayer',
                 args = { id = data.player },
+                arrow = true
+            },
+            {
+                title = locale('cl_client_warn'),
+                description = locale('cl_client_warn_desc'),
+                icon = 'fa-solid fa-triangle-exclamation',
+                event = 'rsg-adminmenu:client:warnplayer',
+                args = { id = data.player, name = data.name },
                 arrow = true
             },
         }

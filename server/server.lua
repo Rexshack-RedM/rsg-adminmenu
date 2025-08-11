@@ -15,6 +15,9 @@ local permissions = {
     ['setonfire'] = 'admin',
     ['giveitem'] = 'admin',
     ['playerinfo'] = 'admin',
+    ['warn'] = 'admin',
+    ['viewreports'] = 'admin',
+    ['closereport'] = 'admin',
 }
 
 -----------------------------------------------------------------------

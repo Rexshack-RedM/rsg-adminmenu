@@ -13,12 +13,16 @@ shared_scripts {
 
 client_scripts {
     'client/*.lua',
+    'client/client_warnings.lua',
+    'client/client_reports.lua',
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server.lua',
     'server/server_finances.lua',
+    'server/server_warnings.lua',
+    'server/server_reports.lua',
     'server/versionchecker.lua'
 }
 
