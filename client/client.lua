@@ -275,7 +275,7 @@ end)
 -------------------------------------------------------------------
 local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_a'))
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName(PlayerId()) .. ' ' .. locale('cl_adminmenu_a'))
     if invisible then
         SetEntityVisible(cache.ped, true)
         invisible = false
@@ -295,7 +295,7 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     if godmode == true then
         lib.notify({ title = locale('cl_client_46'), description = locale('cl_client_47'), type = 'inform' })
     end
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_b'))
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName(PlayerId()) .. ' ' .. locale('cl_adminmenu_b'))
     if godmode then
         while godmode do
             Wait(0)
