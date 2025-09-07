@@ -275,15 +275,34 @@ end)
 -------------------------------------------------------------------
 local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_a'))
+    local playerId = PlayerId()
+    local serverId = GetPlayerServerId(playerId)
+    local playerName = GetPlayerName(playerId)
+
     if invisible then
+        -- Invisibility disabled
         SetEntityVisible(cache.ped, true)
         invisible = false
         lib.notify({ title = locale('cl_client_42'), description = locale('cl_client_43'), type = 'inform' })
+        TriggerServerEvent(
+            'rsg-log:server:CreateLog',
+            'adminmenu',
+            locale('cl_adminmenu'),
+            'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_d') -- disabled invisibility
+        )
     else
+        -- Invisibility enabled
         SetEntityVisible(cache.ped, false)
         invisible = true
         lib.notify({ title = locale('cl_client_44'), description = locale('cl_client_45'), type = 'inform' })
+        TriggerServerEvent(
+            'rsg-log:server:CreateLog',
+            'adminmenu',
+            locale('cl_adminmenu'),
+            'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_a') -- enabled invisibility
+        )
     end
 end)
 
@@ -292,19 +311,39 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     godmode = not godmode
-    if godmode == true then
-        lib.notify({ title = locale('cl_client_46'), description = locale('cl_client_47'), type = 'inform' })
-    end
-    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', GetPlayerName() .. ' ' .. locale('cl_adminmenu_b'))
+
+    local playerId = PlayerId()
+    local serverId = GetPlayerServerId(playerId)
+    local playerName = GetPlayerName(playerId)
+
     if godmode then
+        -- Godmode enabled
+        lib.notify({ title = locale('cl_client_46'), description = locale('cl_client_47'), type = 'inform' })
+        TriggerServerEvent(
+            'rsg-log:server:CreateLog',
+            'adminmenu',
+            locale('cl_adminmenu'),
+            'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_b') -- enabled godmode
+        )
         while godmode do
             Wait(0)
             SetPlayerInvincible(cache.ped, true)
         end
+    else
+        -- Godmode disabled
         SetPlayerInvincible(cache.ped, false)
         lib.notify({ title = locale('cl_client_48'), description = locale('cl_client_49'), type = 'inform' })
+        TriggerServerEvent(
+            'rsg-log:server:CreateLog',
+            'adminmenu',
+            locale('cl_adminmenu'),
+            'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_c') -- disabled godmode
+        )
     end
 end)
+
 
 ------------------------
 -- kick player reason
