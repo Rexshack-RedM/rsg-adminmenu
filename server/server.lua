@@ -1,7 +1,7 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
-local permissions = {
+permissions = {
     ['adminmenu'] = 'admin',
     ['revive'] = 'admin',
     ['inventory'] = 'admin',
@@ -15,6 +15,7 @@ local permissions = {
     ['setonfire'] = 'admin',
     ['giveitem'] = 'admin',
     ['playerinfo'] = 'admin',
+    ['givemoney'] = 'admin',
 }
 
 -----------------------------------------------------------------------
