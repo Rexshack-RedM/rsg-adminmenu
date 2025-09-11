@@ -2,8 +2,11 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 
 -- add money
 RegisterNetEvent('rsg-adminmenu:server:financeadd', function(player, money, amount)
-    local Player = RSGCore.Functions.GetPlayer(player)
-    Player.Functions.AddMoney(money, amount)
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['givemoney']) or IsPlayerAceAllowed(src, 'command') then
+        local Player = RSGCore.Functions.GetPlayer(player)
+        Player.Functions.AddMoney(money, amount)
+    end
 end)
 
 -- remove money
