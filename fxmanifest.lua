@@ -19,7 +19,8 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/server.lua',
     'server/server_finances.lua',
-    'server/versionchecker.lua'
+    'server/versionchecker.lua',
+    'server/server_reports.lua',
 }
 
 files {

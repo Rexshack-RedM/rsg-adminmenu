@@ -30,6 +30,13 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
                 arrow = true
             },
             {
+                title = locale('cl_report_admin_menu'),
+                description = locale('cl_report_admin_menu_desc'),
+                icon = 'fa-solid fa-ticket',
+                event = 'rsg-adminmenu:client:adminreportsmenu',
+                arrow = true
+            },
+            {
                 title = locale('cl_client_2'),
                 description = locale('cl_client_3'),
                 icon = 'fa-solid fa-user',

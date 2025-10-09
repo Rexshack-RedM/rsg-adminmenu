@@ -1,5 +1,34 @@
 Config = {}
 
+Config.Reports = {
+    Webhooks = {
+        Main = "YOUR_WEBHOOK_URL_HERE",
+        Bug = "",      -- Leave empty to use Main
+        Player = "",   -- Leave empty to use Main
+        Question = "", -- Leave empty to use Main
+    },
+    Discord = {
+        EnableRoleMention = true, -- Enable/disable Discord role mentions
+        -- List of Discord role IDs to mention (add as many as you want)
+        RolesToMention = {
+            "YOUR_DISCORD_ROLE_ID_HERE", -- Admin role ID
+            -- "9876543210987654321", -- Moderator role ID
+            -- "1111111111111111111", -- Support role ID
+        },
+    },
+    WebhookColors = {  -- Renamed "Colors" to "WebhookColors"
+        bug = 16711680,      -- Red
+        player = 16776960,   -- Yellow
+        question = 65280,    -- Green
+        open = 3447003,      -- Blue
+        claimed = 16776960,  -- Yellow
+        resolved = 65280,    -- Green
+        closed = 10197915,   -- Gray
+    },
+    NearbyDistance = 50.0, -- Distance (in units) to detect players near the reporter
+    Cooldown = 60, -- Cooldown time (in seconds) before being able to create a new report
+}
+
 Config.AdminHorse = {
     {
          horsename = 'Arabian White',
