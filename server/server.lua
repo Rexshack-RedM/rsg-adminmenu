@@ -372,3 +372,11 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
         TriggerClientEvent('ox_lib:notify', src, {title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
     end
 end)
+
+-----------------------------------------------------------------------
+-- Command to open the report menu
+-----------------------------------------------------------------------
+RSGCore.Commands.Add('report', locale('sv_report_command_desc'), {}, false, function(source)
+    local src = source
+    TriggerClientEvent('rsg-adminmenu:client:openreportmenu', src)
+end)
