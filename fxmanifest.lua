@@ -4,7 +4,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-adminmenu'
-version '2.0.6'
+version '2.0.7'
 
 shared_scripts {
     '@ox_lib/init.lua',
