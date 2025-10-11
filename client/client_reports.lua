@@ -178,7 +178,7 @@ end)
 -- View report details (player)
 -----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:viewreportdetails', function(data)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getreportdetails', function(report, messages)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getreportdetails', function(report, messages, nearbyPlayers)
         if not report then
             lib.notify({ title = locale('cl_report_error'), description = locale('cl_report_not_found'), type = 'error' })
             return
@@ -277,16 +277,45 @@ end)
 -- View message history
 -----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:viewreportmessages', function(data)
+    if not data or not data.messages then
+        lib.notify({ 
+            title = locale('cl_report_error'), 
+            description = locale('cl_report_no_messages_data_found'), 
+            type = 'error' 
+        })
+        return
+    end
+    
     local options = {}
     
     for _, msg in ipairs(data.messages) do
-        local icon = msg.sender_type == 'admin' and 'fa-solid fa-user-shield' or 'fa-solid fa-user'
-        local senderTypeText = msg.sender_type == 'admin' and locale('cl_report_sender_admin') or locale('cl_report_sender_player')
+        -- Clean and validate all strings to prevent NUI issues
+        local senderType = tostring(msg.sender_type or 'player')
+        local icon = senderType == 'admin' and 'fa-solid fa-user-shield' or 'fa-solid fa-user'
+        local senderTypeText = senderType == 'admin' and 'Admin' or 'Player'
+        
+        -- Clean strings by removing potential problematic characters
+        local timestamp = tostring(msg.created_at_text or 'Unknown time')
+        local senderName = tostring(msg.sender_name or 'Unknown sender'):gsub('[\n\r]', ' ')
+        local message = tostring(msg.message or 'No message content'):gsub('[\n\r]', ' ')
+        
+        -- Limit string lengths to prevent overflow
+        if #senderName > 50 then senderName = senderName:sub(1, 47) .. '...' end
+        if #message > 200 then message = message:sub(1, 197) .. '...' end
         
         options[#options + 1] = {
-            title = msg.sender_name .. ' (' .. senderTypeText .. ')',
-            description = msg.message .. '\n\n' .. msg.created_at_text,
+            title = senderName .. ' (' .. senderTypeText .. ')',
+            description = message .. ' - ' .. timestamp,
             icon = icon,
+            disabled = true,
+        }
+    end
+    
+    if #options == 0 then
+        options[1] = {
+            title = locale('cl_report_no_messages'),
+            description = locale('cl_report_no_messages_desc'),
+            icon = 'fa-solid fa-info-circle',
             disabled = true,
         }
     end
@@ -295,7 +324,6 @@ RegisterNetEvent('rsg-adminmenu:client:viewreportmessages', function(data)
         id = 'report_messages',
         title = locale('cl_report_messages_history'),
         menu = 'report_details',
-        onBack = function() end,
         options = options
     })
     lib.showContext('report_messages')
