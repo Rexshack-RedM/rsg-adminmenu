@@ -306,8 +306,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getmyreports', function(s
     
     local reporterLicense = RSGCore.Functions.GetIdentifier(src, 'license')
     
-    MySQL.query('SELECT * FROM admin_reports WHERE reporter_license = ? ORDER BY created_at DESC', {
-        reporterLicense
+    MySQL.query('SELECT * FROM admin_reports WHERE reporter_license = ? AND status != ? ORDER BY created_at DESC', {
+        reporterLicense, 'closed'
     }, function(result)
         cb(result)
     end)
@@ -361,14 +361,35 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getreportdetails', functi
             reportId
         }, function(messages)
             for i, msg in ipairs(messages) do
-                messages[i].created_at_text = os.date('%d/%m/%Y %H:%M', os.time({
-                    year = tonumber(os.date("%Y", msg.created_at)),
-                    month = tonumber(os.date("%m", msg.created_at)),
-                    day = tonumber(os.date("%d", msg.created_at)),
-                    hour = tonumber(os.date("%H", msg.created_at)),
-                    min = tonumber(os.date("%M", msg.created_at)),
-                    sec = tonumber(os.date("%S", msg.created_at))
-                }))
+                -- Handle different timestamp formats from MySQL
+                if msg.created_at then
+                    if type(msg.created_at) == 'number' then
+                        -- It's already a Unix timestamp
+                        messages[i].created_at_text = os.date('%d/%m/%Y %H:%M', msg.created_at)
+                    elseif type(msg.created_at) == 'string' then
+                        -- Parse MySQL TIMESTAMP format: "YYYY-MM-DD HH:MM:SS"
+                        local year, month, day, hour, min, sec = msg.created_at:match("(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)")
+                        if year and month and day and hour and min and sec then
+                            local timestamp = os.time({
+                                year = tonumber(year),
+                                month = tonumber(month),
+                                day = tonumber(day),
+                                hour = tonumber(hour),
+                                min = tonumber(min),
+                                sec = tonumber(sec)
+                            })
+                            messages[i].created_at_text = os.date('%d/%m/%Y %H:%M', timestamp)
+                        else
+                            -- Fallback if parsing fails
+                            messages[i].created_at_text = tostring(msg.created_at)
+                        end
+                    else
+                        -- Unknown type, convert to string
+                        messages[i].created_at_text = tostring(msg.created_at)
+                    end
+                else
+                    messages[i].created_at_text = 'Unknown'
+                end
             end
             
             if isAdmin then
