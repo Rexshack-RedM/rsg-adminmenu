@@ -1,5 +1,7 @@
 Config = {}
 
+Config.EnablePlayerBlips = true
+
 Config.Reports = {
     Webhooks = {
         Main = "YOUR_WEBHOOK_URL_HERE",
