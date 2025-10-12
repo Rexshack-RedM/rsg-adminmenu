@@ -29,6 +29,7 @@
   - God Mode (on/off)
   - NoClip (toggle) — uses `txAdmin:menu:noClipToggle`
   - Toggle Player IDs — uses `txAdmin:menu:togglePlayerIDs`
+  - **Toggle Player Blips** — see all players on the map (admin-only, real-time updates)
 - **Player actions**
   - View Inventory, Player Info
   - Kick, Ban (permanent / temporary)

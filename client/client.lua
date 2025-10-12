@@ -80,53 +80,66 @@ end)
 -- admin options menu
 RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
 
+    local options = {
+        {
+            title = locale('cl_client_11'),
+            description = locale('cl_client_12'),
+            icon = 'fa-solid fa-up-down-left-right',
+            event = 'RSGCore:Command:GoToMarker',
+            arrow = true
+        },
+        {
+            title = locale('cl_client_13'),
+            description = locale('cl_client_14'),
+            icon = 'fa-solid fa-heart-pulse',
+            event = 'rsg-medic:client:playerRevive',
+            arrow = true
+        },
+        {
+            title = locale('cl_client_15'),
+            description = locale('cl_client_16'),
+            icon = 'fa-solid fa-ghost',
+            onSelect = function()
+                ExecuteCommand('txAdmin:menu:noClipToggle')
+            end,
+            arrow = true
+        },
+        {
+            title = locale('cl_client_146'),
+            description = locale('cl_client_147'),
+            icon = 'fa-solid fa-id-card-clip',
+            onSelect = function()
+                ExecuteCommand('txAdmin:menu:togglePlayerIDs')
+            end,
+            arrow = true
+        },
+        {
+            title = locale('cl_client_17'),
+            description = locale('cl_client_18'),
+            icon = 'fa-solid fa-book-bible',
+            event = 'rsg-adminmenu:client:godmode',
+            arrow = true
+        },
+    }
+    
+    if Config.EnablePlayerBlips then
+        table.insert(options, {
+            title = locale('cl_client_154'),
+            description = locale('cl_client_155'),
+            icon = 'fa-solid fa-map-location-dot',
+            event = 'rsg-adminmenu:client:toggleplayerblips',
+            arrow = true
+        })
+    end
+    
     lib.registerContext({
         id = 'admin_optionsmenu',
         title = locale('cl_client_10'),
         menu = 'admin_mainmenu',
         onBack = function() end,
-        options = {
-            {
-                title = locale('cl_client_11'),
-                description = locale('cl_client_12'),
-                icon = 'fa-solid fa-up-down-left-right',
-                event = 'RSGCore:Command:GoToMarker',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_13'),
-                description = locale('cl_client_14'),
-                icon = 'fa-solid fa-heart-pulse',
-                event = 'rsg-medic:client:playerRevive',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_15'),
-                description = locale('cl_client_16'),
-                icon = 'fa-solid fa-ghost',
-                onSelect = function()
-                    ExecuteCommand('txAdmin:menu:noClipToggle')
-                end,
-                arrow = true
-            },
-            {
-                title = locale('cl_client_146'),
-                description = locale('cl_client_147'),
-                icon = 'fa-solid fa-id-card-clip',
-                onSelect = function()
-                    ExecuteCommand('txAdmin:menu:togglePlayerIDs')
-                end,
-                arrow = true
-            },
-            {
-                title = locale('cl_client_17'),
-                description = locale('cl_client_18'),
-                icon = 'fa-solid fa-book-bible',
-                event = 'rsg-adminmenu:client:godmode',
-                arrow = true
-            },
-        }
+        options = options
     })
+    
     lib.showContext('admin_optionsmenu')
 
 end)
@@ -275,6 +288,73 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
     })
     lib.showContext('server_optionssmenu')
 
+end)
+
+-------------------------------------------------------------------
+-- toggle player blips
+-------------------------------------------------------------------
+local playerBlipsEnabled = false
+local playerBlips = {}
+local blipUpdateThread = nil
+
+RegisterNetEvent('rsg-adminmenu:client:toggleplayerblips', function()
+    local playerId = PlayerId()
+    local serverId = GetPlayerServerId(playerId)
+    local playerName = GetPlayerName(playerId)
+
+    playerBlipsEnabled = not playerBlipsEnabled
+
+    if playerBlipsEnabled then
+        lib.notify({ title = locale('cl_client_156'), description = locale('cl_client_157'), type = 'inform' })
+        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_e'))
+
+        if not blipUpdateThread then
+            blipUpdateThread = CreateThread(function()
+                while playerBlipsEnabled do
+                    Wait(1000)
+                    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(players)
+                        for _, player in pairs(players) do
+                            if player.id ~= playerId then
+                                if not playerBlips[player.id] then
+                                    local blip = BlipAddForCoords(1664425300, player.coords.x, player.coords.y, player.coords.z)
+                                    SetBlipSprite(blip, GetHashKey('blip_ambient_companion'))
+                                    SetBlipScale(blip, 0.6)
+                                    local steamName = GetPlayerName(GetPlayerFromServerId(player.id))
+                                    SetBlipName(blip, 'ID: ' .. player.id .. ' ' .. steamName)
+                                    playerBlips[player.id] = blip
+                                else
+                                    SetBlipCoords(playerBlips[player.id], player.coords.x, player.coords.y, player.coords.z)
+                                end
+                            end
+                        end
+
+                        for blipId, blip in pairs(playerBlips) do
+                            local found = false
+                            for _, player in pairs(players) do
+                                if player.id == blipId then
+                                    found = true
+                                    break
+                                end
+                            end
+                            if not found then
+                                RemoveBlip(blip)
+                                playerBlips[blipId] = nil
+                            end
+                        end
+                    end)
+                end
+                blipUpdateThread = nil
+            end)
+        end
+    else
+        lib.notify({ title = locale('cl_client_158'), description = locale('cl_client_159'), type = 'inform' })
+        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_f'))
+
+        for _, blip in pairs(playerBlips) do
+            RemoveBlip(blip)
+        end
+        playerBlips = {}
+    end
 end)
 
 -------------------------------------------------------------------
