@@ -8,7 +8,10 @@ CreateThread(function()
     while true do
         Wait(0)
         if IsControlJustReleased(0, RSGCore.Shared.Keybinds['PGUP']) then
-            ExecuteCommand("adminmenu")
+            local playerData = RSGCore.Functions.GetPlayerData()
+            if playerData and playerData.citizenid then
+                ExecuteCommand('adminmenu')
+            end
         end
     end
 end)
@@ -17,7 +20,6 @@ end)
 -- main admin base menu
 -------------------------------
 RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
-
     lib.registerContext({
         id = 'admin_mainmenu',
         title = locale('cl_client_0'),
@@ -74,12 +76,10 @@ RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
         }
     })
     lib.showContext('admin_mainmenu')
-
 end)
 
 -- admin options menu
 RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
-
     local options = {
         {
             title = locale('cl_client_11'),
@@ -121,7 +121,7 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
             arrow = true
         },
     }
-    
+
     if Config.EnablePlayerBlips then
         table.insert(options, {
             title = locale('cl_client_154'),
@@ -131,7 +131,7 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
             arrow = true
         })
     end
-    
+
     lib.registerContext({
         id = 'admin_optionsmenu',
         title = locale('cl_client_10'),
@@ -139,9 +139,8 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
         onBack = function() end,
         options = options
     })
-    
-    lib.showContext('admin_optionsmenu')
 
+    lib.showContext('admin_optionsmenu')
 end)
 
 ----------------------------------------
@@ -152,7 +151,7 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = locale('cl_client_19') .. ' ' ..v.id..' | '..v.name,
+                title = locale('cl_client_19') .. ' ' .. v.id .. ' | ' .. v.name,
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:playermenu',
                 args = { name = v.name, player = v.id },
@@ -175,7 +174,6 @@ end)
 -- player menu
 --------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
-
     lib.registerContext({
         id = 'player_menu',
         title = data.name,
@@ -265,12 +263,10 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         }
     })
     lib.showContext('player_menu')
-
 end)
 
 -- server options menu
 RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
-
     lib.registerContext({
         id = 'server_optionssmenu',
         title = locale('cl_client_38'),
@@ -287,7 +283,6 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
         }
     })
     lib.showContext('server_optionssmenu')
-
 end)
 
 -------------------------------------------------------------------
@@ -306,7 +301,8 @@ RegisterNetEvent('rsg-adminmenu:client:toggleplayerblips', function()
 
     if playerBlipsEnabled then
         lib.notify({ title = locale('cl_client_156'), description = locale('cl_client_157'), type = 'inform' })
-        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_e'))
+        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_e'))
 
         if not blipUpdateThread then
             blipUpdateThread = CreateThread(function()
@@ -316,14 +312,16 @@ RegisterNetEvent('rsg-adminmenu:client:toggleplayerblips', function()
                         for _, player in pairs(players) do
                             if player.id ~= playerId then
                                 if not playerBlips[player.id] then
-                                    local blip = BlipAddForCoords(1664425300, player.coords.x, player.coords.y, player.coords.z)
+                                    local blip = BlipAddForCoords(1664425300, player.coords.x, player.coords.y,
+                                        player.coords.z)
                                     SetBlipSprite(blip, GetHashKey('blip_ambient_companion'))
                                     SetBlipScale(blip, 0.6)
                                     local steamName = GetPlayerName(GetPlayerFromServerId(player.id))
                                     SetBlipName(blip, 'ID: ' .. player.id .. ' ' .. steamName)
                                     playerBlips[player.id] = blip
                                 else
-                                    SetBlipCoords(playerBlips[player.id], player.coords.x, player.coords.y, player.coords.z)
+                                    SetBlipCoords(playerBlips[player.id], player.coords.x, player.coords.y,
+                                        player.coords.z)
                                 end
                             end
                         end
@@ -348,7 +346,8 @@ RegisterNetEvent('rsg-adminmenu:client:toggleplayerblips', function()
         end
     else
         lib.notify({ title = locale('cl_client_158'), description = locale('cl_client_159'), type = 'inform' })
-        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red', playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_f'))
+        TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('cl_adminmenu'), 'red',
+            playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_f'))
 
         for _, blip in pairs(playerBlips) do
             RemoveBlip(blip)
@@ -436,7 +435,7 @@ end)
 -- kick player reason
 ------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
-    local input = lib.inputDialog(locale('cl_client_50') .. ': '..data.name, {
+    local input = lib.inputDialog(locale('cl_client_50') .. ': ' .. data.name, {
         {
             label = locale('cl_client_51'),
             type = 'input',
@@ -446,39 +445,38 @@ RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
     if not input then return end
 
     TriggerServerEvent('rsg-adminmenu:server:kickplayer', data.id, input[1])
-
 end)
 
 ----------------------
 -- ban player reason
 ----------------------
 RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
-    local input = lib.inputDialog(locale('cl_client_52').. ': '..data.name, {
+    local input = lib.inputDialog(locale('cl_client_52') .. ': ' .. data.name, {
         {
             label = locale('cl_client_53'),
             type = 'select',
-                options = {
-                    { value = "permanent", label = locale('cl_client_53_a') },
-                    { value = "temporary", label = locale('cl_client_53_b') },
-                },
+            options = {
+                { value = "permanent", label = locale('cl_client_53_a') },
+                { value = "temporary", label = locale('cl_client_53_b') },
+            },
             required = true,
         },
         {
             label = locale('cl_client_54'),
             type = 'select',
-                options = {
-                    { value = '3600', label = locale('cl_client_55') },
-                    { value = '21600', label = locale('cl_client_56') },
-                    { value = '43200', label = locale('cl_client_57') },
-                    { value = '86400', label = locale('cl_client_58') },
-                    { value = '259200', label = locale('cl_client_59') },
-                    { value = '604800', label = locale('cl_client_60') },
-                    { value = '2678400', label = locale('cl_client_61') },
-                    { value = '8035200', label = locale('cl_client_62') },
-                    { value = '16070400', label = locale('cl_client_63') },
-                    { value = '32140800', label = locale('cl_client_64') },
-                    { value = '99999999999', label = locale('cl_client_65') },
-                },
+            options = {
+                { value = '3600',        label = locale('cl_client_55') },
+                { value = '21600',       label = locale('cl_client_56') },
+                { value = '43200',       label = locale('cl_client_57') },
+                { value = '86400',       label = locale('cl_client_58') },
+                { value = '259200',      label = locale('cl_client_59') },
+                { value = '604800',      label = locale('cl_client_60') },
+                { value = '2678400',     label = locale('cl_client_61') },
+                { value = '8035200',     label = locale('cl_client_62') },
+                { value = '16070400',    label = locale('cl_client_63') },
+                { value = '32140800',    label = locale('cl_client_64') },
+                { value = '99999999999', label = locale('cl_client_65') },
+            },
             required = true,
         },
         {
@@ -493,12 +491,12 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     -- permanent ban
     if input[1] == 'permanent' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
-        lib.notify({ title = locale('cl_client_66'), description = data.name..locale('cl_client_67'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_66'), description = data.name .. locale('cl_client_67'), type = 'inform' })
     end
     -- temporary ban
     if input[1] == 'temporary' then
         TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
-        lib.notify({ title = locale('cl_client_66'), description = data.name..locale('cl_client_68'), type = 'inform' })
+        lib.notify({ title = locale('cl_client_66'), description = data.name .. locale('cl_client_68'), type = 'inform' })
     end
 end)
 
@@ -514,21 +512,21 @@ RegisterNetEvent('rsg-adminmenu:client:spectateplayer', function(targetPed)
     local target = GetPlayerPed(targetplayer)
     if not isSpectating then
         isSpectating = true
-        SetEntityVisible(cache.ped, false) -- Set invisible
-        SetEntityCollision(cache.ped, false, false) -- Set collision
-        SetEntityInvincible(cache.ped, true) -- Set invincible
+        SetEntityVisible(cache.ped, false)                  -- Set invisible
+        SetEntityCollision(cache.ped, false, false)         -- Set collision
+        SetEntityInvincible(cache.ped, true)                -- Set invincible
         NetworkSetEntityInvisibleToNetwork(cache.ped, true) -- Set invisibility
-        lastSpectateCoord = GetEntityCoords(cache.ped) -- save my last coords
-        NetworkSetInSpectatorMode(true, target) -- Enter Spectate Mode
+        lastSpectateCoord = GetEntityCoords(cache.ped)      -- save my last coords
+        NetworkSetInSpectatorMode(true, target)             -- Enter Spectate Mode
     else
         isSpectating = false
-        NetworkSetInSpectatorMode(false, target) -- Remove From Spectate Mode
+        NetworkSetInSpectatorMode(false, target)             -- Remove From Spectate Mode
         NetworkSetEntityInvisibleToNetwork(cache.ped, false) -- Set Visible
-        SetEntityCollision(cache.ped, true, true) -- Set collision
-        SetEntityCoords(cache.ped, lastSpectateCoord) -- Return Me To My Coords
-        SetEntityVisible(cache.ped, true) -- Remove invisible
-        SetEntityInvincible(cache.ped, false) -- Remove godmode
-        lastSpectateCoord = nil -- Reset Last Saved Coords
+        SetEntityCollision(cache.ped, true, true)            -- Set collision
+        SetEntityCoords(cache.ped, lastSpectateCoord)        -- Return Me To My Coords
+        SetEntityVisible(cache.ped, true)                    -- Remove invisible
+        SetEntityInvincible(cache.ped, false)                -- Remove godmode
+        lastSpectateCoord = nil                              -- Reset Last Saved Coords
     end
 end)
 
@@ -562,7 +560,7 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
     for _, item in pairs(items) do
         local label = item.label or item.name
         if label:lower():find(keyword, 1, true) then
-            options[#options+1] = {
+            options[#options + 1] = {
                 value = item.name,
                 label = label
             }
@@ -570,7 +568,7 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
     end
 
     if #options == 0 then
-        return lib.notify({ type = 'error', description = 'No item found for "'..keyword..'"' })
+        return lib.notify({ type = 'error', description = 'No item found for "' .. keyword .. '"' })
     end
 
     local result = lib.inputDialog('Select and Confirm', {
@@ -615,51 +613,51 @@ RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
                 position = 'top-right',
                 options = {
                     {
-                        title = locale('cl_client_140')..': '..data.firstname..' '..data.lastname,
+                        title = locale('cl_client_140') .. ': ' .. data.firstname .. ' ' .. data.lastname,
                         icon = 'user',
                     },
                     {
-                        title = locale('cl_client_141')..': '..data.job,
+                        title = locale('cl_client_141') .. ': ' .. data.job,
                         icon = 'user',
                     },
                     {
-                        title = locale('cl_client_142')..': '..tostring(data.grade),
+                        title = locale('cl_client_142') .. ': ' .. tostring(data.grade),
                         icon = 'user',
                     },
                     {
-                        title = locale('cl_client_143')..': '..tostring(data.cash),
+                        title = locale('cl_client_143') .. ': ' .. tostring(data.cash),
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
-                        title = locale('cl_client_144')..': '..tostring(data.bloodmoney),
+                        title = locale('cl_client_144') .. ': ' .. tostring(data.bloodmoney),
                         icon = 'fa-solid fa-money-bill',
                     },
                     {
-                        title = locale('cl_client_153')..': '..tostring(data.bank),
+                        title = locale('cl_client_153') .. ': ' .. tostring(data.bank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = locale('cl_client_148')..': '..tostring(data.valbank),
+                        title = locale('cl_client_148') .. ': ' .. tostring(data.valbank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = locale('cl_client_149')..': '..tostring(data.rhobank),
+                        title = locale('cl_client_149') .. ': ' .. tostring(data.rhobank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = locale('cl_client_150')..': '..tostring(data.blkbank),
+                        title = locale('cl_client_150') .. ': ' .. tostring(data.blkbank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = locale('cl_client_151')..': '..tostring(data.armbank),
+                        title = locale('cl_client_151') .. ': ' .. tostring(data.armbank),
                         icon = 'fa-solid fa-building-columns',
                     },
                     {
-                        title = 'CitizenID : '..data.citizenid,
+                        title = 'CitizenID : ' .. data.citizenid,
                         icon = 'fa-solid fa-id-card',
                     },
                     {
-                        title = 'ServerID : '..data.serverid,
+                        title = 'ServerID : ' .. data.serverid,
                         icon = 'fa-solid fa-server',
                     },
                 }
