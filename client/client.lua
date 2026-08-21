@@ -1,20 +1,14 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
--------------------------------
--- ACCES FOR KEY PGUP
--------------------------------
-CreateThread(function()
-    while true do
-        Wait(0)
-        if IsControlJustReleased(0, RSGCore.Shared.Keybinds['PGUP']) then
-            local playerData = RSGCore.Functions.GetPlayerData()
-            if playerData and playerData.citizenid then
-                ExecuteCommand('adminmenu')
-            end
-        end
+RegisterRawKeymap("adminmenu", nil, function()
+    local playerData = RSGCore.Functions.GetPlayerData()
+    if playerData and playerData.citizenid then
+        ExecuteCommand('adminmenu')
     end
-end)
+end, 0x21, false)
+
+-- 0x21 = Page up key
 
 -------------------------------
 -- main admin base menu
