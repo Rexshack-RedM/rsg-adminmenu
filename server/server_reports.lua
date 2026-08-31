@@ -1,6 +1,12 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
+-- covers installs from before these columns existed — admin_reports itself is
+-- created externally (no CREATE TABLE anywhere in this codebase), so this
+-- only ever adds columns, never the table
+MySQL.query("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `severity` VARCHAR(20) DEFAULT 'medium'")
+MySQL.query("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `reporter_steam` VARCHAR(50) DEFAULT NULL")
+
 -----------------------------------------------------------------------
 -- Permissions
 -----------------------------------------------------------------------
@@ -142,8 +148,12 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
     local reporterName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     local reporterLicense = RSGCore.Functions.GetIdentifier(src, 'license')
     local reporterDiscord = GetPlayerDiscord(src)
+    local reporterSteam = RSGCore.Functions.GetIdentifier(src, 'steam')
     local coords = GetEntityCoords(GetPlayerPed(src))
     local coordsString = string.format("%.2f, %.2f, %.2f", coords.x, coords.y, coords.z)
+
+    local allowedSeverities = { low = true, medium = true, high = true }
+    local severity = allowedSeverities[reportData.severity] and reportData.severity or 'medium'
     
     local reportedPlayerName = nil
     local reportedPlayerLicense = nil
@@ -187,12 +197,13 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
     local nearbyPlayers = GetNearbyPlayers(src)
     
     -- Insert the report into the database
-    MySQL.insert('INSERT INTO `admin_reports` (report_type, reporter_id, reporter_name, reporter_license, reporter_discord, reporter_coords, reported_player_id, reported_player_name, reported_player_license, reported_player_discord, title, description, image_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
+    MySQL.insert('INSERT INTO `admin_reports` (report_type, reporter_id, reporter_name, reporter_license, reporter_discord, reporter_steam, reporter_coords, reported_player_id, reported_player_name, reported_player_license, reported_player_discord, title, description, image_url, status, severity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', {
         reportData.reportType,
         src,
         reporterName,
         reporterLicense,
         reporterDiscord,
+        reporterSteam,
         coordsString,
         reportData.reportedPlayerId,
         reportedPlayerName,
@@ -201,7 +212,8 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
         reportData.title,
         reportData.description,
         reportData.imageUrl,
-        'open'
+        'open',
+        severity,
     }, function(reportId)
         if reportId then
             -- Insert nearby players
@@ -224,7 +236,7 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
             
             -- Notify online admins about the new report
             for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
-                if RSGCore.Functions.HasPermission(playerId, reportPermissions['viewreports']) or IsPlayerAceAllowed(playerId, 'command') then
+                if RSGCore.Functions.HasPermission(playerId, reportPermissions['viewreports']) or IsPlayerAceAllowed(playerId, 'god') then
                     TriggerClientEvent('rsg-adminmenu:client:newreportnotification', playerId, {
                         id = reportId,
                         reporter_name = reporterName,
@@ -319,7 +331,7 @@ end)
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallreports', function(source, cb)
     local src = source
     
-    if not RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) and not IsPlayerAceAllowed(src, 'command') then
+    if not RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) and not IsPlayerAceAllowed(src, 'god') then
         cb(nil)
         return
     end
@@ -350,7 +362,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getreportdetails', functi
         end
         
         local reporterLicense = RSGCore.Functions.GetIdentifier(src, 'license')
-        local isAdmin = RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) or IsPlayerAceAllowed(src, 'command')
+        local isAdmin = RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) or IsPlayerAceAllowed(src, 'god')
         
         if report.reporter_license ~= reporterLicense and not isAdmin then
             cb(nil)
@@ -392,15 +404,26 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getreportdetails', functi
                 end
             end
             
-            if isAdmin then
-                MySQL.query('SELECT * FROM admin_report_nearby_players WHERE report_id = ? ORDER BY distance ASC', {
-                    reportId
-                }, function(nearbyPlayers)
-                    cb(report, messages, nearbyPlayers)
-                end)
-            else
-                cb(report, messages, nil)
+            local function respond()
+                if isAdmin then
+                    MySQL.query('SELECT * FROM admin_report_nearby_players WHERE report_id = ? ORDER BY distance ASC', {
+                        reportId
+                    }, function(nearbyPlayers)
+                        cb(report, messages, nearbyPlayers)
+                    end)
+                else
+                    cb(report, messages, nil)
+                end
             end
+
+            -- enrich with the reporter's live discord name/avatar (works even
+            -- if they're offline now, since resolution only needs the stored
+            -- discord id, not an active session)
+            ResolveDiscordName(report.reporter_discord, function(discordName, discordAvatarUrl)
+                report.reporter_discord_name = discordName
+                report.reporter_discord_avatar = discordAvatarUrl
+                respond()
+            end)
         end)
     end)
 end)
@@ -412,7 +435,7 @@ RegisterNetEvent('rsg-adminmenu:server:claimreport', function(data)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     
-    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'command') then
+    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
     
@@ -441,8 +464,9 @@ RegisterNetEvent('rsg-adminmenu:server:claimreport', function(data)
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
-            
+
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_claimed'), 'yellow', locale('sv_report_log_claimed_desc', adminName, src, data.reportId), true)
+            LogAdminAction('admin_action', 'low', src, 'Claimed report #' .. tostring(data.reportId), nil, nil)
         end
     end)
 end)
@@ -454,7 +478,7 @@ RegisterNetEvent('rsg-adminmenu:server:releasereport', function(data)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     
-    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'command') then
+    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
     
@@ -481,8 +505,9 @@ RegisterNetEvent('rsg-adminmenu:server:releasereport', function(data)
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
-            
+
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_released'), 'blue', locale('sv_report_log_released_desc', adminName, src, data.reportId), true)
+            LogAdminAction('admin_action', 'low', src, 'Released report #' .. tostring(data.reportId), nil, nil)
         end
     end)
 end)
@@ -494,7 +519,7 @@ RegisterNetEvent('rsg-adminmenu:server:resolvereport', function(data)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     
-    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'command') then
+    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
     
@@ -535,8 +560,9 @@ RegisterNetEvent('rsg-adminmenu:server:resolvereport', function(data)
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
-            
+
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_resolved'), 'green', locale('sv_report_log_resolved_desc', adminName, src, data.reportId), true)
+            LogAdminAction('admin_action', 'low', src, 'Resolved report #' .. tostring(data.reportId), nil, nil)
         end
     end)
 end)
@@ -548,7 +574,7 @@ RegisterNetEvent('rsg-adminmenu:server:deletereport', function(reportId, reason)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     
-    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'command') then
+    if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
     
@@ -576,8 +602,9 @@ RegisterNetEvent('rsg-adminmenu:server:deletereport', function(reportId, reason)
                 timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
-            
+
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_deleted'), 'red', locale('sv_report_log_deleted_desc', adminName, src, reportId, reason), true)
+            LogAdminAction('admin_action', 'low', src, 'Deleted report #' .. tostring(reportId), reason, nil)
         end
     end)
 end)
@@ -597,7 +624,7 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
         if not report then return end
         
         local reporterLicense = RSGCore.Functions.GetIdentifier(src, 'license')
-        local isAdmin = RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) or IsPlayerAceAllowed(src, 'command')
+        local isAdmin = RSGCore.Functions.HasPermission(src, reportPermissions['viewreports']) or IsPlayerAceAllowed(src, 'god')
         
         if report.reporter_license ~= reporterLicense and not isAdmin then
             return
@@ -643,7 +670,7 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
                         end
                     else
                         for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
-                            if RSGCore.Functions.HasPermission(playerId, reportPermissions['viewreports']) or IsPlayerAceAllowed(playerId, 'command') then
+                            if RSGCore.Functions.HasPermission(playerId, reportPermissions['viewreports']) or IsPlayerAceAllowed(playerId, 'god') then
                                 TriggerClientEvent('rsg-adminmenu:client:newreportnotification', playerId, {
                                     id = reportId,
                                     reporter_name = senderName,
@@ -665,6 +692,10 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
                     timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }
                 SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
+
+                if senderType == 'admin' then
+                    LogAdminAction('admin_action', 'low', src, 'Replied to report #' .. tostring(reportId), nil, nil)
+                end
             end
         end)
     end)

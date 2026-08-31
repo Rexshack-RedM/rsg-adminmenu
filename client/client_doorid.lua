@@ -16,7 +16,7 @@ function round(num, numDecimalPlaces)
     return math.floor(num * mult + 0.5) / mult
 end
 
-RegisterNetEvent('rsg-adminmenu:client:toggledoorid', function()
+RegisterNuiCallback('toggleDoorId', function(_, cb)
     if not showdoorid then
         showdoorid = true
         lib.notify({ title = locale('cl_door_on'), type = 'inform', duration = 7000 })
@@ -24,6 +24,7 @@ RegisterNetEvent('rsg-adminmenu:client:toggledoorid', function()
         showdoorid = false
         lib.notify({ title = locale('cl_door_off'), type = 'inform', duration = 7000 })
     end
+    cb({ enabled = showdoorid })
 end)
 
 Citizen.CreateThread(function()

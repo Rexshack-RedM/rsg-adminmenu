@@ -1,60 +1,14 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
--- troll players menu
-RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(players)
-        local options = {}
-        for k, v in pairs(players) do
-            options[#options + 1] = {
-                title = locale('cl_troll_19') .. ': ' .. v.id..' | '..v.name,
-                icon = 'fa-solid fa-circle-user',
-                event = 'rsg-adminmenu:client:trolloptions',
-                args = { name = v.name, player = v.id },
-                arrow = true,
-            }
-        end
-        lib.registerContext({
-            id = 'troll_menu',
-            title = locale('cl_troll_84'),
-            menu = 'admin_mainmenu',
-            onBack = function() end,
-            position = 'top-right',
-            options = options
-        })
-        lib.showContext('troll_menu')
-    end)
+RegisterNuiCallback('wildAttack', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:wildattack', { id = data.id })
+    cb({ success = true })
 end)
 
--- troll options menu
-RegisterNetEvent('rsg-adminmenu:client:trolloptions', function(data)
-
-    lib.registerContext({
-        id = 'troll_optionsmenu',
-        title = locale('cl_troll_85'),
-        menu = 'troll_menu',
-        onBack = function() end,
-        options = {
-            {
-                title = locale('cl_troll_86'),
-                description = locale('cl_troll_87'),
-                icon = 'fa-solid fa-paw',
-                serverEvent = 'rsg-adminmenu:server:wildattack',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_troll_128'),
-                description = locale('cl_troll_129'),
-                icon = 'fa-solid fa-fire',
-                serverEvent = 'rsg-adminmenu:server:playerfire',
-                args = { id = data.player },
-                arrow = true
-            },
-        }
-    })
-    lib.showContext('troll_optionsmenu')
-
+RegisterNuiCallback('setOnFire', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:playerfire', { id = data.id })
+    cb({ success = true })
 end)
 
 -------------------------------------------------------------------

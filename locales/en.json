@@ -240,6 +240,7 @@
     "sv_ban_h" : "banned for using set on fire",
     "sv_ban_i" : "banned for using give item",
     "sv_ban_j" : "banned for using get player info",
+    "sv_ban_k" : "banned for using an admin action",
     "sv_103" : "You have been kicked from the server",
     "sv_104" : "🔸 Check our Discord for more information: ",
     "sv_106" : "You have been banned:",

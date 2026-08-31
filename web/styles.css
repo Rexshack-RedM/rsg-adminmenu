@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Rye&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --rdr-bg: #000000;
+  --rdr-bg-elev: #0a0a0a;
+  --rdr-surface: rgba(20, 20, 20, 0.7);
+  --rdr-surface-2: rgba(30, 30, 30, 0.75);
+  --rdr-panel: rgba(8, 7, 6, 0.97);
+
+  --rdr-heading: #ffffff;
+  --rdr-text: #f2f2f2;
+  --rdr-muted: #b5b5b5;
+  --rdr-faint: #6b6b6b;
+
+  --rdr-accent: #c8892b;
+  --rdr-accent-bright: #e8a63d;
+  --rdr-accent-deep: #8a5a1b;
+  --rdr-red: #b8442f;
+  --rdr-red-bright: #d95f42;
+  --rdr-green: #5e8f4f;
+
+  /* pre-mixed translucent variants — Tailwind's `/NN` opacity modifier doesn't
+     generate a rule for arbitrary `var(--x)` values (only for its own palette
+     colors), so any bg-[var(--rdr-accent)]/20-style class silently produces no
+     CSS at all. Bake the alpha into the variable itself instead. */
+  --rdr-accent-10: rgba(200, 137, 43, 0.10);
+  --rdr-accent-15: rgba(200, 137, 43, 0.15);
+  --rdr-accent-20: rgba(200, 137, 43, 0.20);
+  --rdr-accent-40: rgba(200, 137, 43, 0.40);
+  --rdr-accent-50: rgba(200, 137, 43, 0.50);
+  --rdr-red-10: rgba(184, 68, 47, 0.10);
+  --rdr-red-15: rgba(184, 68, 47, 0.15);
+  --rdr-red-20: rgba(184, 68, 47, 0.20);
+  --rdr-red-50: rgba(184, 68, 47, 0.50);
+
+  --rdr-line: rgba(255, 255, 255, 0.1);
+  --rdr-border: rgba(255, 255, 255, 0.15);
+
+  --font-display: 'Rye', 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--rdr-text);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--rdr-faint);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--rdr-heading) !important;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

@@ -1,6 +1,14 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 lib.locale()
 
+-- shared toggle state (declared up front so the NUI callbacks below and the
+-- RegisterNetEvent handlers further down both close over the same locals)
+local invisible = false
+local godmode = false
+local playerBlipsEnabled = false
+local playerBlips = {}
+local blipUpdateThread = nil
+
 RegisterRawKeymap("adminmenu", nil, function()
     local playerData = RSGCore.Functions.GetPlayerData()
     if playerData and playerData.citizenid then
@@ -11,281 +19,200 @@ end, 0x21, false)
 -- 0x21 = Page up key
 
 -------------------------------
--- main admin base menu
+-- open the admin dashboard (server only fires this after a permission check)
 -------------------------------
-RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function()
-    lib.registerContext({
-        id = 'admin_mainmenu',
-        title = locale('cl_client_0'),
-        options = {
-            {
-                title = locale('cl_client_0'),
-                description = locale('cl_client_1'),
-                icon = 'fa-solid fa-user-secret',
-                event = 'rsg-adminmenu:client:adminoptions',
-                arrow = true
-            },
-            {
-                title = locale('cl_report_admin_menu'),
-                description = locale('cl_report_admin_menu_desc'),
-                icon = 'fa-solid fa-ticket',
-                event = 'rsg-adminmenu:client:adminreportsmenu',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_2'),
-                description = locale('cl_client_3'),
-                icon = 'fa-solid fa-user',
-                event = 'rsg-adminmenu:client:playersoptions',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_88'),
-                description = locale('cl_client_89'),
-                icon = 'fa-solid fa-money-bill',
-                event = 'rsg-adminmenu:client:playersfinances',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_4'),
-                description = locale('cl_client_5'),
-                icon = 'fa-regular fa-face-grin-squint-tears',
-                event = 'rsg-adminmenu:client:playerstroll',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_6'),
-                description = locale('cl_client_7'),
-                icon = 'fa-solid fa-server',
-                event = 'rsg-adminmenu:client:serveroptions',
-                arrow = true
-            },
-            {
-                title = locale('cl_client_8'),
-                description = locale('cl_client_9'),
-                icon = 'fa-solid fa-code',
-                event = 'rsg-adminmenu:client:devoptions',
-                arrow = true
-            },
-        }
+RegisterNetEvent('rsg-adminmenu:client:openadminmenu', function(data)
+    local playerData = RSGCore.Functions.GetPlayerData()
+    if not playerData or not playerData.citizenid then return end
+
+    local displayName = (data and data.discordName) or (playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname)
+
+    NUI.Open({
+        mode = 'admin',
+        self = {
+            name = displayName,
+            citizenid = playerData.citizenid,
+            job = { label = playerData.job and playerData.job.label or nil },
+            avatarUrl = data and data.discordAvatar or nil,
+        },
+        permissions = {
+            isAdmin = true,
+            enablePlayerBlips = Config.EnablePlayerBlips == true,
+            canManageHistory = data and data.roleFlags and data.roleFlags.canManageHistory == true,
+            canManageAdmins = data and data.roleFlags and data.roleFlags.canManageAdmins == true,
+            atLeastMod = data and data.roleFlags and data.roleFlags.atLeastMod == true,
+            atLeastAdmin = data and data.roleFlags and data.roleFlags.atLeastAdmin == true,
+            fullAccess = data and data.roleFlags and data.roleFlags.fullAccess == true,
+        },
     })
-    lib.showContext('admin_mainmenu')
 end)
 
--- admin options menu
-RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
-    local options = {
-        {
-            title = locale('cl_client_11'),
-            description = locale('cl_client_12'),
-            icon = 'fa-solid fa-up-down-left-right',
-            event = 'RSGCore:Command:GoToMarker',
-            arrow = true
-        },
-        {
-            title = locale('cl_client_13'),
-            description = locale('cl_client_14'),
-            icon = 'fa-solid fa-heart-pulse',
-            event = 'rsg-medic:client:playerRevive',
-            arrow = true
-        },
-        {
-            title = locale('cl_client_15'),
-            description = locale('cl_client_16'),
-            icon = 'fa-solid fa-ghost',
-            onSelect = function()
-                ExecuteCommand('txAdmin:menu:noClipToggle')
-            end,
-            arrow = true
-        },
-        {
-            title = locale('cl_client_146'),
-            description = locale('cl_client_147'),
-            icon = 'fa-solid fa-id-card-clip',
-            onSelect = function()
-                ExecuteCommand('txAdmin:menu:togglePlayerIDs')
-            end,
-            arrow = true
-        },
-        {
-            title = locale('cl_client_17'),
-            description = locale('cl_client_18'),
-            icon = 'fa-solid fa-book-bible',
-            event = 'rsg-adminmenu:client:godmode',
-            arrow = true
-        },
-    }
-
-    if Config.EnablePlayerBlips then
-        table.insert(options, {
-            title = locale('cl_client_154'),
-            description = locale('cl_client_155'),
-            icon = 'fa-solid fa-map-location-dot',
-            event = 'rsg-adminmenu:client:toggleplayerblips',
-            arrow = true
-        })
-    end
-
-    lib.registerContext({
-        id = 'admin_optionsmenu',
-        title = locale('cl_client_10'),
-        menu = 'admin_mainmenu',
-        onBack = function() end,
-        options = options
-    })
-
-    lib.showContext('admin_optionsmenu')
-end)
-
-----------------------------------------
--- player options
-----------------------------------------
-RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
+-------------------------------
+-- players list / player info
+-------------------------------
+RegisterNuiCallback('getPlayers', function(_, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(players)
-        local options = {}
-        for k, v in pairs(players) do
-            options[#options + 1] = {
-                title = locale('cl_client_19') .. ' ' .. v.id .. ' | ' .. v.name,
-                icon = 'fa-solid fa-circle-user',
-                event = 'rsg-adminmenu:client:playermenu',
-                args = { name = v.name, player = v.id },
-                arrow = true,
-            }
+        local mapped = {}
+        for _, v in ipairs(players or {}) do
+            mapped[#mapped + 1] = { id = v.id, name = v.name, citizenid = v.citizenid }
         end
-        lib.registerContext({
-            id = 'players_optionssmenu',
-            title = locale('cl_client_21'),
-            menu = 'admin_mainmenu',
-            onBack = function() end,
-            position = 'top-right',
-            options = options
-        })
-        lib.showContext('players_optionssmenu')
+        cb(mapped)
     end)
 end)
 
---------------------------------------
--- player menu
---------------------------------------
-RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
-    lib.registerContext({
-        id = 'player_menu',
-        title = data.name,
-        menu = 'players_optionssmenu',
-        onBack = function() end,
-        options = {
-            {
-                title = locale('cl_client_137'),
-                description = locale('cl_client_138'),
-                icon = 'fa-solid fa-briefcase-medical',
-                event = 'rsg-adminmenu:server:playerinfo',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_22'),
-                description = locale('cl_client_23'),
-                icon = 'fa-solid fa-briefcase-medical',
-                serverEvent = 'rsg-adminmenu:server:playerrevive',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_130'),
-                description = locale('cl_client_131'),
-                icon = 'fa-solid fa-gift',
-                event = 'rsg-adminmenu:client:giveitem',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_24'),
-                description = locale('cl_client_25'),
-                icon = 'fa-solid fa-box',
-                serverEvent = 'rsg-adminmenu:server:openinventory',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_26'),
-                description = locale('cl_client_27'),
-                icon = 'fa-solid fa-socks',
-                event = 'rsg-adminmenu:client:kickplayer',
-                args = { id = data.player, name = data.name },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_28'),
-                description = locale('cl_client_29'),
-                icon = 'fa-solid fa-ban',
-                event = 'rsg-adminmenu:client:banplayer',
-                args = { id = data.player, name = data.name },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_30'),
-                description = locale('cl_client_31'),
-                icon = 'fa-solid fa-location-dot',
-                serverEvent = 'rsg-adminmenu:server:gotoplayer',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_32'),
-                description = locale('cl_client_33'),
-                icon = 'fa-solid fa-hand',
-                serverEvent = 'rsg-adminmenu:server:bringplayer',
-                args = { id = data.player },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_34'),
-                description = locale('cl_client_35'),
-                icon = 'fa-solid fa-snowflake',
-                serverEvent = 'rsg-adminmenu:server:freezeplayer',
-                args = { id = data.player, name = data.name },
-                arrow = true
-            },
-            {
-                title = locale('cl_client_36'),
-                description = locale('cl_client_37'),
-                icon = 'fa-solid fa-eye',
-                serverEvent = 'rsg-adminmenu:server:spectateplayer',
-                args = { id = data.player },
-                arrow = true
-            },
-        }
-    })
-    lib.showContext('player_menu')
+RegisterNuiCallback('getPlayerInfo', function(data, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayerinfo', function(result)
+        cb(result or {})
+    end, { id = data.id })
 end)
 
--- server options menu
-RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
-    lib.registerContext({
-        id = 'server_optionssmenu',
-        title = locale('cl_client_38'),
-        menu = 'admin_mainmenu',
-        onBack = function() end,
-        options = {
-            {
-                title = locale('cl_client_39'),
-                description = locale('cl_client_40'),
-                icon = 'fa-solid fa-cloud-sun',
-                event = 'weathersync:openAdminUi',
-                arrow = true
-            },
-        }
-    })
-    lib.showContext('server_optionssmenu')
+-------------------------------
+-- player actions
+-------------------------------
+RegisterNuiCallback('revivePlayer', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:playerrevive', { id = data.id })
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('openInventory', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:openinventory', { id = data.id })
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('kickPlayer', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:kickplayer', data.id, data.reason)
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('banPlayer', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, data.duration, data.reason)
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('goToPlayer', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:gotoplayer', { id = data.id })
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('bringPlayer', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:bringplayer', { id = data.id })
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('toggleFreeze', function(data, cb)
+    local targetName = GetPlayerName(GetPlayerFromServerId(data.id)) or ('ID ' .. data.id)
+    TriggerServerEvent('rsg-adminmenu:server:freezeplayer', { id = data.id, name = targetName })
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('toggleSpectate', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:spectateplayer', { id = data.id })
+    cb({ success = true })
+end)
+
+-------------------------------
+-- give item (search happens client-side against RSGCore.Shared.Items, as before)
+-------------------------------
+RegisterNuiCallback('searchItems', function(data, cb)
+    local items = RSGCore.Shared.Items
+    local keyword = (data.query or ''):lower()
+    local options = {}
+
+    if keyword ~= '' then
+        for _, item in pairs(items) do
+            local label = item.label or item.name
+            if label:lower():find(keyword, 1, true) then
+                options[#options + 1] = { value = item.name, label = label }
+                if #options >= 30 then break end
+            end
+        end
+    end
+
+    cb(options)
+end)
+
+RegisterNuiCallback('giveItem', function(data, cb)
+    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, data.item, data.quantity)
+    cb({ success = true })
+end)
+
+-------------------------------
+-- dashboard stats
+-------------------------------
+RegisterNuiCallback('getDashboardStats', function(_, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getdashboardstats', function(stats)
+        cb(stats or {})
+    end)
+end)
+
+RegisterNuiCallback('getBotLogo', function(_, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getbotlogo', function(result)
+        cb(result or {})
+    end)
+end)
+
+RegisterNuiCallback('getAllPlayersManaged', function(_, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getallplayersmanaged', function(result)
+        cb(result or {})
+    end)
+end)
+
+RegisterNuiCallback('unbanPlayer', function(data, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:unbanplayer', function(result)
+        cb(result or { success = false })
+    end, { banId = data.banId })
+end)
+
+RegisterNuiCallback('getStatistics', function(_, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getstatistics', function(result)
+        cb(result or {})
+    end)
+end)
+
+-------------------------------
+-- server weather
+-------------------------------
+RegisterNuiCallback('openWeatherSync', function(_, cb)
+    TriggerEvent('weathersync:openAdminUi')
+    cb({ success = true })
+end)
+
+-------------------------------------------------------------------
+-- admin options: teleport / self revive / toggle IDs
+-------------------------------------------------------------------
+RegisterNuiCallback('teleportToMarker', function(_, cb)
+    TriggerEvent('RSGCore:Command:GoToMarker')
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('selfRevive', function(_, cb)
+    TriggerEvent('rsg-medic:client:playerRevive')
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('toggleIds', function(_, cb)
+    ExecuteCommand('txAdmin:menu:togglePlayerIDs')
+    cb({ success = true })
+end)
+
+RegisterNuiCallback('toggleInvisible', function(_, cb)
+    TriggerEvent('rsg-adminmenu:client:goinvisible')
+    cb({ enabled = invisible == true })
+end)
+
+RegisterNuiCallback('toggleGodmode', function(_, cb)
+    TriggerEvent('rsg-adminmenu:client:godmode')
+    cb({ enabled = godmode == true })
+end)
+
+RegisterNuiCallback('togglePlayerBlips', function(_, cb)
+    TriggerEvent('rsg-adminmenu:client:toggleplayerblips')
+    cb({ enabled = playerBlipsEnabled == true })
 end)
 
 -------------------------------------------------------------------
 -- toggle player blips
 -------------------------------------------------------------------
-local playerBlipsEnabled = false
-local playerBlips = {}
-local blipUpdateThread = nil
-
 RegisterNetEvent('rsg-adminmenu:client:toggleplayerblips', function()
     local playerId = PlayerId()
     local serverId = GetPlayerServerId(playerId)
@@ -353,7 +280,6 @@ end)
 -------------------------------------------------------------------
 -- go invisible
 -------------------------------------------------------------------
-local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
     local playerId = PlayerId()
     local serverId = GetPlayerServerId(playerId)
@@ -406,10 +332,16 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
             'red',
             playerName .. ' (ID: ' .. serverId .. ') ' .. locale('cl_adminmenu_b') -- enabled godmode
         )
-        while godmode do
-            Wait(0)
-            SetPlayerInvincible(cache.ped, true)
-        end
+        -- SetPlayerInvincible is a sticky flag, not a per-frame state — it stays
+        -- set until explicitly changed, so this never needed a Wait(0) loop
+        -- re-calling it hundreds of times a second. Still loop, just slowly, so
+        -- a ped change mid-godmode (death/respawn) gets re-flagged invincible.
+        CreateThread(function()
+            while godmode do
+                SetPlayerInvincible(cache.ped, true)
+                Wait(2000)
+            end
+        end)
     else
         -- Godmode disabled
         SetPlayerInvincible(cache.ped, false)
@@ -424,75 +356,9 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     end
 end)
 
-
 ------------------------
--- kick player reason
+-- kick / ban announcements arrive through the server events unchanged
 ------------------------
-RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
-    local input = lib.inputDialog(locale('cl_client_50') .. ': ' .. data.name, {
-        {
-            label = locale('cl_client_51'),
-            type = 'input',
-            required = true,
-        },
-    })
-    if not input then return end
-
-    TriggerServerEvent('rsg-adminmenu:server:kickplayer', data.id, input[1])
-end)
-
-----------------------
--- ban player reason
-----------------------
-RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
-    local input = lib.inputDialog(locale('cl_client_52') .. ': ' .. data.name, {
-        {
-            label = locale('cl_client_53'),
-            type = 'select',
-            options = {
-                { value = "permanent", label = locale('cl_client_53_a') },
-                { value = "temporary", label = locale('cl_client_53_b') },
-            },
-            required = true,
-        },
-        {
-            label = locale('cl_client_54'),
-            type = 'select',
-            options = {
-                { value = '3600',        label = locale('cl_client_55') },
-                { value = '21600',       label = locale('cl_client_56') },
-                { value = '43200',       label = locale('cl_client_57') },
-                { value = '86400',       label = locale('cl_client_58') },
-                { value = '259200',      label = locale('cl_client_59') },
-                { value = '604800',      label = locale('cl_client_60') },
-                { value = '2678400',     label = locale('cl_client_61') },
-                { value = '8035200',     label = locale('cl_client_62') },
-                { value = '16070400',    label = locale('cl_client_63') },
-                { value = '32140800',    label = locale('cl_client_64') },
-                { value = '99999999999', label = locale('cl_client_65') },
-            },
-            required = true,
-        },
-        {
-            label = locale('cl_client_51'),
-            type = 'input',
-            required = true,
-        }
-    })
-
-    if not input then return end
-
-    -- permanent ban
-    if input[1] == 'permanent' then
-        TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, '99999999999', input[3])
-        lib.notify({ title = locale('cl_client_66'), description = data.name .. locale('cl_client_67'), type = 'inform' })
-    end
-    -- temporary ban
-    if input[1] == 'temporary' then
-        TriggerServerEvent('rsg-adminmenu:server:banplayer', data.id, input[2], input[3])
-        lib.notify({ title = locale('cl_client_66'), description = data.name .. locale('cl_client_68'), type = 'inform' })
-    end
-end)
 
 --------------------
 -- spectate player
@@ -522,141 +388,4 @@ RegisterNetEvent('rsg-adminmenu:client:spectateplayer', function(targetPed)
         SetEntityInvincible(cache.ped, false)                -- Remove godmode
         lastSpectateCoord = nil                              -- Reset Last Saved Coords
     end
-end)
-
------------------------
--- sort table function
------------------------
-local function compareNames(a, b)
-    return a.value < b.value
-end
-
----------------------
--- give item
----------------------
-RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
-    local items = RSGCore.Shared.Items
-
-    local searchInput = lib.inputDialog('Search and Give Item', {
-        {
-            type = 'input',
-            label = 'Search Item',
-            placeholder = 'e.g. revolver, bandage...',
-            required = true
-        }
-    })
-
-    if not searchInput then return end
-    local keyword = searchInput[1]:lower()
-
-    -- 2. Filter matching items
-    local options = {}
-    for _, item in pairs(items) do
-        local label = item.label or item.name
-        if label:lower():find(keyword, 1, true) then
-            options[#options + 1] = {
-                value = item.name,
-                label = label
-            }
-        end
-    end
-
-    if #options == 0 then
-        return lib.notify({ type = 'error', description = 'No item found for "' .. keyword .. '"' })
-    end
-
-    local result = lib.inputDialog('Select and Confirm', {
-        {
-            type = 'select',
-            label = 'Item to Give',
-            options = options,
-            required = true,
-            search = true
-        },
-        {
-            type = 'number',
-            label = 'Quantity',
-            required = true
-        }
-    })
-
-    if not result then return end
-
-    local selectedItem = result[1]
-    local quantity = tonumber(result[2])
-
-    if not selectedItem or not quantity or quantity <= 0 then
-        return lib.notify({ type = 'error', description = 'Invalid input.' })
-    end
-
-    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, selectedItem, quantity)
-end)
-
--------------------------
--- player info
--------------------------
-RegisterNetEvent('rsg-adminmenu:server:playerinfo', function(player)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayerinfo', function(data)
-        lib.registerContext(
-            {
-                id = 'adminplayer_info',
-                title = locale('cl_client_139'),
-                description = '',
-                menu = 'players_optionssmenu',
-                onBack = function() end,
-                position = 'top-right',
-                options = {
-                    {
-                        title = locale('cl_client_140') .. ': ' .. data.firstname .. ' ' .. data.lastname,
-                        icon = 'user',
-                    },
-                    {
-                        title = locale('cl_client_141') .. ': ' .. data.job,
-                        icon = 'user',
-                    },
-                    {
-                        title = locale('cl_client_142') .. ': ' .. tostring(data.grade),
-                        icon = 'user',
-                    },
-                    {
-                        title = locale('cl_client_143') .. ': ' .. tostring(data.cash),
-                        icon = 'fa-solid fa-money-bill',
-                    },
-                    {
-                        title = locale('cl_client_144') .. ': ' .. tostring(data.bloodmoney),
-                        icon = 'fa-solid fa-money-bill',
-                    },
-                    {
-                        title = locale('cl_client_153') .. ': ' .. tostring(data.bank),
-                        icon = 'fa-solid fa-building-columns',
-                    },
-                    {
-                        title = locale('cl_client_148') .. ': ' .. tostring(data.valbank),
-                        icon = 'fa-solid fa-building-columns',
-                    },
-                    {
-                        title = locale('cl_client_149') .. ': ' .. tostring(data.rhobank),
-                        icon = 'fa-solid fa-building-columns',
-                    },
-                    {
-                        title = locale('cl_client_150') .. ': ' .. tostring(data.blkbank),
-                        icon = 'fa-solid fa-building-columns',
-                    },
-                    {
-                        title = locale('cl_client_151') .. ': ' .. tostring(data.armbank),
-                        icon = 'fa-solid fa-building-columns',
-                    },
-                    {
-                        title = 'CitizenID : ' .. data.citizenid,
-                        icon = 'fa-solid fa-id-card',
-                    },
-                    {
-                        title = 'ServerID : ' .. data.serverid,
-                        icon = 'fa-solid fa-server',
-                    },
-                }
-            }
-        )
-        lib.showContext('adminplayer_info')
-    end, player)
 end)

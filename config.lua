@@ -2,9 +2,23 @@ Config = {}
 
 Config.EnablePlayerBlips = true
 
+-- Used to resolve an admin's real Discord username for the "Hey, {name}" dashboard greeting.
+-- Create an application + bot at https://discord.com/developers/applications, copy its token
+-- here. The bot does NOT need to be invited to your Discord server for this lookup to work.
+-- Leave blank to fall back to the in-game character name instead.
+Config.DiscordBot = {
+    Token = "TOKEN HERE",
+}
+
+Config.Webhooks = {
+    AdminLogs = "YOUR_DISCORD_WEBHOOK_URL_HERE",        -- any admin action (kick, ban, teleport, permission changes, etc.)
+    PlayerManagement = "YOUR_DISCORD_WEBHOOK_URL_HERE", -- player-targeted actions, including finances (give/remove money)
+    WorldSettings = "YOUR_DISCORD_WEBHOOK_URL_HERE",    -- server actions (kick-all, close server, announcements) + time/weather/wind/timescale/resource changes
+}
+
 Config.Reports = {
     Webhooks = {
-        Main = "YOUR_WEBHOOK_URL_HERE",
+        Main = "YOUR_DISCORD_WEBHOOK_URL_HERE",
         Bug = "",      -- Leave empty to use Main
         Player = "",   -- Leave empty to use Main
         Question = "", -- Leave empty to use Main

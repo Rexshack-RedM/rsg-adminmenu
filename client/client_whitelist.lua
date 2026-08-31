@@ -1,0 +1,25 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
+RegisterNuiCallback('getWhitelist', function(_, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getwhitelist', function(result)
+        cb(result or {})
+    end)
+end)
+
+RegisterNuiCallback('addWhitelist', function(data, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:addwhitelist', function(result)
+        cb(result or { success = false })
+    end, data)
+end)
+
+RegisterNuiCallback('setWhitelistStatus', function(data, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:setwhiteliststatus', function(result)
+        cb(result or { success = false })
+    end, data)
+end)
+
+RegisterNuiCallback('removeWhitelist', function(data, cb)
+    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:removewhitelist', function(result)
+        cb(result or { success = false })
+    end, data)
+end)
