@@ -41,12 +41,32 @@ export async function fetchNui<T = unknown>(
     return {} as T;
   }
   const resourceName = (window as any).GetParentResourceName();
-  const response = await fetch(`https://${resourceName}/${eventName}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return response.json();
+  try {
+    const response = await fetch(`https://${resourceName}/${eventName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      console.error(`[NUI] ${eventName} failed: HTTP ${response.status}`);
+      return (mockData ?? {}) as T;
+    }
+    return await response.json();
+  } catch (err) {
+    console.error(`[NUI] ${eventName} failed`, err);
+    return (mockData ?? {}) as T;
+  }
+}
+
+// NUI CEF does not grant clipboard-write, so in-game copies go through Lua
+// (ox_lib setClipboard). Browser debug still uses the normal clipboard API.
+export async function copyToClipboard(text: string): Promise<void> {
+  if (!text) return;
+  if (isDebug) {
+    await navigator.clipboard?.writeText(text);
+    return;
+  }
+  await fetchNui('copyToClipboard', { text }, { success: true });
 }
 
 // Module-level cache shared across every mount of every page for the lifetime of the

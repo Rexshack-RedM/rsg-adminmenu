@@ -94,7 +94,7 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
           className="text-xs"
           isLoading={refreshing}
           loadingText="Refreshing"
-          onClick={async () => { setRefreshing(true); await refresh(); setRefreshing(false); }}
+          onClick={async () => { setRefreshing(true); try { await refresh(); } finally { setRefreshing(false); } }}
         >
           Refresh
         </Button>

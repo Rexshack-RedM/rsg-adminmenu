@@ -3,7 +3,7 @@ import {
   Search, UserCog, ShieldCheck, Crown, MessageCircle, Cpu, Fingerprint, Calendar, Wifi,
   Eye, MapPin, LogOut, Trash2, KeyRound, UserPlus, CheckCircle2, Award,
 } from 'lucide-react';
-import { fetchNui, useNuiData } from '../hooks/useNui';
+import { copyToClipboard, fetchNui, useNuiData } from '../hooks/useNui';
 import { useToast } from '../components/Toast';
 import { Modal } from '../components/Modal';
 import { Dropdown } from '../components/Dropdown';
@@ -83,7 +83,7 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
             className="text-xs"
             isLoading={refreshing}
             loadingText="Refreshing"
-            onClick={async () => { setRefreshing(true); await refresh(); setRefreshing(false); }}
+            onClick={async () => { setRefreshing(true); try { await refresh(); } finally { setRefreshing(false); } }}
           >
             Refresh
           </Button>
@@ -428,7 +428,7 @@ function IdRow({ icon, label, value }: { icon: React.ReactNode; label: string; v
       disabled={!value}
       onClick={() => {
         if (!value) return;
-        navigator.clipboard?.writeText(value).catch(() => {});
+        copyToClipboard(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}

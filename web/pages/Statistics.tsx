@@ -333,7 +333,13 @@ function EconomyTab({ stats }: { stats: StatisticsData }) {
               <XAxis dataKey="type" type="category" interval={0} tickFormatter={(t: MoneyType) => moneyLabels[t]} tickLine={false} axisLine={false} tickMargin={10} stroke="var(--rdr-muted)" fontSize={12} />
               <YAxis tickLine={false} axisLine={false} tickMargin={8} stroke="var(--rdr-muted)" fontSize={12} tickFormatter={(v: number) => `$${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`} />
               <Tooltip content={<ChartTooltipContent labelFormatter={(t: string) => moneyLabels[t as MoneyType]} valueFormatter={formatMoney} />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="total" name="Total" fill="var(--rdr-accent)" radius={4} />
+              <Bar
+                dataKey="total"
+                name="Total"
+                fill="var(--rdr-accent)"
+                radius={4}
+                minPointSize={(value) => (Number(value) > 0 ? 8 : 0)}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

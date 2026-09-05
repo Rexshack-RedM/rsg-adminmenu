@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, FileText, Hourglass, CheckCircle2, BarChart2, Fingerprint, MessageCircle, Cpu, Check } from 'lucide-react';
-import { fetchNui, useNuiData } from '../hooks/useNui';
+import { copyToClipboard, fetchNui, useNuiData } from '../hooks/useNui';
 import { useToast } from '../components/Toast';
 import { Modal, ConfirmModal } from '../components/Modal';
 import { PlayerManageModal } from '../components/PlayerManageModal';
@@ -85,7 +85,7 @@ export function Reports({ permissions }: { permissions: Permissions | null }) {
           className="text-xs"
           isLoading={refreshing}
           loadingText="Refreshing"
-          onClick={async () => { setRefreshing(true); await load(); setRefreshing(false); }}
+          onClick={async () => { setRefreshing(true); try { await load(); } finally { setRefreshing(false); } }}
         >
           Refresh
         </Button>
@@ -176,7 +176,7 @@ function ReportCopyRow({ icon, label, value }: { icon: React.ReactNode; label: s
       disabled={!value}
       onClick={() => {
         if (!value) return;
-        navigator.clipboard?.writeText(value).catch(() => {});
+        copyToClipboard(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}

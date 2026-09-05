@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, RefreshCw, Play, Square, Check, ClipboardList } from 'lucide-react';
-import { fetchNui } from '../../hooks/useNui';
+import { copyToClipboard, fetchNui } from '../../hooks/useNui';
 import { Button } from '../../components/Button';
 import type { CurrentCoords } from '../../types';
 
@@ -28,7 +28,7 @@ function FormatRow({ badge, label, value }: { badge: string; label: string; valu
         <Button
           variant="outline"
           className="text-xs px-3 py-2 shrink-0"
-          onClick={() => { navigator.clipboard?.writeText(value).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1200); }}
+          onClick={async () => { await copyToClipboard(value); setCopied(true); setTimeout(() => setCopied(false), 1200); }}
         >
           {copied ? <Check size={13} /> : <ClipboardList size={13} />} {copied ? 'Copied' : 'Copy'}
         </Button>

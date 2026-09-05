@@ -4,12 +4,8 @@ local function CanUseServerSettings(src)
     return RSGCore.Functions.HasPermission(src, permissions['serversettings']) or IsPlayerAceAllowed(src, 'god')
 end
 
------------------------------------------------------------------------
--- server actions
------------------------------------------------------------------------
 local serverClosed = false
 
--- rejects new connections while the server is marked closed, admins excepted
 AddEventHandler('playerConnecting', function(_, _, deferrals)
     local src = source
     if not serverClosed then return end
@@ -58,9 +54,12 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:refreshresources', functi
         cb({ success = false })
         return
     end
-    ExecuteCommand('refresh')
-    LogAdminAction('server_event', 'low', src, 'Refreshed server resources', nil, nil)
-    cb({ success = true })
+
+    CreateThread(function()
+        ExecuteCommand('refresh')
+        LogAdminAction('server_event', 'low', src, 'Refreshed server resources', nil, nil)
+        cb({ success = true })
+    end)
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendannouncement', function(source, cb, data)
@@ -82,11 +81,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendannouncement', functi
     cb({ success = true })
 end)
 
------------------------------------------------------------------------
--- world settings (time / weather / wind / timescale) — this resource holds
--- the authoritative values and pushes them to every client (including on
--- join), which then applies them locally via natives on its own
------------------------------------------------------------------------
 local worldSettings = {
     time = { day = nil, hour = 6, minute = 0, second = 0, transition = 5, freeze = false },
     weather = { type = 'SUNNY', transition = 5, freeze = false, snow = false },
@@ -173,6 +167,79 @@ end)
 -----------------------------------------------------------------------
 -- resource management
 -----------------------------------------------------------------------
+-- Refresh Resources on the Server Settings page still needs command.refresh.
+CreateThread(function()
+    pcall(function()
+        exports.ox_lib.addAce('resource.' .. GetCurrentResourceName(), 'command.refresh', true)
+    end)
+end)
+
+local function collectMetadata(name, key)
+    local out = {}
+    local i = 0
+    while i < 64 do
+        local v = GetResourceMetadata(name, key, i)
+        if v == nil then break end
+        if v ~= '' then out[#out + 1] = v end
+        i = i + 1
+    end
+    return out
+end
+
+-- LoadResourceFile cannot read fxmanifest.lua (it isn't in files {}), so
+-- that path always returned nothing. Read the file off disk instead.
+local function readManifestFile(name)
+    local base = GetResourcePath(name)
+    if io and io.open and base and base ~= '' then
+        base = base:gsub('\\', '/'):gsub('/+$', '')
+        local f = io.open(base .. '/fxmanifest.lua', 'r') or io.open(base .. '/__resource.lua', 'r')
+        if f then
+            local body = f:read('*a')
+            f:close()
+            if body and body ~= '' then return body end
+        end
+    end
+    return LoadResourceFile(name, 'fxmanifest.lua') or LoadResourceFile(name, '__resource.lua')
+end
+
+local function dependenciesFromManifest(name)
+    local manifest = readManifestFile(name)
+    if not manifest then return {} end
+    local deps, seen = {}, {}
+    local function add(dep)
+        if type(dep) ~= 'string' then return end
+        dep = dep:match('^%s*(.-)%s*$') or dep
+        if dep == '' or dep:sub(1, 1) == '/' or seen[dep] then return end
+        seen[dep] = true
+        deps[#deps + 1] = dep
+    end
+    for dep in manifest:gmatch("[Dd]ependency%s+['\"]([^'\"]+)['\"]") do
+        add(dep)
+    end
+    for block in manifest:gmatch("[Dd]ependencies%s*{([^}]+)}") do
+        for dep in block:gmatch("['\"]([^'\"]+)['\"]") do
+            add(dep)
+        end
+    end
+    return deps
+end
+
+local function getResourceDependencies(name)
+    local seen, deps = {}, {}
+    local function addAll(list)
+        for _, dep in ipairs(list) do
+            if type(dep) == 'string' and dep ~= '' and dep:sub(1, 1) ~= '/' and not seen[dep] then
+                seen[dep] = true
+                deps[#deps + 1] = dep
+            end
+        end
+    end
+    addAll(collectMetadata(name, 'dependency'))
+    addAll(collectMetadata(name, 'dependencies'))
+    addAll(dependenciesFromManifest(name))
+    return deps
+end
+
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getresources', function(source, cb)
     local src = source
     if not CanUseServerSettings(src) then
@@ -184,85 +251,17 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getresources', function(s
     for i = 0, count - 1 do
         local name = GetResourceByFindIndex(i)
         if name then
-            local depCount = GetNumResourceMetadata(name, 'dependency') or 0
-            local dependencies = {}
-            for d = 0, depCount - 1 do
-                dependencies[#dependencies + 1] = GetResourceMetadata(name, 'dependency', d)
-            end
             list[#list + 1] = {
                 name = name,
                 state = GetResourceState(name),
                 version = GetResourceMetadata(name, 'version', 0),
                 author = GetResourceMetadata(name, 'author', 0),
                 description = GetResourceMetadata(name, 'description', 0),
-                dependencies = dependencies,
+                -- joined string so NUI JSON never turns an empty Lua table into
+                -- `{}` (which has no .length and always rendered as "No dependencies")
+                dependencies = table.concat(getResourceDependencies(name), ', '),
             }
         end
     end
     cb(list)
-end)
-
--- states that count as a successful outcome for each command, once the
--- resource has had a moment to actually transition
-local expectedStates = {
-    start = { started = true, starting = true },
-    restart = { started = true, starting = true },
-    stop = { stopped = true, stopping = true, uninitialized = true },
-}
-
-local function ResourceAction(source, cb, command, name)
-    local src = source
-    if not CanUseServerSettings(src) then
-        cb({ success = false })
-        return
-    end
-    if not name or name == '' or GetResourceState(name) == 'missing' then
-        cb({ success = false, reason = 'not_found' })
-        return
-    end
-
-    local label = command:sub(1, 1):upper() .. command:sub(2)
-
-    -- stopping/restarting THIS resource kills the very Lua context handling
-    -- this very request partway through — the callback below would never run,
-    -- and the NUI's request would just hang forever with no error shown
-    -- (exactly what "the button doesn't work" looks like from the panel).
-    -- Acknowledge first, then issue the command a moment later so the
-    -- response has actually gone out before this resource goes down.
-    if name == GetCurrentResourceName() then
-        LogAdminAction('server_event', 'high', src, label .. ' resource', name, name)
-        cb({ success = true })
-        CreateThread(function()
-            Wait(300)
-            ExecuteCommand(command .. ' ' .. name)
-        end)
-        return
-    end
-
-    ExecuteCommand(command .. ' ' .. name)
-
-    -- ExecuteCommand doesn't report whether the command actually took effect
-    -- (a typo'd name, a resource that refuses to stop, etc. would previously
-    -- have still reported success) — give it a moment, then check for real
-    CreateThread(function()
-        Wait(command == 'stop' and 500 or 1500)
-        local newState = GetResourceState(name)
-        local ok = expectedStates[command] and expectedStates[command][newState] or false
-        if ok then
-            LogAdminAction('server_event', 'medium', src, label .. ' resource', name, name)
-        end
-        cb({ success = ok, state = newState })
-    end)
-end
-
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:startresource', function(source, cb, data)
-    ResourceAction(source, cb, 'start', data and data.name)
-end)
-
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:stopresource', function(source, cb, data)
-    ResourceAction(source, cb, 'stop', data and data.name)
-end)
-
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:restartresource', function(source, cb, data)
-    ResourceAction(source, cb, 'restart', data and data.name)
 end)

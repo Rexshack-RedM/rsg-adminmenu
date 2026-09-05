@@ -33,12 +33,6 @@ RegisterNuiCallback('sendAnnouncement', function(data, cb)
     end, data)
 end)
 
------------------------------------------------------------------------
--- world settings — server pushes the authoritative values here (on change
--- and on join); this client applies them locally via natives, and keeps
--- re-applying every few seconds while a "freeze" flag is set so the game's
--- own simulation doesn't slowly drift the value back
------------------------------------------------------------------------
 RegisterNuiCallback('getWorldSettings', function(_, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getworldsettings', function(result)
         cb(result or {})
@@ -91,17 +85,14 @@ end
 
 local function ApplyWeather(w)
     if not w then return end
-    -- RDR3's SET_WEATHER_TYPE has no auto-generated Lua global (unlike GTA5's
-    -- weather natives) — invoked by hash per the RDR3 community reference at
-    -- https://github.com/femga/rdr3_discoveries/blob/master/weather/weather_types.lua
+
     Citizen.InvokeNative(0x59174F1AFE095B5A, GetHashKey(w.type or 'SUNNY'), true, true, true,
         (tonumber(w.transition) or 0) + 0.0, false)
 end
 
 local function ApplyWind(w)
     if not w then return end
-    -- UI speed is 0-100 for a simple slider; SET_WIND_SPEED's native range is
-    -- 0-12 m/s, and SET_WIND_DIRECTION takes radians, not degrees
+
     SetWindSpeed(((tonumber(w.speed) or 0) / 100) * 12.0)
     SetWindDirection(math.rad(tonumber(w.direction) or 0))
 end
@@ -120,8 +111,7 @@ RegisterNetEvent('rsg-adminmenu:client:applyworldsettings', function(settings)
     ApplyAll(settings)
 end)
 
--- re-assert any frozen values periodically so the natural sim can't drift
--- them back between admin changes
+
 CreateThread(function()
     while true do
         Wait(5000)
@@ -133,36 +123,14 @@ CreateThread(function()
     end
 end)
 
------------------------------------------------------------------------
--- resource management
------------------------------------------------------------------------
+
 RegisterNuiCallback('getResources', function(_, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getresources', function(result)
         cb(result or {})
     end)
 end)
 
-RegisterNuiCallback('startResource', function(data, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:startresource', function(result)
-        cb(result or { success = false })
-    end, data)
-end)
 
-RegisterNuiCallback('stopResource', function(data, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:stopresource', function(result)
-        cb(result or { success = false })
-    end, data)
-end)
-
-RegisterNuiCallback('restartResource', function(data, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:restartresource', function(result)
-        cb(result or { success = false })
-    end, data)
-end)
-
------------------------------------------------------------------------
--- master admin — webhook settings + custom items
------------------------------------------------------------------------
 RegisterNuiCallback('getWebhookSettings', function(_, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getwebhooksettings', function(result)
         cb(result or {})

@@ -8,7 +8,7 @@ import {
   Zap, ArrowUpToLine, Shuffle, BatteryLow, Link2, Wine, AlertTriangle, Check,
   Ghost, Footprints, Waves, Users,
 } from 'lucide-react';
-import { fetchNui } from '../hooks/useNui';
+import { copyToClipboard, fetchNui } from '../hooks/useNui';
 import { useToast } from './Toast';
 import { Modal, ConfirmModal } from './Modal';
 import { Dropdown } from './Dropdown';
@@ -149,7 +149,7 @@ function CopyRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   return (
     <button
       onClick={() => {
-        navigator.clipboard?.writeText(value).catch(() => {});
+        copyToClipboard(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}

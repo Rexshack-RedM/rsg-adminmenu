@@ -32,10 +32,7 @@ MySQL.query([[
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ]])
 
------------------------------------------------------------------------
--- teleport locations (built-in list lives client-side; this is only the
--- custom/admin-added ones, persisted so they survive a restart)
------------------------------------------------------------------------
+
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getteleportlocations', function(source, cb)
     local src = source
     if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
@@ -74,9 +71,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deleteteleportlocation', 
     end)
 end)
 
------------------------------------------------------------------------
--- map blips
------------------------------------------------------------------------
+
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getblips', function(source, cb)
     local src = source
     if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
@@ -140,7 +135,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deleteblip', function(sou
     end)
 end)
 
--- sync blips to any admin as soon as they load in
+
 AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
     local src = Player.PlayerData.source
     if RSGCore.Functions.HasPermission(src, permissions['adminmenu']) then
@@ -150,9 +145,6 @@ AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
     end
 end)
 
------------------------------------------------------------------------
--- entity spawner
------------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:spawnentity', function(source, cb, data)
     local src = source
     if not (RSGCore.Functions.HasPermission(src, permissions['worldtools']) or IsPlayerAceAllowed(src, 'god')) then
@@ -167,4 +159,17 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:spawnentity', function(so
     TriggerClientEvent('rsg-adminmenu:client:spawnentity', src, data.entityType, hash)
     LogAdminAction('admin_action', 'low', src, 'Spawned entity', data.entityType .. ': ' .. hash, nil)
     cb({ success = true })
+end)
+
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:cleararea', function(source, cb, data)
+    local src = source
+    if not (RSGCore.Functions.HasPermission(src, permissions['worldtools']) or IsPlayerAceAllowed(src, 'god')) then
+        cb({ success = false, message = 'No permission' })
+        return
+    end
+    local radius = tonumber(data and data.radius) or 25
+    radius = math.max(5.0, math.min(100.0, radius + 0.0))
+    TriggerClientEvent('rsg-adminmenu:client:cleararea', src, radius)
+    LogAdminAction('admin_action', 'low', src, 'Cleared area', ('Radius: %.0fm'):format(radius), nil)
+    cb({ success = true, radius = radius })
 end)

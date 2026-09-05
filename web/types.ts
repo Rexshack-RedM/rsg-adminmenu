@@ -54,7 +54,7 @@ export interface ServerResource {
   version?: string;
   author?: string;
   description?: string;
-  dependencies: string[];
+  dependencies: string[] | string;
 }
 
 export interface WebhookSettings {
