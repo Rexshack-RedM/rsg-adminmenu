@@ -195,7 +195,6 @@ function OverviewTab({ detail, totalBank, toast }: { detail: PlayerDetail; total
         <div className="space-y-1.5">
           <CopyRow icon={<Fingerprint size={14} />} label="Citizen ID" value={detail.citizenid} />
           <CopyRow icon={<Cpu size={14} />} label="Steam Hex" value={detail.steamHex || 'Unavailable'} />
-          <CopyRow icon={<MapPin size={14} />} label="IP Address" value={detail.ip || 'Unavailable'} />
           <CopyRow icon={<MessageCircle size={14} />} label="Discord ID" value={detail.discordId ? `${detail.discordId}${detail.discordName ? ` (${detail.discordName})` : ''}` : 'Unavailable'} />
         </div>
       </div>
