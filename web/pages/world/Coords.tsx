@@ -1,3 +1,4 @@
+import { locale } from '../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, RefreshCw, Play, Square, Check, ClipboardList } from 'lucide-react';
 import { copyToClipboard, fetchNui } from '../../hooks/useNui';
@@ -30,7 +31,7 @@ function FormatRow({ badge, label, value }: { badge: string; label: string; valu
           className="text-xs px-3 py-2 shrink-0"
           onClick={async () => { await copyToClipboard(value); setCopied(true); setTimeout(() => setCopied(false), 1200); }}
         >
-          {copied ? <Check size={13} /> : <ClipboardList size={13} />} {copied ? 'Copied' : 'Copy'}
+          {copied ? <Check size={13} /> : <ClipboardList size={13} />} {copied ? locale('ui_copied') : locale('ui_copy')}
         </Button>
       </div>
     </div>
@@ -64,43 +65,43 @@ export function Coords() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold flex items-center gap-2"><MapPin size={22} /> Coordinates</h2>
-          <p className="text-[var(--rdr-muted)] mt-1 text-sm">Get your current player coordinates in various formats</p>
+          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold flex items-center gap-2"><MapPin size={22} /> {locale('ui_coordinates_3')}</h2>
+          <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_get_your_current_player_coordinates_in_vario')}</p>
         </div>
         <span className={`px-2 py-1 rounded-sm text-xs ${live ? 'bg-green-500/20 text-green-400' : 'bg-[var(--rdr-surface-2)] text-[var(--rdr-faint)]'}`}>
-          Live Update {live ? 'ON' : 'OFF'}
+          {locale('ui_live_update')} {live ? 'ON' : 'OFF'}
         </span>
       </div>
 
       <div className="rounded-lg p-4 flex items-center justify-between" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
         <div>
-          <p className="text-[var(--rdr-heading)] text-sm font-semibold">Live Coordinate Update</p>
-          <p className="text-[var(--rdr-muted)] text-xs mt-0.5">Enable to automatically update coordinates in real-time</p>
+          <p className="text-[var(--rdr-heading)] text-sm font-semibold">{locale('ui_live_coordinate_update')}</p>
+          <p className="text-[var(--rdr-muted)] text-xs mt-0.5">{locale('ui_enable_to_automatically_update_coordinates_i')}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="text-xs" onClick={refresh}><RefreshCw size={13} /> Refresh</Button>
+          <Button variant="outline" className="text-xs" onClick={refresh}><RefreshCw size={13} /> {locale('ui_refresh')}</Button>
           <Button variant="outline" tone={live ? 'red' : 'green'} className="text-xs" onClick={() => setLive((l) => !l)}>
-            {live ? <><Square size={13} /> Stop Live</> : <><Play size={13} /> Start Live</>}
+            {live ? <><Square size={13} /> {locale('ui_stop_live')}</> : <><Play size={13} /> {locale('ui_start_live')}</>}
           </Button>
         </div>
       </div>
 
       <div>
-        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Current Position</p>
+        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_current_position')}</p>
         <div className="grid grid-cols-4 gap-3">
           <StatBox label="X" value={fmt(coords.x)} color="#e07a6b" />
           <StatBox label="Y" value={fmt(coords.y)} color="#7fc47c" />
           <StatBox label="Z" value={fmt(coords.z)} color="#6fa8dc" />
-          <StatBox label="Heading" value={`${fmt(coords.heading)}°`} color="#a58fc4" />
+          <StatBox label={locale('ui_heading')} value={`${fmt(coords.heading)}°`} color="#a58fc4" />
         </div>
       </div>
 
       <div>
-        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Coordinate Formats</p>
+        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_coordinate_formats')}</p>
         <div className="space-y-2">
-          <FormatRow badge="Vector2" label="2D Position (X, Y)" value={`vector2(${fmt(coords.x)}, ${fmt(coords.y)})`} />
-          <FormatRow badge="Vector3" label="3D Position (X, Y, Z)" value={`vector3(${fmt(coords.x)}, ${fmt(coords.y)}, ${fmt(coords.z)})`} />
-          <FormatRow badge="Vector4" label="3D Position with Heading (X, Y, Z, H)" value={`vector4(${fmt(coords.x)}, ${fmt(coords.y)}, ${fmt(coords.z)}, ${fmt(coords.heading)})`} />
+          <FormatRow badge="Vector2" label={locale('ui_2d_position_x_y')} value={`vector2(${fmt(coords.x)}, ${fmt(coords.y)})`} />
+          <FormatRow badge="Vector3" label={locale('ui_3d_position_x_y_z')} value={`vector3(${fmt(coords.x)}, ${fmt(coords.y)}, ${fmt(coords.z)})`} />
+          <FormatRow badge="Vector4" label={locale('ui_3d_position_with_heading_x_y_z_h')} value={`vector4(${fmt(coords.x)}, ${fmt(coords.y)}, ${fmt(coords.z)}, ${fmt(coords.heading)})`} />
         </div>
       </div>
     </div>

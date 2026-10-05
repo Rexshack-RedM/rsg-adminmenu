@@ -100,7 +100,7 @@ RegisterNuiCallback('bringPlayer', function(data, cb)
 end)
 
 RegisterNuiCallback('toggleFreeze', function(data, cb)
-    local targetName = GetPlayerName(GetPlayerFromServerId(data.id)) or ('ID ' .. data.id)
+    local targetName = GetPlayerName(GetPlayerFromServerId(data.id)) or (locale('cl_client_id_prefix') .. ' ' .. data.id)
     TriggerServerEvent('rsg-adminmenu:server:freezeplayer', { id = data.id, name = targetName })
     cb({ success = true })
 end)

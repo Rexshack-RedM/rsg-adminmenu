@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useState } from 'react';
 import { Search, Boxes } from 'lucide-react';
 import { useNuiData } from '../hooks/useNui';
@@ -10,9 +11,9 @@ const mockResources: ServerResource[] = [
 ];
 
 const statusOptions: DropdownOption<'all' | ResourceState>[] = [
-  { value: 'all', label: 'All Status' },
-  { value: 'started', label: 'Started' },
-  { value: 'stopped', label: 'Stopped' },
+  { value: 'all', label: locale('ui_all_status') },
+  { value: 'started', label: locale('ui_started') },
+  { value: 'stopped', label: locale('ui_stopped') },
 ];
 
 function formatDependencies(value: unknown): string {
@@ -23,16 +24,16 @@ function formatDependencies(value: unknown): string {
       : value && typeof value === 'object'
         ? Object.values(value).filter((v): v is string => typeof v === 'string' && v.length > 0)
         : [];
-  return list.length ? list.join(', ') : 'No dependencies';
+  return list.length ? list.join(', ') : locale('ui_no_dependencies');
 }
 
 const stateBadge: Record<ResourceState, { label: string; className: string }> = {
-  started: { label: 'Started', className: 'bg-green-500/20 text-green-400' },
-  starting: { label: 'Starting', className: 'bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]' },
-  stopped: { label: 'Stopped', className: 'bg-red-500/20 text-red-400' },
-  stopping: { label: 'Stopping', className: 'bg-red-500/20 text-red-400' },
-  uninitialized: { label: 'Uninitialized', className: 'bg-zinc-500/20 text-zinc-400' },
-  missing: { label: 'Missing', className: 'bg-zinc-500/20 text-zinc-400' },
+  started: { label: locale('ui_started'), className: 'bg-green-500/20 text-green-400' },
+  starting: { label: locale('ui_starting'), className: 'bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]' },
+  stopped: { label: locale('ui_stopped'), className: 'bg-red-500/20 text-red-400' },
+  stopping: { label: locale('ui_stopping'), className: 'bg-red-500/20 text-red-400' },
+  uninitialized: { label: locale('ui_uninitialized'), className: 'bg-zinc-500/20 text-zinc-400' },
+  missing: { label: locale('ui_missing'), className: 'bg-zinc-500/20 text-zinc-400' },
 };
 
 export function ResourceLookup() {
@@ -50,8 +51,8 @@ export function ResourceLookup() {
   return (
     <div className="space-y-4 pb-6">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold flex items-center gap-2"><Boxes size={22} /> Resource Lookup</h2>
-        <p className="text-[var(--rdr-muted)] mt-1 text-sm">Every resource running on this server</p>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold flex items-center gap-2"><Boxes size={22} /> {locale('ui_resource_lookup')}</h2>
+        <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_every_resource_running_on_this_server')}</p>
       </div>
 
       <div className="flex gap-3 items-center">
@@ -60,13 +61,13 @@ export function ResourceLookup() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search resources..."
+            placeholder={locale('ui_search_resources')}
             className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
           />
         </div>
         <Dropdown className="w-40 shrink-0" value={status} onChange={setStatus} options={statusOptions} />
         <span className="text-[var(--rdr-faint)] text-xs whitespace-nowrap px-3 py-2 rounded-sm" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-          {filtered.length} resource{filtered.length === 1 ? '' : 's'}
+          {locale('ui_x_resources', filtered.length)}
         </span>
       </div>
 
@@ -79,16 +80,16 @@ export function ResourceLookup() {
                 <p className="text-[var(--rdr-heading)] text-sm font-semibold truncate">{r.name}</p>
                 <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-semibold uppercase ${badge.className}`}>{badge.label}</span>
               </div>
-              <p className="text-[var(--rdr-faint)] text-[11px] mt-0.5">v{r.version || 'unknown'} &middot; by {r.author || 'unknown'}</p>
+              <p className="text-[var(--rdr-faint)] text-[11px] mt-0.5">{locale('ui_version_x_by_y', r.version || locale('ui_unknown_lc'), r.author || locale('ui_unknown_lc'))}</p>
               {r.description && <p className="text-[var(--rdr-muted)] text-xs mt-1.5">{r.description}</p>}
               <div className="mt-2.5 text-xs">
-                <p className="text-[var(--rdr-faint)] uppercase tracking-wide text-[10px]">Dependencies</p>
+                <p className="text-[var(--rdr-faint)] uppercase tracking-wide text-[10px]">{locale('ui_dependencies')}</p>
                 <p className="text-[var(--rdr-muted)] mt-0.5">{formatDependencies(r.dependencies)}</p>
               </div>
             </div>
           );
         })}
-        {filtered.length === 0 && <p className="text-center text-[var(--rdr-faint)] text-sm py-8">No resources found</p>}
+        {filtered.length === 0 && <p className="text-center text-[var(--rdr-faint)] text-sm py-8">{locale('ui_no_resources_found')}</p>}
       </div>
     </div>
   );

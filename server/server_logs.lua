@@ -44,18 +44,18 @@ function SendDiscordEmbed(url, title, adminName, body, color, targetName)
 
     local fields = {}
     if targetName then
-        fields[#fields + 1] = { name = 'Target', value = tostring(targetName), inline = true }
+        fields[#fields + 1] = { name = locale('sv_webhook_target'), value = tostring(targetName), inline = true }
     end
 
     PerformHttpRequest(url, function() end, 'POST', json.encode({
         embeds = { {
             title = title,
-            author = { name = adminName or 'System' },
-            description = '```\n' .. (body or 'No additional details') .. '\n```',
+            author = { name = adminName or locale('sv_system') },
+            description = '```\n' .. (body or locale('sv_no_additional_details')) .. '\n```',
             color = color or 3447003,
             fields = fields,
             timestamp = os.date('!%Y-%m-%dT%H:%M:%SZ'),
-            footer = { text = 'RSG Admin' },
+            footer = { text = locale('sv_webhook_footer') },
         } },
     }), { ['Content-Type'] = 'application/json' })
 end
@@ -99,12 +99,12 @@ end
 -----------------------------------------------------------------------
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName == GetCurrentResourceName() then return end
-    LogAdminAction('system', 'low', nil, 'Started resource \'' .. resourceName .. '\'', 'Resource: ' .. resourceName .. ' | Action: start', nil)
+    LogAdminAction('system', 'low', nil, locale('sv_log_started_resource', resourceName), locale('sv_log_resource_action', resourceName, 'start'), nil)
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
     if resourceName == GetCurrentResourceName() then return end
-    LogAdminAction('system', 'low', nil, 'Stopped resource \'' .. resourceName .. '\'', 'Resource: ' .. resourceName .. ' | Action: stop', nil)
+    LogAdminAction('system', 'low', nil, locale('sv_log_stopped_resource', resourceName), locale('sv_log_resource_action', resourceName, 'stop'), nil)
 end)
 
 -----------------------------------------------------------------------

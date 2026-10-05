@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, MessagesSquare, Users, Zap, ScrollText, UserCog, Wallet } from 'lucide-react';
 import { fetchNui, useNuiData, useNuiEvent } from '../hooks/useNui';
@@ -62,7 +63,7 @@ export function AdminChat({ self, onNavigate }: AdminChatProps) {
       setMessages((prev) => [...prev, {
         id: prev.length + 1,
         sender_citizenid: self?.citizenid ?? 'me',
-        sender_name: self?.name ?? 'You',
+        sender_name: self?.name ?? locale('ui_you'),
         sender_role: null,
         sender_role_label: null,
         sender_discord_name: self?.name ?? null,
@@ -78,8 +79,8 @@ export function AdminChat({ self, onNavigate }: AdminChatProps) {
   return (
     <div className="space-y-4 h-full flex flex-col min-h-0">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Admin Chat</h2>
-        <p className="text-[var(--rdr-muted)] mt-1 text-sm">Admin chat between online staff</p>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_admin_chat')}</h2>
+        <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_admin_chat_between_online_staff')}</p>
       </div>
 
       <div className="flex-1 min-h-0 grid grid-cols-[1fr_260px] gap-4">
@@ -107,26 +108,26 @@ export function AdminChat({ self, onNavigate }: AdminChatProps) {
                 </div>
               );
             })}
-            {messages.length === 0 && <p className="text-[var(--rdr-faint)] text-sm text-center py-8">No messages yet. Say hello to the team.</p>}
+            {messages.length === 0 && <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_no_messages_yet_say_hello_to_the_team')}</p>}
           </div>
           <div className="flex gap-2 p-3 shrink-0" style={{ borderTop: '1px solid var(--rdr-line)' }}>
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Message the team..."
+              placeholder={locale('ui_message_the_team')}
               maxLength={500}
               className="flex-1 bg-[var(--rdr-surface-2)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]"
             />
             <Button variant="outline" tone="accent" disabled={!draft.trim() || sending} isLoading={sending} onClick={send}>
-              <Send size={14} /> Send
+              <Send size={14} /> {locale('ui_send')}
             </Button>
           </div>
         </div>
 
         <div className="space-y-4 min-h-0 overflow-y-auto">
           <div className="rounded-lg p-3" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><Users size={13} /> Online Admins ({onlineAdmins.length})</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><Users size={13} /> {locale('ui_online_admins_x', onlineAdmins.length)}</p>
             <div className="space-y-1.5">
               {onlineAdmins.map((a) => (
                 <div key={a.citizenid} className="flex items-center gap-2">
@@ -135,26 +136,26 @@ export function AdminChat({ self, onNavigate }: AdminChatProps) {
                   <span className="px-1.5 py-0.5 rounded-sm text-[9px] uppercase bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)] ml-auto shrink-0">{a.roleLabel}</span>
                 </div>
               ))}
-              {onlineAdmins.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">No admins online</p>}
+              {onlineAdmins.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_no_admins_online')}</p>}
             </div>
           </div>
 
           <div className="rounded-lg p-3" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><Zap size={13} /> Quick Actions</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><Zap size={13} /> {locale('ui_quick_actions')}</p>
             <div className="space-y-1.5">
-              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('admins')}><UserCog size={13} /> Admins</Button>
-              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('logs')}><ScrollText size={13} /> Logs</Button>
-              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('reports')}><MessagesSquare size={13} /> Reports</Button>
-              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('finances')}><Wallet size={13} /> Finances</Button>
+              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('admins')}><UserCog size={13} /> {locale('ui_admins')}</Button>
+              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('logs')}><ScrollText size={13} /> {locale('ui_logs')}</Button>
+              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('reports')}><MessagesSquare size={13} /> {locale('ui_reports')}</Button>
+              <Button variant="outline" fullWidth className="justify-start text-xs" onClick={() => onNavigate('finances')}><Wallet size={13} /> {locale('ui_finances')}</Button>
             </div>
           </div>
 
           <div className="rounded-lg p-3" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Chat Statistics</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_chat_statistics')}</p>
             <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">Total Messages</span><span className="text-[var(--rdr-text)] font-medium">{stats.total}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">Messages Today</span><span className="text-[var(--rdr-text)] font-medium">{stats.today}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">Active Participants</span><span className="text-[var(--rdr-text)] font-medium">{stats.activeSenders}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">{locale('ui_total_messages')}</span><span className="text-[var(--rdr-text)] font-medium">{stats.total}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">{locale('ui_messages_today')}</span><span className="text-[var(--rdr-text)] font-medium">{stats.today}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--rdr-muted)]">{locale('ui_active_participants')}</span><span className="text-[var(--rdr-text)] font-medium">{stats.activeSenders}</span></div>
             </div>
           </div>
         </div>

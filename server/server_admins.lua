@@ -62,16 +62,16 @@ end)
 -- server.lua's getplayerinfo can reuse it too. Falls back to a capitalized
 -- version of the raw string for any role added later that isn't listed here.
 RoleLabels = {
-    god = 'Owner',
-    headadmin = 'Head Admin',
-    developer = 'Developer',
-    admin = 'Admin',
-    mod = 'Moderator',
-    helper = 'Helper',
+    god = locale('sv_role_owner'),
+    headadmin = locale('sv_role_headadmin'),
+    developer = locale('sv_role_developer'),
+    admin = locale('sv_role_admin'),
+    mod = locale('sv_role_moderator'),
+    helper = locale('sv_role_helper'),
 }
 
 function LabelForRole(role)
-    if not role or role == '' then return 'User' end
+    if not role or role == '' then return locale('sv_role_user') end
     return RoleLabels[role] or (role:sub(1, 1):upper() .. role:sub(2))
 end
 
@@ -225,7 +225,7 @@ end)
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(source, cb, data)
     local src = source
     if not (RSGCore.Functions.HasPermission(src, permissions['setpermission']) or IsPlayerAceAllowed(src, 'god')) then
-        cb({ success = false, message = 'Not allowed' })
+        cb({ success = false, message = locale('sv_not_allowed') })
         return
     end
 
@@ -239,7 +239,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(sourc
     end
 
     if not targetSrc then
-        cb({ success = false, message = 'Player must be online to be added as an admin' })
+        cb({ success = false, message = locale('sv_admin_must_be_online') })
         return
     end
 
@@ -250,10 +250,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(sourc
     local targetDiscord = RSGCore.Functions.GetIdentifier(targetSrc, 'discord')
 
     if SetAdminRole(target.PlayerData.citizenid, targetSrc, data.role, adminName, targetDiscord, targetName) then
-        LogAdminAction('admin_action', 'high', src, 'Granted \'' .. LabelForRole(data.role) .. '\' role to ' .. targetName, 'Target: ' .. targetName, targetName, targetSrc)
+        LogAdminAction('admin_action', 'high', src, locale('sv_log_granted_role', LabelForRole(data.role), targetName), locale('sv_log_target', targetName), targetName, targetSrc)
         cb({ success = true })
     else
-        cb({ success = false, message = 'Invalid role' })
+        cb({ success = false, message = locale('sv_invalid_role') })
     end
 end)
 
@@ -272,7 +272,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:changeadminrole', functio
     local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(data.citizenid)
 
     if SetAdminRole(data.citizenid, onlinePlayer and onlinePlayer.PlayerData.source or nil, data.role, adminName, nil, data.name) then
-        LogAdminAction('admin_action', 'high', src, 'Changed ' .. (data.name or data.citizenid) .. '\'s role to \'' .. LabelForRole(data.role) .. '\'', nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
+        LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_role', (data.name or data.citizenid), LabelForRole(data.role)), nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
         cb({ success = true })
     else
         cb({ success = false })
@@ -291,6 +291,6 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removeadmin', function(so
 
     local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(data.citizenid)
     RemoveAdminRole(data.citizenid, onlinePlayer and onlinePlayer.PlayerData.source or nil)
-    LogAdminAction('admin_action', 'high', src, 'Removed admin access from ' .. (data.name or data.citizenid), nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
+    LogAdminAction('admin_action', 'high', src, locale('sv_log_removed_admin_access', (data.name or data.citizenid)), nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
     cb({ success = true })
 end)

@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard, BarChart3, Users, ShieldCheck, Ticket, Wallet,
@@ -32,44 +33,44 @@ interface NavItem {
 
 const navGroups: { label: string; items: NavItem[] }[] = [
   {
-    label: 'Overview',
+    label: locale('ui_overview'),
     items: [
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { id: 'statistics', label: 'Statistics', icon: BarChart3 },
+      { id: 'dashboard', label: locale('ui_dashboard'), icon: LayoutDashboard },
+      { id: 'statistics', label: locale('ui_statistics'), icon: BarChart3 },
     ],
   },
   {
-    label: 'Players',
+    label: locale('ui_players'),
     items: [
-      { id: 'players', label: 'Players', icon: Users },
-      { id: 'whitelist', label: 'Whitelist', icon: ShieldCheck, minRole: 'mod' },
-      { id: 'reports', label: 'Reports', icon: Ticket },
-      { id: 'finances', label: 'Finances', icon: Wallet, minRole: 'admin' },
+      { id: 'players', label: locale('ui_players'), icon: Users },
+      { id: 'whitelist', label: locale('ui_whitelist'), icon: ShieldCheck, minRole: 'mod' },
+      { id: 'reports', label: locale('ui_reports'), icon: Ticket },
+      { id: 'finances', label: locale('ui_finances'), icon: Wallet, minRole: 'admin' },
     ],
   },
   {
-    label: 'Team',
+    label: locale('ui_team'),
     items: [
-      { id: 'admins', label: 'Admins', icon: UserCog },
-      { id: 'logs', label: 'Logs', icon: ScrollText },
-      { id: 'adminchat', label: 'Admin Chat', icon: MessagesSquare },
+      { id: 'admins', label: locale('ui_admins'), icon: UserCog },
+      { id: 'logs', label: locale('ui_logs'), icon: ScrollText },
+      { id: 'adminchat', label: locale('ui_admin_chat'), icon: MessagesSquare },
     ],
   },
   {
-    label: 'World',
+    label: locale('ui_world'),
     items: [
-      { id: 'teleports', label: 'Teleports', icon: Navigation, minRole: 'mod' },
-      { id: 'coords', label: 'Coords', icon: MapPinned, minRole: 'mod' },
-      { id: 'blips', label: 'Blips', icon: Bookmark, minRole: 'mod' },
-      { id: 'spawner', label: 'Spawner', icon: Sparkles, minRole: 'mod' },
+      { id: 'teleports', label: locale('ui_teleports'), icon: Navigation, minRole: 'mod' },
+      { id: 'coords', label: locale('ui_coords'), icon: MapPinned, minRole: 'mod' },
+      { id: 'blips', label: locale('ui_blips'), icon: Bookmark, minRole: 'mod' },
+      { id: 'spawner', label: locale('ui_spawner'), icon: Sparkles, minRole: 'mod' },
     ],
   },
   {
-    label: 'Developer',
+    label: locale('ui_developer'),
     items: [
-      { id: 'serversettings', label: 'Server Settings', icon: SlidersHorizontal, minRole: 'headadmin' },
-      { id: 'resourcelookup', label: 'Resource Lookup', icon: Boxes, minRole: 'headadmin' },
-      { id: 'masteractions', label: 'Master Actions', icon: ShieldAlert, minRole: 'headadmin' },
+      { id: 'serversettings', label: locale('ui_server_settings'), icon: SlidersHorizontal, minRole: 'headadmin' },
+      { id: 'resourcelookup', label: locale('ui_resource_lookup'), icon: Boxes, minRole: 'headadmin' },
+      { id: 'masteractions', label: locale('ui_master_actions'), icon: ShieldAlert, minRole: 'headadmin' },
     ],
   },
 ];
@@ -140,9 +141,9 @@ export function Sidebar({ self, permissions, currentPage, onPageChange, onClose 
         {!collapsed && (
           <div className="min-w-0">
             <h1 className="text-[var(--rdr-heading)] text-base tracking-wide truncate" style={{ fontFamily: 'var(--font-display)' }}>
-              RSG Admin
+              {locale('ui_rsg_admin')}
             </h1>
-            <p className="text-[var(--rdr-faint)] text-[10px] uppercase tracking-widest">Frontier Control</p>
+            <p className="text-[var(--rdr-faint)] text-[10px] uppercase tracking-widest">{locale('ui_frontier_control')}</p>
           </div>
         )}
       </div>
@@ -150,7 +151,7 @@ export function Sidebar({ self, permissions, currentPage, onPageChange, onClose 
       <div className={`flex py-2 ${collapsed ? 'justify-center' : 'justify-end px-3'}`}>
         <button
           onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? locale('ui_expand_sidebar') : locale('ui_collapse_sidebar')}
           className="text-[var(--rdr-muted)] hover:text-[var(--rdr-heading)] p-1.5 rounded hover:bg-white/5 transition-colors"
         >
           {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
@@ -204,7 +205,7 @@ export function Sidebar({ self, permissions, currentPage, onPageChange, onClose 
             {!collapsed && (
               <div className="min-w-0">
                 <p className="text-[var(--rdr-text)] text-sm font-medium truncate">{self.name}</p>
-                <p className="text-[var(--rdr-accent-bright)] text-xs truncate">{self.job?.label || 'Administrator'}</p>
+                <p className="text-[var(--rdr-accent-bright)] text-xs truncate">{self.job?.label || locale('ui_administrator')}</p>
               </div>
             )}
           </div>
@@ -212,10 +213,10 @@ export function Sidebar({ self, permissions, currentPage, onPageChange, onClose 
 
         <button
           onClick={onClose}
-          title="Close"
+          title={locale('ui_close')}
           className={`w-full flex items-center gap-2 py-2 rounded-sm text-sm text-[var(--rdr-muted)] hover:text-[var(--rdr-heading)] hover:bg-white/5 transition-colors ${collapsed ? 'justify-center px-0' : 'justify-center px-3'}`}
         >
-          <LogOut size={15} /> {!collapsed && 'Close'}
+          <LogOut size={15} /> {!collapsed && locale('ui_close')}
         </button>
       </div>
     </div>

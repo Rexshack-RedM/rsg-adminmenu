@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useMemo, useState } from 'react';
 import { Search, Users, UserCheck, UserX, MessageCircle, ShieldBan } from 'lucide-react';
 import { useNuiData, fetchNui } from '../hooks/useNui';
@@ -10,10 +11,10 @@ import { useToast } from '../components/Toast';
 import type { ManagedPlayer, OnlinePlayer, Permissions } from '../types';
 
 const statusFilterOptions = [
-  { value: 'all' as const, label: 'All Players' },
-  { value: 'online' as const, label: 'Online Only' },
-  { value: 'offline' as const, label: 'Offline Only' },
-  { value: 'banned' as const, label: 'Banned' },
+  { value: 'all' as const, label: locale('ui_all_players') },
+  { value: 'online' as const, label: locale('ui_online_only') },
+  { value: 'offline' as const, label: locale('ui_offline_only') },
+  { value: 'banned' as const, label: locale('ui_banned') },
 ];
 
 const mockPlayers: ManagedPlayer[] = [
@@ -66,15 +67,15 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Players</h2>
-        <p className="text-[var(--rdr-muted)] mt-1 text-sm">Manage and monitor all server players</p>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_players')}</h2>
+        <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_manage_and_monitor_all_server_players')}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <StatBox label="Online Players" value={counts.online} icon={<UserCheck size={18} />} color="#7fc47c" />
-        <StatBox label="Offline Players" value={counts.offline} icon={<UserX size={18} />} color="#b5b5b5" />
-        <StatBox label="Banned Players" value={counts.banned} icon={<ShieldBan size={18} />} color="#e07a6b" />
-        <StatBox label="Total Players" value={counts.total} icon={<Users size={18} />} color="#6fa8dc" />
+        <StatBox label={locale('ui_online_players')} value={counts.online} icon={<UserCheck size={18} />} color="#7fc47c" />
+        <StatBox label={locale('ui_offline_players')} value={counts.offline} icon={<UserX size={18} />} color="#b5b5b5" />
+        <StatBox label={locale('ui_banned_players')} value={counts.banned} icon={<ShieldBan size={18} />} color="#e07a6b" />
+        <StatBox label={locale('ui_total_players')} value={counts.total} icon={<Users size={18} />} color="#6fa8dc" />
       </div>
 
       <div className="flex gap-3">
@@ -83,7 +84,7 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search player name..."
+            placeholder={locale('ui_search_player_name')}
             className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
           />
         </div>
@@ -93,10 +94,10 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
           tone="accent"
           className="text-xs"
           isLoading={refreshing}
-          loadingText="Refreshing"
+          loadingText={locale('ui_refreshing')}
           onClick={async () => { setRefreshing(true); try { await refresh(); } finally { setRefreshing(false); } }}
         >
-          Refresh
+          {locale('ui_refresh')}
         </Button>
       </div>
 
@@ -104,13 +105,13 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--rdr-surface-2)] text-[var(--rdr-muted)] text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-2 font-medium">Player</th>
-              <th className="text-left px-4 py-2 font-medium">Job</th>
-              <th className="text-left px-4 py-2 font-medium">Money</th>
-              <th className="text-left px-4 py-2 font-medium">Playtime</th>
-              <th className="text-left px-4 py-2 font-medium">Last Seen</th>
-              <th className="text-left px-4 py-2 font-medium">Status</th>
-              <th className="text-right px-4 py-2 font-medium">Actions</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_player')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_job')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_money')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_playtime')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_last_seen')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_status')}</th>
+              <th className="text-right px-4 py-2 font-medium">{locale('ui_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -131,14 +132,14 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
                 <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-sm bg-[var(--rdr-surface-2)] text-[var(--rdr-text)] text-xs capitalize">{p.job}</span></td>
                 <td className="px-4 py-2.5 text-[#7fc47c]">${p.money.toLocaleString()}</td>
                 <td className="px-4 py-2.5 text-[var(--rdr-text)]">{formatPlaytime(p.playtimeMinutes)}</td>
-                <td className="px-4 py-2.5 text-[var(--rdr-muted)] text-xs">{p.online ? 'Now' : p.lastSeen ? new Date(p.lastSeen).toLocaleDateString() : 'Never'}</td>
+                <td className="px-4 py-2.5 text-[var(--rdr-muted)] text-xs">{p.online ? locale('ui_now') : p.lastSeen ? new Date(p.lastSeen).toLocaleDateString() : locale('ui_never')}</td>
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className={`px-2 py-0.5 rounded-sm text-xs ${p.online ? 'bg-green-500/20 text-green-400' : 'bg-zinc-500/20 text-zinc-400'}`}>
-                      {p.online ? 'Online' : 'Offline'}
+                      {p.online ? locale('ui_online') : locale('ui_offline')}
                     </span>
                     {p.banned && (
-                      <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-20)] text-[var(--rdr-red-bright)]">Banned</span>
+                      <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-20)] text-[var(--rdr-red-bright)]">{locale('ui_banned')}</span>
                     )}
                   </div>
                 </td>
@@ -152,17 +153,17 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
                         ? setSelectedOnline({ id: p.serverId, name: p.name, citizenid: p.citizenid })
                         : setSelectedOffline(p)}
                     >
-                      {p.online ? 'Manage' : 'View'}
+                      {p.online ? locale('ui_manage') : locale('ui_view')}
                     </Button>
                     {p.banned && (
-                      <Button variant="outline" tone="red" className="text-xs px-3 py-1" onClick={() => unban(p)}>Unban</Button>
+                      <Button variant="outline" tone="red" className="text-xs px-3 py-1" onClick={() => unban(p)}>{locale('ui_unban')}</Button>
                     )}
                   </div>
                 </td>
               </tr>
             ))}
             {data !== undefined && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">No players found</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">{locale('ui_no_players_found')}</td></tr>
             )}
           </tbody>
         </table>
@@ -170,29 +171,29 @@ export function Players({ permissions }: { permissions: Permissions | null }) {
 
       {selectedOnline && <PlayerManageModal player={selectedOnline} permissions={permissions} onClose={() => setSelectedOnline(null)} />}
       {selectedOffline && (
-        <Modal title={selectedOffline.name} subtitle={`Citizen ID: ${selectedOffline.citizenid}`} onClose={() => setSelectedOffline(null)} width="max-w-sm">
+        <Modal title={selectedOffline.name} subtitle={locale('ui_citizen_id_x', selectedOffline.citizenid)} onClose={() => setSelectedOffline(null)} width="max-w-sm">
           <div className="space-y-2 text-sm">
-            <Row label="Account" value={selectedOffline.accountName} />
-            <Row label="Job" value={selectedOffline.job} />
-            <Row label="Money" value={`$${selectedOffline.money.toLocaleString()}`} />
-            <Row label="Playtime" value={formatPlaytime(selectedOffline.playtimeMinutes)} />
-            <Row label="Last Seen" value={selectedOffline.lastSeen ? new Date(selectedOffline.lastSeen).toLocaleString() : 'Never'} />
+            <Row label={locale('ui_account')} value={selectedOffline.accountName} />
+            <Row label={locale('ui_job')} value={selectedOffline.job} />
+            <Row label={locale('ui_money')} value={`$${selectedOffline.money.toLocaleString()}`} />
+            <Row label={locale('ui_playtime')} value={formatPlaytime(selectedOffline.playtimeMinutes)} />
+            <Row label={locale('ui_last_seen')} value={selectedOffline.lastSeen ? new Date(selectedOffline.lastSeen).toLocaleString() : locale('ui_never')} />
           </div>
           {selectedOffline.banned && (
             <div className="mt-3 p-3 rounded-sm space-y-2" style={{ background: 'var(--rdr-red-10)', border: '1px solid var(--rdr-red-20)' }}>
               <div className="flex items-center justify-between">
-                <span className="text-[var(--rdr-red-bright)] text-sm font-semibold">Banned</span>
-                <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-20)] text-[var(--rdr-red-bright)]">{selectedOffline.banPermanent ? 'Permanent' : 'Temporary'}</span>
+                <span className="text-[var(--rdr-red-bright)] text-sm font-semibold">{locale('ui_banned')}</span>
+                <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-20)] text-[var(--rdr-red-bright)]">{selectedOffline.banPermanent ? locale('ui_permanent') : locale('ui_temporary')}</span>
               </div>
-              <Row label="Reason" value={selectedOffline.banReason || 'No reason given'} />
-              <Row label="Banned By" value={selectedOffline.bannedBy || 'Unknown'} />
+              <Row label={locale('ui_reason')} value={selectedOffline.banReason || locale('ui_no_reason_given')} />
+              <Row label={locale('ui_banned_by')} value={selectedOffline.bannedBy || locale('ui_unknown')} />
               {!selectedOffline.banPermanent && selectedOffline.banExpire && (
-                <Row label="Expires" value={new Date(selectedOffline.banExpire * 1000).toLocaleString()} />
+                <Row label={locale('ui_expires')} value={new Date(selectedOffline.banExpire * 1000).toLocaleString()} />
               )}
-              <Button variant="outline" tone="red" fullWidth onClick={() => unban(selectedOffline)}>Unban Player</Button>
+              <Button variant="outline" tone="red" fullWidth onClick={() => unban(selectedOffline)}>{locale('ui_unban_player')}</Button>
             </div>
           )}
-          <p className="text-[var(--rdr-faint)] text-xs mt-4">This player is offline. Most admin actions require them to be connected.</p>
+          <p className="text-[var(--rdr-faint)] text-xs mt-4">{locale('ui_this_player_is_offline_most_admin_actions_re')}</p>
         </Modal>
       )}
     </div>

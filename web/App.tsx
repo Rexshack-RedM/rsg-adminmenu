@@ -1,3 +1,4 @@
+import { locale } from './i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isDebug, useNuiEvent, fetchNui } from './hooks/useNui';
 import { ToastProvider } from './components/Toast';
@@ -166,7 +167,7 @@ function AppInner() {
           <PanelBackground />
           <div className="relative" style={{ zIndex: 1 }}>
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--rdr-line)', background: 'rgba(0,0,0,0.4)' }}>
-              <h1 className="text-[var(--rdr-heading)] text-lg" style={{ fontFamily: 'var(--font-display)' }}>Report System</h1>
+              <h1 className="text-[var(--rdr-heading)] text-lg" style={{ fontFamily: 'var(--font-display)' }}>{locale('ui_report_system')}</h1>
               <button onClick={handleClose} className="text-[var(--rdr-muted)] hover:text-[var(--rdr-heading)] px-2 py-1 rounded hover:bg-white/5">✕</button>
             </div>
             <div className="flex gap-1 px-5 pt-4">
@@ -174,13 +175,13 @@ function AppInner() {
                 onClick={() => setPlayerTab('create')}
                 className={`px-3 py-1.5 rounded-sm text-xs font-medium ${playerTab === 'create' ? 'bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]' : 'text-[var(--rdr-muted)] hover:bg-white/5'}`}
               >
-                Create Report
+                {locale('ui_create_report')}
               </button>
               <button
                 onClick={() => setPlayerTab('my')}
                 className={`px-3 py-1.5 rounded-sm text-xs font-medium ${playerTab === 'my' ? 'bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]' : 'text-[var(--rdr-muted)] hover:bg-white/5'}`}
               >
-                My Reports
+                {locale('ui_my_reports')}
               </button>
             </div>
             <div className="p-5">

@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useState } from 'react';
 import { Search, ShieldAlert, Wallet, UserCog, Lock, Server, Cpu, Send } from 'lucide-react';
 import { fetchNui, useNuiData } from '../hooks/useNui';
@@ -7,16 +8,16 @@ import { Button } from '../components/Button';
 import type { LogCategory, LogEntry, LogsResult } from '../types';
 
 const categoryMeta: Record<LogCategory, { label: string; icon: React.ReactNode; color: string }> = {
-  admin_action: { label: 'Admin Action', icon: <UserCog size={16} />, color: '#e8b25a' },
-  economy: { label: 'Economy', icon: <Wallet size={16} />, color: '#7fc47c' },
-  player_action: { label: 'Player Action', icon: <ShieldAlert size={16} />, color: '#6fa8dc' },
-  security: { label: 'Security', icon: <Lock size={16} />, color: '#e07a6b' },
-  server_event: { label: 'Server Event', icon: <Server size={16} />, color: '#a58fc4' },
-  system: { label: 'System', icon: <Cpu size={16} />, color: '#b5b5b5' },
+  admin_action: { label: locale('ui_admin_action'), icon: <UserCog size={16} />, color: '#e8b25a' },
+  economy: { label: locale('ui_economy'), icon: <Wallet size={16} />, color: '#7fc47c' },
+  player_action: { label: locale('ui_player_action'), icon: <ShieldAlert size={16} />, color: '#6fa8dc' },
+  security: { label: locale('ui_security'), icon: <Lock size={16} />, color: '#e07a6b' },
+  server_event: { label: locale('ui_server_event'), icon: <Server size={16} />, color: '#a58fc4' },
+  system: { label: locale('ui_system'), icon: <Cpu size={16} />, color: '#b5b5b5' },
 };
 
 const categoryFilterOptions: DropdownOption<'all' | LogCategory>[] = [
-  { value: 'all', label: 'All Categories' },
+  { value: 'all', label: locale('ui_all_categories') },
   ...(Object.keys(categoryMeta) as LogCategory[]).map((c) => ({ value: c, label: categoryMeta[c].label })),
 ];
 
@@ -69,11 +70,11 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
   const sendToDiscord = async (logId: number) => {
     const res = await fetchNui<{ success: boolean; reason?: string }>('sendLogToDiscord', { logId }, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: 'Sent to Discord' });
+      toast.push({ type: 'success', title: locale('ui_sent_to_discord') });
     } else if (res.reason === 'webhook_not_configured') {
-      toast.push({ type: 'error', title: 'No webhook configured', description: 'Set one for this category under Master Actions.' });
+      toast.push({ type: 'error', title: locale('ui_no_webhook_configured'), description: locale('ui_set_one_for_this_category_under_master_actio') });
     } else {
-      toast.push({ type: 'error', title: 'Failed to send' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_send') });
     }
   };
 
@@ -92,7 +93,7 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
                   <p className="text-[var(--rdr-text)] text-sm font-medium truncate">{log.action}</p>
                   {log.details && <p className="text-[var(--rdr-muted)] text-xs mt-0.5 truncate">{log.details}</p>}
                   <p className="text-[var(--rdr-faint)] text-[11px] mt-1">
-                    {log.admin_name || 'System'}{log.target_name ? ` → ${log.target_name}` : ''} · {new Date(log.created_at).toLocaleString()}
+                    {log.admin_name || locale('ui_system')}{log.target_name ? ` → ${log.target_name}` : ''} · {new Date(log.created_at).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -101,7 +102,7 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
                 {!embedded && (
                   <button
                     onClick={() => sendToDiscord(log.id)}
-                    title="Send to Discord"
+                    title={locale('ui_send_to_discord')}
                     className="text-[var(--rdr-muted)] hover:text-[var(--rdr-accent-bright)] p-1.5 rounded hover:bg-white/5"
                   >
                     <Send size={13} />
@@ -113,7 +114,7 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
         );
       })}
       {result.logs.length === 0 && (
-        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">No log entries found</p>
+        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_no_log_entries_found')}</p>
       )}
     </div>
   );
@@ -126,10 +127,10 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Logs</h2>
-          <p className="text-[var(--rdr-muted)] mt-1 text-sm">Full detailed history of server and admin activity</p>
+          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_logs')}</h2>
+          <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_full_detailed_history_of_server_and_admin_ac')}</p>
         </div>
-        <Button variant="outline" tone="accent" className="text-xs" onClick={() => refresh()}>Refresh</Button>
+        <Button variant="outline" tone="accent" className="text-xs" onClick={() => refresh()}>{locale('ui_refresh')}</Button>
       </div>
 
       <div className="grid grid-cols-6 gap-3">
@@ -150,7 +151,7 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search logs..."
+            placeholder={locale('ui_search_logs')}
             className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
           />
         </div>
@@ -161,9 +162,9 @@ export function Logs({ embedded = false, adminCitizenid }: LogsProps) {
 
       {result.total > 0 && (
         <div className="flex items-center justify-center gap-2 pt-2 pb-4">
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="text-xs px-2.5 py-1.5">Previous</Button>
-          <span className="text-xs text-[var(--rdr-muted)]">Page {page} / {totalPages} ({result.total} entries)</span>
-          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="text-xs px-2.5 py-1.5">Next</Button>
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="text-xs px-2.5 py-1.5">{locale('ui_previous')}</Button>
+          <span className="text-xs text-[var(--rdr-muted)]">{locale('ui_page_x_of_y', page, totalPages)} ({locale('ui_x_entries', result.total)})</span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="text-xs px-2.5 py-1.5">{locale('ui_next')}</Button>
         </div>
       )}
     </div>

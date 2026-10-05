@@ -152,7 +152,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getdashboardstats', funct
                 job = type(job) == 'table' and job or {}
 
                 local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(row.citizenid)
-                local jobLabel = job.label or 'Unemployed'
+                local jobLabel = job.label or locale('sv_unemployed')
                 if onlinePlayer and onlinePlayer.PlayerData.job then
                     jobLabel = onlinePlayer.PlayerData.job.label
                 end
@@ -261,7 +261,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getstatistics', function(
                             label = onlinePlayer.PlayerData.job.label
                         else
                             local ok, job = pcall(json.decode, row.job or '{}')
-                            label = (ok and type(job) == 'table' and job.label) or 'Unemployed'
+                            label = (ok and type(job) == 'table' and job.label) or locale('sv_unemployed')
                         end
                         jobCounts[label] = (jobCounts[label] or 0) + 1
 

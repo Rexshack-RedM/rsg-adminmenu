@@ -1,3 +1,4 @@
+import { locale } from '../../i18n';
 import { useEffect, useState } from 'react';
 import { fetchNui } from '../../hooks/useNui';
 import { ReportDetail } from '../Reports';
@@ -22,8 +23,8 @@ export function MyReports() {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-[var(--rdr-heading)] text-base font-semibold" style={{ fontFamily: 'var(--font-display)' }}>My Reports</h3>
-      {reports.length === 0 && <p className="text-[var(--rdr-faint)] text-sm">You haven't submitted any reports yet.</p>}
+      <h3 className="text-[var(--rdr-heading)] text-base font-semibold" style={{ fontFamily: 'var(--font-display)' }}>{locale('ui_my_reports')}</h3>
+      {reports.length === 0 && <p className="text-[var(--rdr-faint)] text-sm">{locale('ui_you_haven_t_submitted_any_reports_yet')}</p>}
       <div className="space-y-2">
         {reports.map((r) => (
           <button

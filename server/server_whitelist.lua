@@ -57,7 +57,7 @@ end)
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addwhitelist', function(source, cb, data)
     local src = source
     if not IsWhitelistAdmin(src) then
-        cb({ success = false, message = 'Not allowed' })
+        cb({ success = false, message = locale('sv_not_allowed') })
         return
     end
 
@@ -77,7 +77,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addwhitelist', function(s
         data.citizenid, data.playerName, data.accountName, data.reason, adminName, expiresAt,
         data.playerName, data.accountName, data.reason, adminName, expiresAt,
     }, function()
-        LogAdminAction('admin_action', 'medium', src, 'Added player to whitelist', data.reason, data.playerName)
+        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_player_to_whitelist'), data.reason, data.playerName)
         cb({ success = true })
     end)
 end)
@@ -95,7 +95,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setwhiteliststatus', func
     MySQL.update('UPDATE admin_whitelist SET status = ? WHERE id = ?', { data.status, data.id }, function(affected)
         local success = affected > 0
         if success then
-            LogAdminAction('admin_action', 'medium', src, 'Changed whitelist status', 'New status: ' .. tostring(data.status), nil)
+            LogAdminAction('admin_action', 'medium', src, locale('sv_log_changed_whitelist_status'), locale('sv_log_new_status', tostring(data.status)), nil)
         end
         cb({ success = success })
     end)
@@ -114,7 +114,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removewhitelist', functio
     MySQL.update('DELETE FROM admin_whitelist WHERE id = ?', { data.id }, function(affected)
         local success = affected > 0
         if success then
-            LogAdminAction('admin_action', 'medium', src, 'Removed player from whitelist', nil, nil)
+            LogAdminAction('admin_action', 'medium', src, locale('sv_log_removed_player_from_whitelist'), nil, nil)
         end
         cb({ success = success })
     end)

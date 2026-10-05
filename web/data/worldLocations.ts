@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import type { TeleportCategory, TeleportLocation } from '../types';
 
 // RDR2's world extents, used to plot world x/y onto the map panel — a square
@@ -21,11 +22,11 @@ export function percentToWorld(leftPct: number, topPct: number) {
 }
 
 export const categoryLabels: Record<TeleportCategory, string> = {
-  towns: 'Towns & Cities',
-  gangcamps: 'Gang Camps',
-  nature: 'Nature & Landmarks',
-  shops: 'Shops & Services',
-  special: 'Special Locations',
+  towns: locale('ui_tpcat_towns'),
+  gangcamps: locale('ui_tpcat_gangcamps'),
+  nature: locale('ui_tpcat_nature'),
+  shops: locale('ui_tpcat_shops'),
+  special: locale('ui_tpcat_special'),
 };
 
 export const categoryIcons: Record<TeleportCategory, string> = {

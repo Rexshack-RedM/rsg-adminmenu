@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useState } from 'react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -11,8 +12,8 @@ type Tab = 'players' | 'economy' | 'performance';
 const PIE_COLORS = ['#c8892b', '#3b6ea5', '#5e8f4f', '#a5463b', '#7a5ea8', '#3b8a8a', '#b5b5b5'];
 
 const moneyLabels: Record<MoneyType, string> = {
-  cash: 'Cash', bank: 'Bank', bloodmoney: 'Blood Money',
-  valbank: 'Val Bank', rhobank: 'Rho Bank', blkbank: 'Blk Bank', armbank: 'Arm Bank',
+  cash: locale('ui_cash'), bank: locale('ui_bank'), bloodmoney: locale('ui_blood_money'),
+  valbank: locale('ui_val_bank'), rhobank: locale('ui_rho_bank'), blkbank: locale('ui_blk_bank'), armbank: locale('ui_arm_bank'),
 };
 
 const mockStats: StatisticsData = {
@@ -180,7 +181,7 @@ function JobDistributionRings({ jobs }: { jobs: JobDistributionEntry[] }) {
 
   const top = jobs.slice(0, RING_BANDS.length);
   const restCount = jobs.slice(RING_BANDS.length).reduce((sum, j) => sum + j.count, 0);
-  const rings = restCount > 0 ? [...top.slice(0, RING_BANDS.length - 1), { job: 'Other', count: restCount }] : top;
+  const rings = restCount > 0 ? [...top.slice(0, RING_BANDS.length - 1), { job: locale('ui_other'), count: restCount }] : top;
 
   return (
     <>
@@ -226,7 +227,7 @@ function JobDistributionRings({ jobs }: { jobs: JobDistributionEntry[] }) {
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xs text-[var(--rdr-muted)]">Total Players</span>
+          <span className="text-xs text-[var(--rdr-muted)]">{locale('ui_total_players')}</span>
           <span className="text-xl font-semibold text-[var(--rdr-heading)]">{total}</span>
         </div>
       </div>
@@ -249,8 +250,8 @@ export function Statistics() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Statistics</h2>
-        <p className="text-[var(--rdr-muted)] mt-1 text-sm">Server performance metrics and player analytics</p>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_statistics')}</h2>
+        <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_server_performance_metrics_and_player_analyt')}</p>
       </div>
 
       <div className="flex gap-1 bg-[var(--rdr-surface-2)] w-fit rounded-sm p-1">
@@ -268,7 +269,7 @@ export function Statistics() {
       </div>
 
       {!stats ? (
-        <p className="text-[var(--rdr-faint)] text-sm">Loading...</p>
+        <p className="text-[var(--rdr-faint)] text-sm">{locale('ui_loading')}</p>
       ) : tab === 'players' ? (
         <PlayersTab stats={stats} />
       ) : tab === 'economy' ? (
@@ -285,10 +286,10 @@ function PlayersTab({ stats }: { stats: StatisticsData }) {
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">Player Activity</h3>
-        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">Daily player count and peak times</p>
+        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">{locale('ui_player_activity')}</h3>
+        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">{locale('ui_daily_player_count_and_peak_times')}</p>
         {stats.players.activity.length === 0 ? (
-          <EmptyState message="No activity data yet" />
+          <EmptyState message={locale('ui_no_activity_data_yet')} />
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={stats.players.activity} accessibilityLayer>
@@ -297,18 +298,18 @@ function PlayersTab({ stats }: { stats: StatisticsData }) {
               <YAxis tickLine={false} axisLine={false} tickMargin={8} stroke="var(--rdr-muted)" fontSize={12} allowDecimals={false} />
               <Tooltip content={<ChartTooltipContent labelFormatter={formatDate} />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend content={<ChartLegendContent />} />
-              <Bar dataKey="peakPlayers" name="Peak Players" fill="#3b6ea5" radius={4} />
-              <Bar dataKey="averagePlayers" name="Average Players" fill="#5e8f4f" radius={4} />
+              <Bar dataKey="peakPlayers" name={locale('ui_peak_players')} fill="#3b6ea5" radius={4} />
+              <Bar dataKey="averagePlayers" name={locale('ui_average_players')} fill="#5e8f4f" radius={4} />
             </BarChart>
           </ResponsiveContainer>
         )}
       </div>
 
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">Job Distribution</h3>
-        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">Player job breakdown</p>
+        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">{locale('ui_job_distribution')}</h3>
+        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">{locale('ui_player_job_breakdown')}</p>
         {jobs.length === 0 ? (
-          <EmptyState message="No registered players yet." />
+          <EmptyState message={locale('ui_no_registered_players_yet')} />
         ) : (
           <JobDistributionRings jobs={jobs} />
         )}
@@ -322,10 +323,10 @@ function EconomyTab({ stats }: { stats: StatisticsData }) {
   return (
     <div className="space-y-4">
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">Money by Account Type</h3>
-        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">Current totals across every registered player</p>
+        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">{locale('ui_money_by_account_type')}</h3>
+        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">{locale('ui_current_totals_across_every_registered_playe')}</p>
         {!hasAnyMoney ? (
-          <EmptyState message="No money on the server yet." />
+          <EmptyState message={locale('ui_no_money_on_the_server_yet')} />
         ) : (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={stats.economy.moneyByType} accessibilityLayer>
@@ -335,7 +336,7 @@ function EconomyTab({ stats }: { stats: StatisticsData }) {
               <Tooltip content={<ChartTooltipContent labelFormatter={(t: string) => moneyLabels[t as MoneyType]} valueFormatter={formatMoney} />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Bar
                 dataKey="total"
-                name="Total"
+                name={locale('ui_total')}
                 fill="var(--rdr-accent)"
                 radius={4}
                 minPointSize={(value) => (Number(value) > 0 ? 8 : 0)}
@@ -346,10 +347,10 @@ function EconomyTab({ stats }: { stats: StatisticsData }) {
       </div>
 
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">Server Economy</h3>
-        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">Total money on server by day</p>
+        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">{locale('ui_server_economy')}</h3>
+        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">{locale('ui_total_money_on_server_by_day')}</p>
         {stats.economy.dailyMoney.length === 0 ? (
-          <EmptyState message="No economy history yet. This fills in over the next few days." />
+          <EmptyState message={locale('ui_no_economy_history_yet_this_fills_in_over_th')} />
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={stats.economy.dailyMoney} accessibilityLayer>
@@ -358,7 +359,7 @@ function EconomyTab({ stats }: { stats: StatisticsData }) {
               <YAxis tickLine={false} axisLine={false} tickMargin={8} stroke="var(--rdr-muted)" fontSize={12} tickFormatter={(v: number) => `$${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`} />
               <Tooltip content={<ChartTooltipContent labelFormatter={formatDate} valueFormatter={formatMoney} />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Legend content={<ChartLegendContent />} />
-              <Bar dataKey="averageMoney" name="Total Money" fill="#3ba884" radius={4} maxBarSize={64} />
+              <Bar dataKey="averageMoney" name={locale('ui_total_money')} fill="#3ba884" radius={4} maxBarSize={64} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -372,17 +373,17 @@ function PerformanceTab({ stats }: { stats: StatisticsData }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-4">
-        <PerfCard label="Online Players" value={String(perf.onlineCount)} />
-        <PerfCard label="Average Ping" value={`${perf.averagePing}ms`} />
-        <PerfCard label="Running Resources" value={String(perf.resourceCount)} />
-        <PerfCard label="Server Uptime" value={formatUptime(perf.serverUptimeSeconds)} />
+        <PerfCard label={locale('ui_online_players')} value={String(perf.onlineCount)} />
+        <PerfCard label={locale('ui_average_ping')} value={`${perf.averagePing}ms`} />
+        <PerfCard label={locale('ui_running_resources')} value={String(perf.resourceCount)} />
+        <PerfCard label={locale('ui_server_uptime')} value={formatUptime(perf.serverUptimeSeconds)} />
       </div>
 
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">Player Count Over Time</h3>
-        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">Hourly average and peak player counts (last 24 hours)</p>
+        <h3 className="text-[var(--rdr-heading)] text-base font-semibold">{locale('ui_player_count_over_time')}</h3>
+        <p className="text-[var(--rdr-muted)] text-xs mt-0.5 mb-4">{locale('ui_hourly_average_and_peak_player_counts_last_2')}</p>
         {perf.hourlyActivity.length === 0 ? (
-          <EmptyState message="No activity data yet" />
+          <EmptyState message={locale('ui_no_activity_data_yet')} />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={perf.hourlyActivity} accessibilityLayer margin={{ top: 5, right: 24, left: 0, bottom: 0 }}>
@@ -391,8 +392,8 @@ function PerformanceTab({ stats }: { stats: StatisticsData }) {
               <YAxis tickLine={false} axisLine={false} tickMargin={8} stroke="var(--rdr-muted)" fontSize={12} allowDecimals={false} />
               <Tooltip content={<ChartTooltipContent labelFormatter={formatHour} />} cursor={{ stroke: 'var(--rdr-border)' }} />
               <Legend content={<ChartLegendContent />} />
-              <Line type="monotone" dataKey="averagePlayers" name="Avg Players" stroke="#3b6ea5" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="peakPlayers" name="Peak Players" stroke="#e8a63d" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="averagePlayers" name={locale('ui_avg_players')} stroke="#3b6ea5" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="peakPlayers" name={locale('ui_peak_players')} stroke="#e8a63d" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}

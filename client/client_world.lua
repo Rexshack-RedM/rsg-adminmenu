@@ -143,7 +143,7 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     local kind = entityType == 'horse' and 'animal' or entityType
     local model = loadModel(hash, kind == 'prop')
     if not model then
-        lib.notify({ title = 'Spawner', description = 'Failed to load model: ' .. tostring(hash), type = 'error' })
+        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_load_model', tostring(hash)), type = 'error' })
         return
     end
 
@@ -180,11 +180,11 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     SetModelAsNoLongerNeeded(model)
 
     if not waitForEntity(entity) then
-        lib.notify({ title = 'Spawner', description = 'Model loaded but failed to spawn as a ' .. tostring(kind) .. ' (' .. tostring(hash) .. ' may not be that type of model)', type = 'error' })
+        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_spawn_as', tostring(kind), tostring(hash)), type = 'error' })
     else
         SetEntityAsMissionEntity(entity, true, true)
         spawnedByMenu[entity] = true
-        lib.notify({ title = 'Spawner', description = 'Spawned ' .. tostring(kind) .. ': ' .. tostring(hash), type = 'success' })
+        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_spawned', tostring(kind), tostring(hash)), type = 'success' })
     end
 end)
 
@@ -282,8 +282,8 @@ RegisterNetEvent('rsg-adminmenu:client:cleararea', function(radius)
     end
 
     lib.notify({
-        title = 'Clear Area',
-        description = removed > 0 and ('Removed ' .. removed .. ' entities') or 'Nothing to clear in that radius',
+        title = locale('cl_world_clear_area'),
+        description = removed > 0 and locale('cl_world_removed_entities', removed) or locale('cl_world_nothing_to_clear'),
         type = removed > 0 and 'success' or 'inform',
     })
 end)

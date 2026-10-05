@@ -72,8 +72,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deletehistoryentry', func
 
         MySQL.update('DELETE FROM admin_player_history WHERE id = ?', { data.id }, function(affected)
             if affected > 0 then
-                LogAdminAction('admin_action', 'high', src, 'Deleted punishment history entry #' .. tostring(data.id),
-                    entry.action .. ': ' .. (entry.reason or 'no reason'), nil)
+                LogAdminAction('admin_action', 'high', src, locale('sv_log_deleted_history', tostring(data.id)),
+                    entry.action .. ': ' .. (entry.reason or locale('sv_no_reason')), nil)
             end
             cb({ success = affected > 0 })
         end)

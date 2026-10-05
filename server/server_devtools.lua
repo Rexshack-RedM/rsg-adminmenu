@@ -12,7 +12,7 @@ AddEventHandler('playerConnecting', function(_, _, deferrals)
     if IsPlayerAceAllowed(src, 'god') then return end
     deferrals.defer()
     Wait(0)
-    deferrals.done('The server is currently closed to new connections.')
+    deferrals.done(locale('sv_server_closed'))
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getserverstate', function(source, cb)
@@ -27,7 +27,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:togglecloseserver', funct
     end
     serverClosed = not serverClosed
     LogAdminAction('server_event', 'high', src,
-        serverClosed and 'Closed server for new players' or 'Reopened server for new players', nil, nil)
+        serverClosed and locale('sv_log_closed_server') or locale('sv_log_reopened_server'), nil, nil)
     cb({ success = true, closed = serverClosed })
 end)
 
@@ -40,11 +40,11 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:kickallplayers', function
     local count = 0
     for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
         if tostring(playerId) ~= tostring(src) then
-            DropPlayer(playerId, 'Removed by an administrator (server-wide kick)')
+            DropPlayer(playerId, locale('sv_kick_all_reason'))
             count = count + 1
         end
     end
-    LogAdminAction('server_event', 'high', src, 'Kicked all players', count .. ' player(s) removed', nil)
+    LogAdminAction('server_event', 'high', src, locale('sv_log_kicked_all_players'), locale('sv_log_players_removed', count), nil)
     cb({ success = true, count = count })
 end)
 
@@ -57,7 +57,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:refreshresources', functi
 
     CreateThread(function()
         ExecuteCommand('refresh')
-        LogAdminAction('server_event', 'low', src, 'Refreshed server resources', nil, nil)
+        LogAdminAction('server_event', 'low', src, locale('sv_log_refreshed_server_resources'), nil, nil)
         cb({ success = true })
     end)
 end)
@@ -74,10 +74,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendannouncement', functi
         return
     end
     TriggerClientEvent('chat:addMessage', -1, {
-        template = "<div class='chat-message server'><strong>[ANNOUNCEMENT] " .. AdminDisplayName(src) .. ":</strong> {0}</div>",
+        template = "<div class='chat-message server'><strong>[" .. locale('sv_announcement') .. "] " .. AdminDisplayName(src) .. ":</strong> {0}</div>",
         args = { message },
     })
-    LogAdminAction('server_event', 'medium', src, 'Sent server announcement', message, nil)
+    LogAdminAction('server_event', 'medium', src, locale('sv_log_sent_server_announcement'), message, nil)
     cb({ success = true })
 end)
 
@@ -115,7 +115,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:settimesettings', functio
         freeze = data.freeze and true or false,
     }
     BroadcastWorldSettings()
-    LogAdminAction('server_event', 'low', src, 'Updated server time settings', nil, nil)
+    LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_time_settings'), nil, nil)
     cb({ success = true })
 end)
 
@@ -132,7 +132,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setweathersettings', func
         snow = data.snow and true or false,
     }
     BroadcastWorldSettings()
-    LogAdminAction('server_event', 'low', src, 'Updated server weather settings', tostring(data.type), nil)
+    LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_weather_settings'), tostring(data.type), nil)
     cb({ success = true })
 end)
 
@@ -144,7 +144,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:settimescale', function(s
     end
     worldSettings.timescale = tonumber(data.timescale) or 1
     BroadcastWorldSettings()
-    LogAdminAction('server_event', 'low', src, 'Updated server timescale', tostring(worldSettings.timescale), nil)
+    LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_timescale'), tostring(worldSettings.timescale), nil)
     cb({ success = true })
 end)
 
@@ -160,7 +160,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setwindsettings', functio
         freeze = data.freeze and true or false,
     }
     BroadcastWorldSettings()
-    LogAdminAction('server_event', 'low', src, 'Updated server wind settings', nil, nil)
+    LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_wind_settings'), nil, nil)
     cb({ success = true })
 end)
 

@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
@@ -72,7 +73,7 @@ export function Dropdown<T extends string = string>({ value, onChange, options, 
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between gap-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)] hover:border-[var(--rdr-heading)] transition-colors"
       >
-        <span className={`truncate ${selected ? '' : 'text-[var(--rdr-faint)]'}`}>{selected?.label ?? placeholder ?? 'Select...'}</span>
+        <span className={`truncate ${selected ? '' : 'text-[var(--rdr-faint)]'}`}>{selected?.label ?? placeholder ?? locale('ui_select')}</span>
         <ChevronDown size={14} className={`text-[var(--rdr-muted)] shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && rect && createPortal(

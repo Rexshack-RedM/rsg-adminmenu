@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Coins, Landmark, Wifi, Fingerprint, Cpu, MapPin, MessageCircle,
@@ -84,12 +85,12 @@ export function PlayerManageModal({ player, permissions, onClose }: PlayerManage
             <Avatar name={player.name} size={44} imageUrl={detail?.discordAvatarUrl} />
             <div>
               <h2 className="text-[var(--rdr-heading)] text-lg font-bold leading-tight" style={{ fontFamily: 'var(--font-display)' }}>{player.name}</h2>
-              <p className="text-[var(--rdr-muted)] text-xs mt-0.5">{detail?.discordName ? `@${detail.discordName}` : `Server ID: ${player.id}`}</p>
+              <p className="text-[var(--rdr-muted)] text-xs mt-0.5">{detail?.discordName ? `@${detail.discordName}` : locale('ui_server_id_x', player.id)}</p>
               <div className="flex items-center gap-1.5 mt-1.5">
                 {detail && (
                   <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold uppercase bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]">{detail.roleLabel}</span>
                 )}
-                <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-green-500/20 text-green-400">Online</span>
+                <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold bg-green-500/20 text-green-400">{locale('ui_online')}</span>
               </div>
             </div>
           </div>
@@ -114,7 +115,7 @@ export function PlayerManageModal({ player, permissions, onClose }: PlayerManage
 
         <div className="p-5 overflow-y-auto flex-1 min-h-0">
           {!detail ? (
-            <p className="text-[var(--rdr-faint)] text-sm text-center py-8">Loading...</p>
+            <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_loading')}</p>
           ) : tab === 'overview' ? (
             <OverviewTab detail={detail} totalBank={totalBank} toast={toast} />
           ) : tab === 'actions' ? (
@@ -161,7 +162,7 @@ function CopyRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         <span className="block text-[var(--rdr-muted)] text-xs">{label}</span>
         <span className="block text-[var(--rdr-text)] text-sm font-medium truncate">{value}</span>
       </span>
-      <span className="text-xs text-[var(--rdr-faint)] shrink-0">{copied ? 'Copied' : 'Copy'}</span>
+      <span className="text-xs text-[var(--rdr-faint)] shrink-0">{copied ? locale('ui_copied') : locale('ui_copy')}</span>
     </button>
   );
 }
@@ -171,31 +172,31 @@ function OverviewTab({ detail, totalBank, toast }: { detail: PlayerDetail; total
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Cash" value={fmt(detail.cash)} icon={<Coins size={16} />} color="#7fc47c" />
-        <StatCard label="Total Bank" value={fmt(totalBank)} icon={<Landmark size={16} />} color="#e8b25a" />
-        <StatCard label="Ping" value={`${detail.ping}ms`} icon={<Wifi size={16} />} color="#6fa8dc" />
+        <StatCard label={locale('ui_cash')} value={fmt(detail.cash)} icon={<Coins size={16} />} color="#7fc47c" />
+        <StatCard label={locale('ui_total_bank')} value={fmt(totalBank)} icon={<Landmark size={16} />} color="#e8b25a" />
+        <StatCard label={locale('ui_ping')} value={`${detail.ping}ms`} icon={<Wifi size={16} />} color="#6fa8dc" />
       </div>
 
       <div>
-        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Job Details</p>
+        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_job_details')}</p>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-sm p-2.5" style={{ background: 'var(--rdr-surface-2)' }}>
-            <p className="text-[var(--rdr-muted)] text-xs">Job</p>
+            <p className="text-[var(--rdr-muted)] text-xs">{locale('ui_job')}</p>
             <p className="text-[var(--rdr-text)] text-sm font-medium capitalize">{detail.job}</p>
           </div>
           <div className="rounded-sm p-2.5" style={{ background: 'var(--rdr-surface-2)' }}>
-            <p className="text-[var(--rdr-muted)] text-xs">Job Grade</p>
+            <p className="text-[var(--rdr-muted)] text-xs">{locale('ui_job_grade')}</p>
             <p className="text-[var(--rdr-text)] text-sm font-medium">{detail.jobGradeName}</p>
           </div>
         </div>
       </div>
 
       <div>
-        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Player Details</p>
+        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_player_details')}</p>
         <div className="space-y-1.5">
-          <CopyRow icon={<Fingerprint size={14} />} label="Citizen ID" value={detail.citizenid} />
-          <CopyRow icon={<Cpu size={14} />} label="Steam Hex" value={detail.steamHex || 'Unavailable'} />
-          <CopyRow icon={<MessageCircle size={14} />} label="Discord ID" value={detail.discordId ? `${detail.discordId}${detail.discordName ? ` (${detail.discordName})` : ''}` : 'Unavailable'} />
+          <CopyRow icon={<Fingerprint size={14} />} label={locale('ui_citizen_id')} value={detail.citizenid} />
+          <CopyRow icon={<Cpu size={14} />} label={locale('ui_steam_hex')} value={detail.steamHex || locale('ui_unavailable')} />
+          <CopyRow icon={<MessageCircle size={14} />} label={locale('ui_discord_id')} value={detail.discordId ? `${detail.discordId}${detail.discordName ? ` (${detail.discordName})` : ''}` : locale('ui_unavailable')} />
         </div>
       </div>
     </div>
@@ -237,71 +238,71 @@ function ActionsTab({
 
   return (
     <div className="space-y-4">
-      <ActionSection title="Player Actions">
-        <ActionButton tone="green" icon={<HeartPulse />} label="Revive" onClick={() => act('revivePlayer', {}, 'Player revived')} />
-        <ActionButton tone="green" icon={<Sparkles />} label="Heal" onClick={() => act('healPlayer', {}, 'Player healed')} />
-        <ActionButton tone="red" icon={<Skull />} label="Kill" onClick={() => act('killPlayer', {}, 'Player killed')} />
-        <ActionButton icon={<Snowflake />} label="Toggle Freeze" onClick={() => act('toggleFreeze', {}, 'Freeze toggled')} />
-        <ActionButton icon={<MapPin />} label="GoTo Player" onClick={() => act('goToPlayer')} />
-        <ActionButton icon={<ArrowDownToLine />} label="Bring Player" onClick={() => act('bringPlayer')} />
-        <ActionButton icon={<Eye />} label="Toggle Spectate" onClick={() => act('toggleSpectate')} />
-        <ActionButton icon={<Package />} label="Open Inventory" onClick={() => act('openInventory')} />
+      <ActionSection title={locale('ui_player_actions')}>
+        <ActionButton tone="green" icon={<HeartPulse />} label={locale('ui_revive')} onClick={() => act('revivePlayer', {}, locale('ui_player_revived'))} />
+        <ActionButton tone="green" icon={<Sparkles />} label={locale('ui_heal')} onClick={() => act('healPlayer', {}, locale('ui_player_healed'))} />
+        <ActionButton tone="red" icon={<Skull />} label={locale('ui_kill')} onClick={() => act('killPlayer', {}, locale('ui_player_killed'))} />
+        <ActionButton icon={<Snowflake />} label={locale('ui_toggle_freeze')} onClick={() => act('toggleFreeze', {}, locale('ui_freeze_toggled'))} />
+        <ActionButton icon={<MapPin />} label={locale('ui_goto_player')} onClick={() => act('goToPlayer')} />
+        <ActionButton icon={<ArrowDownToLine />} label={locale('ui_bring_player')} onClick={() => act('bringPlayer')} />
+        <ActionButton icon={<Eye />} label={locale('ui_toggle_spectate')} onClick={() => act('toggleSpectate')} />
+        <ActionButton icon={<Package />} label={locale('ui_open_inventory')} onClick={() => act('openInventory')} />
       </ActionSection>
 
       {atLeastMod && (
-        <ActionSection title="Moderation">
-          <ActionButton tone="amber" icon={<AlertTriangle />} label="Warn" onClick={() => setForm('warn')} />
-          <ActionButton tone="red" icon={<LogOut />} label="Kick" onClick={() => setForm('kick')} />
-          {atLeastAdmin && <ActionButton tone="red" icon={<Gavel />} label="Ban" onClick={() => setForm('ban')} />}
-          {canManageAdmins && <ActionButton tone="amber" icon={<KeyRound />} label="Set Permission" onClick={() => setForm('permission')} />}
+        <ActionSection title={locale('ui_moderation')}>
+          <ActionButton tone="amber" icon={<AlertTriangle />} label={locale('ui_warn')} onClick={() => setForm('warn')} />
+          <ActionButton tone="red" icon={<LogOut />} label={locale('ui_kick')} onClick={() => setForm('kick')} />
+          {atLeastAdmin && <ActionButton tone="red" icon={<Gavel />} label={locale('ui_ban')} onClick={() => setForm('ban')} />}
+          {canManageAdmins && <ActionButton tone="amber" icon={<KeyRound />} label={locale('ui_set_permission')} onClick={() => setForm('permission')} />}
         </ActionSection>
       )}
 
       {fullAccess && (
-        <ActionSection title="Economy">
-          <ActionButton tone="green" icon={<Wallet />} label="Give / Remove Money" onClick={() => setForm('economy')} />
+        <ActionSection title={locale('ui_economy')}>
+          <ActionButton tone="green" icon={<Wallet />} label={locale('ui_give_remove_money')} onClick={() => setForm('economy')} />
         </ActionSection>
       )}
 
-      <ActionSection title="Character">
-        <ActionButton icon={<Briefcase />} label="Set Job" onClick={() => setForm('job')} />
-        <ActionButton icon={<Tag />} label="Set Nickname" onClick={() => { setCharField({ field: 'nickname', label: 'Nickname' }); setForm('charfield'); }} />
-        <ActionButton icon={<UserRound />} label="Set Firstname" onClick={() => { setCharField({ field: 'firstname', label: 'Firstname' }); setForm('charfield'); }} />
-        <ActionButton icon={<UserRound />} label="Set Lastname" onClick={() => { setCharField({ field: 'lastname', label: 'Lastname' }); setForm('charfield'); }} />
-        <ActionButton icon={<Cake />} label="Set Age" onClick={() => { setCharField({ field: 'age', label: 'Age' }); setForm('charfield'); }} />
-        <ActionButton icon={<FileText />} label="Set Description" onClick={() => { setCharField({ field: 'description', label: 'Description' }); setForm('charfield'); }} />
-        <ActionButton tone="green" icon={<TrendingUp />} label="Add XP" onClick={() => { setXpDirection('add'); setForm('xp'); }} />
-        <ActionButton tone="red" icon={<TrendingDown />} label="Remove XP" onClick={() => { setXpDirection('remove'); setForm('xp'); }} />
+      <ActionSection title={locale('ui_character')}>
+        <ActionButton icon={<Briefcase />} label={locale('ui_set_job')} onClick={() => setForm('job')} />
+        <ActionButton icon={<Tag />} label={locale('ui_set_nickname')} onClick={() => { setCharField({ field: 'nickname', label: locale('ui_nickname') }); setForm('charfield'); }} />
+        <ActionButton icon={<UserRound />} label={locale('ui_set_firstname')} onClick={() => { setCharField({ field: 'firstname', label: locale('ui_firstname') }); setForm('charfield'); }} />
+        <ActionButton icon={<UserRound />} label={locale('ui_set_lastname')} onClick={() => { setCharField({ field: 'lastname', label: locale('ui_lastname') }); setForm('charfield'); }} />
+        <ActionButton icon={<Cake />} label={locale('ui_set_age')} onClick={() => { setCharField({ field: 'age', label: locale('ui_age') }); setForm('charfield'); }} />
+        <ActionButton icon={<FileText />} label={locale('ui_set_description')} onClick={() => { setCharField({ field: 'description', label: locale('ui_description') }); setForm('charfield'); }} />
+        <ActionButton tone="green" icon={<TrendingUp />} label={locale('ui_add_xp')} onClick={() => { setXpDirection('add'); setForm('xp'); }} />
+        <ActionButton tone="red" icon={<TrendingDown />} label={locale('ui_remove_xp')} onClick={() => { setXpDirection('remove'); setForm('xp'); }} />
       </ActionSection>
 
       {atLeastAdmin && (
-        <ActionSection title="Clear Actions">
-          <ActionButton tone="red" icon={<BanIcon />} label="Clear Weapons" onClick={() => act('clearWeapons', {}, 'Weapons cleared')} />
-          <ActionButton tone="red" icon={<Trash2 />} label="Clear Items" onClick={() => act('clearItems', {}, 'Inventory cleared')} />
+        <ActionSection title={locale('ui_clear_actions')}>
+          <ActionButton tone="red" icon={<BanIcon />} label={locale('ui_clear_weapons')} onClick={() => act('clearWeapons', {}, locale('ui_weapons_cleared'))} />
+          <ActionButton tone="red" icon={<Trash2 />} label={locale('ui_clear_items')} onClick={() => act('clearItems', {}, locale('ui_inventory_cleared'))} />
         </ActionSection>
       )}
 
       {atLeastMod && (
-        <ActionSection title="Troll Actions">
-          <ActionButton tone="amber" icon={<PawPrint />} label="Wild Attack" onClick={() => act('wildAttack')} />
-          <ActionButton tone="amber" icon={<Flame />} label="Set on Fire" onClick={() => act('setOnFire')} />
-          <ActionButton tone="amber" icon={<Zap />} label="Lightning" onClick={() => act('lightningPlayer')} />
-          <ActionButton tone="amber" icon={<ArrowUpToLine />} label="To Heaven" onClick={() => act('toHeavenPlayer')} />
-          <ActionButton tone="amber" icon={<Shuffle />} label="Ragdoll" onClick={() => act('ragdollPlayer')} />
-          <ActionButton tone="amber" icon={<BatteryLow />} label="Drain Stamina" onClick={() => act('drainStaminaPlayer')} />
-          <ActionButton tone="amber" icon={<Link2 />} label="Handcuff" onClick={() => act('handcuffPlayer')} />
-          <ActionButton tone="amber" icon={<Wine />} label="Drunk" onClick={() => act('drunkPlayer')} />
-          <ActionButton tone="amber" icon={<Ghost />} label="Jump Scare" onClick={() => act('jumpScarePlayer')} />
-          <ActionButton tone="amber" icon={<Footprints />} label="Horse Buck" onClick={() => act('horseBuckPlayer')} />
-          <ActionButton tone="amber" icon={<Waves />} label="Haunted" onClick={() => act('hauntedPlayer')} />
-          <ActionButton tone="amber" icon={<Users />} label="Make Everyone Attack" onClick={() => act('everyoneAttackPlayer')} />
+        <ActionSection title={locale('ui_troll_actions')}>
+          <ActionButton tone="amber" icon={<PawPrint />} label={locale('ui_wild_attack')} onClick={() => act('wildAttack')} />
+          <ActionButton tone="amber" icon={<Flame />} label={locale('ui_set_on_fire')} onClick={() => act('setOnFire')} />
+          <ActionButton tone="amber" icon={<Zap />} label={locale('ui_lightning')} onClick={() => act('lightningPlayer')} />
+          <ActionButton tone="amber" icon={<ArrowUpToLine />} label={locale('ui_to_heaven')} onClick={() => act('toHeavenPlayer')} />
+          <ActionButton tone="amber" icon={<Shuffle />} label={locale('ui_ragdoll')} onClick={() => act('ragdollPlayer')} />
+          <ActionButton tone="amber" icon={<BatteryLow />} label={locale('ui_drain_stamina')} onClick={() => act('drainStaminaPlayer')} />
+          <ActionButton tone="amber" icon={<Link2 />} label={locale('ui_handcuff')} onClick={() => act('handcuffPlayer')} />
+          <ActionButton tone="amber" icon={<Wine />} label={locale('ui_drunk')} onClick={() => act('drunkPlayer')} />
+          <ActionButton tone="amber" icon={<Ghost />} label={locale('ui_jump_scare')} onClick={() => act('jumpScarePlayer')} />
+          <ActionButton tone="amber" icon={<Footprints />} label={locale('ui_horse_buck')} onClick={() => act('horseBuckPlayer')} />
+          <ActionButton tone="amber" icon={<Waves />} label={locale('ui_haunted')} onClick={() => act('hauntedPlayer')} />
+          <ActionButton tone="amber" icon={<Users />} label={locale('ui_make_everyone_attack')} onClick={() => act('everyoneAttackPlayer')} />
         </ActionSection>
       )}
 
       {form === 'warn' && (
         <WarnForm onCancel={() => setForm(null)} onSubmit={async (reason, severity) => {
           await act('warnPlayer', { reason, severity });
-          toast.push({ type: 'success', title: 'Player warned' });
+          toast.push({ type: 'success', title: locale('ui_player_warned') });
           setForm(null);
           reload();
         }} />
@@ -309,7 +310,7 @@ function ActionsTab({
       {form === 'kick' && (
         <KickForm onCancel={() => setForm(null)} onSubmit={async (reason) => {
           await act('kickPlayer', { reason });
-          toast.push({ type: 'success', title: 'Player kicked' });
+          toast.push({ type: 'success', title: locale('ui_player_kicked') });
           setForm(null);
           onClose();
         }} />
@@ -317,7 +318,7 @@ function ActionsTab({
       {form === 'ban' && (
         <BanForm onCancel={() => setForm(null)} onSubmit={async (type, duration, reason) => {
           await act('banPlayer', { type, duration, reason });
-          toast.push({ type: 'success', title: 'Player banned' });
+          toast.push({ type: 'success', title: locale('ui_player_banned') });
           setForm(null);
           onClose();
         }} />
@@ -329,7 +330,7 @@ function ActionsTab({
           onCancel={() => setForm(null)}
           onSubmit={async (level) => {
             await act('setPermission', { level });
-            toast.push({ type: 'success', title: 'Permission updated' });
+            toast.push({ type: 'success', title: locale('ui_permission_updated') });
             setForm(null);
             reload();
           }}
@@ -340,7 +341,7 @@ function ActionsTab({
           onCancel={() => setForm(null)}
           onSubmit={async (action, type, amount) => {
             await act(action === 'give' ? 'giveMoney' : 'removeMoney', { type, amount });
-            toast.push({ type: 'success', title: action === 'give' ? 'Money given' : 'Money removed' });
+            toast.push({ type: 'success', title: action === 'give' ? locale('ui_money_given') : locale('ui_money_removed') });
             setForm(null);
             reload();
           }}
@@ -349,7 +350,7 @@ function ActionsTab({
       {form === 'job' && (
         <JobForm onCancel={() => setForm(null)} onSubmit={async (job, grade) => {
           await act('setJob', { job, grade });
-          toast.push({ type: 'success', title: 'Job updated' });
+          toast.push({ type: 'success', title: locale('ui_job_updated') });
           setForm(null);
           reload();
         }} />
@@ -372,12 +373,12 @@ function ActionsTab({
           onCancel={() => setForm(null)}
           onSubmit={async (amount) => {
             await act('adjustXp', { direction: xpDirection, amount });
-            toast.push({ type: 'success', title: xpDirection === 'add' ? 'XP added' : 'XP removed' });
+            toast.push({ type: 'success', title: xpDirection === 'add' ? locale('ui_xp_added') : locale('ui_xp_removed') });
             setForm(null);
           }}
         />
       )}
-      <p className="text-[var(--rdr-faint)] text-[11px]">Server ID: {player.id}</p>
+      <p className="text-[var(--rdr-faint)] text-[11px]">{locale('ui_server_id')} {player.id}</p>
     </div>
   );
 }
@@ -385,28 +386,28 @@ function ActionsTab({
 const inputCls = 'w-full mt-1 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]';
 
 const severityOptions = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
+  { value: 'low', label: locale('ui_low') },
+  { value: 'medium', label: locale('ui_medium') },
+  { value: 'high', label: locale('ui_high') },
 ];
 
 function WarnForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (reason: string, severity: string) => void }) {
   const [reason, setReason] = useState('');
   const [severity, setSeverity] = useState('medium');
   return (
-    <Modal title="Warn Player" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_warn_player')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Severity</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_severity')}</label>
           <div className="mt-1"><Dropdown value={severity} onChange={setSeverity} options={severityOptions} /></div>
         </div>
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Reason</label>
-          <input autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder="Reason for warning" />
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_reason')}</label>
+          <input autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder={locale('ui_reason_for_warning')} />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="amber" disabled={!reason.trim()} onClick={() => onSubmit(reason.trim(), severity)}>Warn Player</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="amber" disabled={!reason.trim()} onClick={() => onSubmit(reason.trim(), severity)}>{locale('ui_warn_player')}</Button>
         </div>
       </div>
     </Modal>
@@ -416,15 +417,15 @@ function WarnForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (rea
 function KickForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (reason: string) => void }) {
   const [reason, setReason] = useState('');
   return (
-    <Modal title="Kick Player" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_kick_player')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Reason for Kick</label>
-          <input autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder="Reason for kick" />
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_reason_for_kick_2')}</label>
+          <input autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder={locale('ui_reason_for_kick')} />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="red" disabled={!reason.trim()} onClick={() => onSubmit(reason.trim())}>Kick Player</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="red" disabled={!reason.trim()} onClick={() => onSubmit(reason.trim())}>{locale('ui_kick_player')}</Button>
         </div>
       </div>
     </Modal>
@@ -432,43 +433,43 @@ function KickForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (rea
 }
 
 const banDurations = [
-  { value: '3600', label: '1 Hour' }, { value: '21600', label: '6 Hours' }, { value: '43200', label: '12 Hours' },
-  { value: '86400', label: '1 Day' }, { value: '259200', label: '3 Days' }, { value: '604800', label: '1 Week' },
-  { value: '2678400', label: '1 Month' }, { value: '8035200', label: '3 Months' },
-  { value: '16070400', label: '6 Months' }, { value: '32140800', label: '1 Year' },
+  { value: '3600', label: locale('ui_1_hour') }, { value: '21600', label: locale('ui_6_hours') }, { value: '43200', label: locale('ui_12_hours') },
+  { value: '86400', label: locale('ui_1_day') }, { value: '259200', label: locale('ui_3_days') }, { value: '604800', label: locale('ui_1_week') },
+  { value: '2678400', label: locale('ui_1_month') }, { value: '8035200', label: locale('ui_3_months') },
+  { value: '16070400', label: locale('ui_6_months') }, { value: '32140800', label: locale('ui_1_year') },
 ];
-const banTypeOptions = [{ value: 'permanent' as const, label: 'Permanent' }, { value: 'temporary' as const, label: 'Temporary' }];
+const banTypeOptions = [{ value: 'permanent' as const, label: locale('ui_permanent') }, { value: 'temporary' as const, label: locale('ui_temporary') }];
 
 function BanForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (type: string, duration: string, reason: string) => void }) {
   const [type, setType] = useState<'permanent' | 'temporary'>('permanent');
   const [duration, setDuration] = useState(banDurations[0].value);
   const [reason, setReason] = useState('');
   return (
-    <Modal title="Ban Player" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_ban_player')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Ban Type</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_ban_type')}</label>
           <div className="mt-1"><Dropdown value={type} onChange={setType} options={banTypeOptions} /></div>
         </div>
         {type === 'temporary' && (
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Duration</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_duration')}</label>
             <div className="mt-1"><Dropdown value={duration} onChange={setDuration} options={banDurations} /></div>
           </div>
         )}
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Reason</label>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder="Reason for ban" />
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_reason')}</label>
+          <input value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} placeholder={locale('ui_reason_for_ban')} />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
           <Button
             variant="solid"
             tone="red"
             disabled={!reason.trim()}
             onClick={() => onSubmit(type, type === 'permanent' ? '99999999999' : duration, reason.trim())}
           >
-            Ban Player
+            {locale('ui_ban_player')}
           </Button>
         </div>
       </div>
@@ -477,18 +478,18 @@ function BanForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (type
 }
 
 function PermissionForm({ levels, current, onCancel, onSubmit }: { levels: { value: string; label: string }[]; current: string; onCancel: () => void; onSubmit: (level: string) => void }) {
-  const options = useMemo(() => [{ value: 'user', label: 'User' }, ...levels], [levels]);
+  const options = useMemo(() => [{ value: 'user', label: locale('ui_user') }, ...levels], [levels]);
   const [level, setLevel] = useState(current);
   return (
-    <Modal title="Set Permission" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_set_permission')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Permission Level</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_permission_level')}</label>
           <div className="mt-1"><Dropdown value={level} onChange={setLevel} options={options} /></div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="accent" onClick={() => onSubmit(level)}>Set Permission</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="accent" onClick={() => onSubmit(level)}>{locale('ui_set_permission')}</Button>
         </div>
       </div>
     </Modal>
@@ -496,9 +497,9 @@ function PermissionForm({ levels, current, onCancel, onSubmit }: { levels: { val
 }
 
 const moneyTypeOptions = [
-  { value: 'cash', label: 'Cash' }, { value: 'bank', label: 'Std Bank' }, { value: 'valbank', label: 'Val Bank' },
-  { value: 'rhobank', label: 'Rho Bank' }, { value: 'blkbank', label: 'Blk Bank' }, { value: 'armbank', label: 'Arm Bank' },
-  { value: 'bloodmoney', label: 'Blood Money' },
+  { value: 'cash', label: locale('ui_cash') }, { value: 'bank', label: locale('ui_std_bank') }, { value: 'valbank', label: locale('ui_val_bank') },
+  { value: 'rhobank', label: locale('ui_rho_bank') }, { value: 'blkbank', label: locale('ui_blk_bank') }, { value: 'armbank', label: locale('ui_arm_bank') },
+  { value: 'bloodmoney', label: locale('ui_blood_money') },
 ];
 
 function EconomyForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (action: 'give' | 'remove', type: string, amount: number) => void }) {
@@ -506,22 +507,22 @@ function EconomyForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (
   const [amount, setAmount] = useState<number | ''>('');
   const numericAmount = Number(amount) || 0;
   return (
-    <Modal title="Give / Remove Money" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_give_remove_money')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Account Type</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_account_type')}</label>
             <div className="mt-1"><Dropdown value={type} onChange={setType} options={moneyTypeOptions} /></div>
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Amount</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_amount')}</label>
             <input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} />
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="red" disabled={numericAmount <= 0} onClick={() => onSubmit('remove', type, numericAmount)}>Remove</Button>
-          <Button variant="solid" tone="accent" disabled={numericAmount <= 0} onClick={() => onSubmit('give', type, numericAmount)}>Give</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="red" disabled={numericAmount <= 0} onClick={() => onSubmit('remove', type, numericAmount)}>{locale('ui_remove')}</Button>
+          <Button variant="solid" tone="accent" disabled={numericAmount <= 0} onClick={() => onSubmit('give', type, numericAmount)}>{locale('ui_give')}</Button>
         </div>
       </div>
     </Modal>
@@ -532,21 +533,21 @@ function JobForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (job:
   const [job, setJob] = useState('');
   const [grade, setGrade] = useState('0');
   return (
-    <Modal title="Set Job" onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_set_job')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Job Name</label>
-            <input value={job} onChange={(e) => setJob(e.target.value)} className={inputCls} placeholder="e.g. sheriff" />
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_job_name')}</label>
+            <input value={job} onChange={(e) => setJob(e.target.value)} className={inputCls} placeholder={locale('ui_e_g_sheriff')} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Grade</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_grade')}</label>
             <input type="number" min={0} value={grade} onChange={(e) => setGrade(e.target.value)} className={inputCls} />
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="accent" disabled={!job.trim()} onClick={() => onSubmit(job.trim().toLowerCase(), grade)}>Set Job</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="accent" disabled={!job.trim()} onClick={() => onSubmit(job.trim().toLowerCase(), grade)}>{locale('ui_set_job')}</Button>
         </div>
       </div>
     </Modal>
@@ -556,15 +557,15 @@ function JobForm({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (job:
 function TextFieldForm({ label, onCancel, onSubmit }: { label: string; onCancel: () => void; onSubmit: (value: string) => void }) {
   const [value, setValue] = useState('');
   return (
-    <Modal title={`Set ${label}`} onClose={onCancel} width="max-w-sm">
+    <Modal title={locale('ui_set_x', label)} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
           <label className="text-xs text-[var(--rdr-muted)]">{label}</label>
-          <input autoFocus value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={`New ${label.toLowerCase()}`} />
+          <input autoFocus value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} placeholder={locale('ui_new_x', label.toLowerCase())} />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="solid" tone="accent" disabled={!value.trim()} onClick={() => onSubmit(value.trim())}>Save</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="accent" disabled={!value.trim()} onClick={() => onSubmit(value.trim())}>{locale('ui_save')}</Button>
         </div>
       </div>
     </Modal>
@@ -575,16 +576,16 @@ function XpForm({ direction, onCancel, onSubmit }: { direction: 'add' | 'remove'
   const [amount, setAmount] = useState<number | ''>('');
   const numericAmount = Number(amount) || 0;
   return (
-    <Modal title={direction === 'add' ? 'Add XP' : 'Remove XP'} onClose={onCancel} width="max-w-sm">
+    <Modal title={direction === 'add' ? locale('ui_add_xp') : locale('ui_remove_xp')} onClose={onCancel} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Amount</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_amount')}</label>
           <input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
           <Button variant="solid" tone={direction === 'add' ? 'accent' : 'red'} disabled={numericAmount <= 0} onClick={() => onSubmit(numericAmount)}>
-            {direction === 'add' ? 'Add XP' : 'Remove XP'}
+            {direction === 'add' ? locale('ui_add_xp') : locale('ui_remove_xp')}
           </Button>
         </div>
       </div>
@@ -619,11 +620,11 @@ function InventoryTab({ player, detail, reload, toast }: { player: OnlinePlayer;
   return (
     <div className="space-y-2">
       <Button variant="outline" tone="green" fullWidth onClick={() => setShowAdd(true)}>
-        <Plus /> Select Item to Add
+        <Plus /> {locale('ui_select_item_to_add')}
       </Button>
 
       {detail.items.length === 0 ? (
-        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">This player's inventory is empty.</p>
+        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_this_player_s_inventory_is_empty')}</p>
       ) : (
         <div className="space-y-1.5">
           {detail.items.map((item) => (
@@ -649,7 +650,7 @@ function InventoryTab({ player, detail, reload, toast }: { player: OnlinePlayer;
           onClose={() => setRemoveTarget(null)}
           onRemove={async (amount) => {
             await fetchNui('removePlayerItem', { id: player.id, item: removeTarget.name, amount, slot: removeTarget.slot }, { success: true });
-            toast.push({ type: 'success', title: 'Item removed' });
+            toast.push({ type: 'success', title: locale('ui_item_removed') });
             setRemoveTarget(null);
             reload();
           }}
@@ -662,7 +663,7 @@ function InventoryTab({ player, detail, reload, toast }: { player: OnlinePlayer;
             for (const { item, quantity } of items) {
               await fetchNui('giveItem', { id: player.id, item, quantity }, { success: true });
             }
-            toast.push({ type: 'success', title: `${items.length} item${items.length === 1 ? '' : 's'} given` });
+            toast.push({ type: 'success', title: locale('ui_x_items_given', items.length) });
             setShowAdd(false);
             reload();
           }}
@@ -676,44 +677,44 @@ function RemoveItemModal({ item, onClose, onRemove }: { item: InventoryItemEntry
   const [amount, setAmount] = useState<number | ''>(1);
   const clampedAmount = Math.min(item.amount, Math.max(1, Number(amount) || 0));
   return (
-    <Modal title="Remove Item" subtitle={`Remove ${item.label} from player inventory`} onClose={onClose} width="max-w-sm">
+    <Modal title={locale('ui_remove_item')} subtitle={locale('ui_remove_x_from_player_inventory', item.label)} onClose={onClose} width="max-w-sm">
       <div className="flex items-center gap-3 rounded-sm p-3 mb-4" style={{ background: 'var(--rdr-surface-2)' }}>
         <ItemIcon image={item.image} label={item.label} />
         <div>
           <p className="text-[var(--rdr-text)] text-sm font-medium">{item.label}</p>
-          <p className="text-[var(--rdr-faint)] text-xs">Available: {item.amount}</p>
+          <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_available')} {item.amount}</p>
         </div>
       </div>
-      <label className="text-xs text-[var(--rdr-muted)]">Amount to Remove</label>
+      <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_amount_to_remove')}</label>
       <input
         type="number" min={1} max={item.amount} value={amount}
         onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
         onBlur={() => setAmount(clampedAmount)}
         className={inputCls}
       />
-      <p className="text-[var(--rdr-faint)] text-xs mt-1">Maximum: {item.amount}</p>
+      <p className="text-[var(--rdr-faint)] text-xs mt-1">{locale('ui_maximum')} {item.amount}</p>
       <div className="flex justify-end gap-2 mt-4">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="outline" tone="red" onClick={() => onRemove(item.amount)}>Remove All</Button>
-        <Button variant="solid" tone="red" disabled={clampedAmount <= 0} onClick={() => onRemove(clampedAmount)}>Remove {clampedAmount}</Button>
+        <Button variant="ghost" onClick={onClose}>{locale('ui_cancel')}</Button>
+        <Button variant="outline" tone="red" onClick={() => onRemove(item.amount)}>{locale('ui_remove_all')}</Button>
+        <Button variant="solid" tone="red" disabled={clampedAmount <= 0} onClick={() => onRemove(clampedAmount)}>{locale('ui_remove')} {clampedAmount}</Button>
       </div>
     </Modal>
   );
 }
 
 const catalogFilterOptions = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'ammo', label: 'Ammo' },
-  { value: 'consumable', label: 'Consumable' },
-  { value: 'financial', label: 'Financial' },
-  { value: 'fishing', label: 'Fishing' },
-  { value: 'horse', label: 'Horse' },
-  { value: 'medical', label: 'Medical' },
-  { value: 'resource', label: 'Resource' },
-  { value: 'tools', label: 'Tools' },
-  { value: 'weapon_kit', label: 'Accessories' },
-  { value: 'weapons', label: 'Weapons' },
-  { value: 'other', label: 'Other' },
+  { value: 'all', label: locale('ui_all_categories') },
+  { value: 'ammo', label: locale('ui_ammo') },
+  { value: 'consumable', label: locale('ui_consumable') },
+  { value: 'financial', label: locale('ui_financial') },
+  { value: 'fishing', label: locale('ui_fishing') },
+  { value: 'horse', label: locale('ui_horse') },
+  { value: 'medical', label: locale('ui_medical') },
+  { value: 'resource', label: locale('ui_resource') },
+  { value: 'tools', label: locale('ui_tools') },
+  { value: 'weapon_kit', label: locale('ui_accessories') },
+  { value: 'weapons', label: locale('ui_weapons') },
+  { value: 'other', label: locale('ui_other') },
 ];
 
 // items.lua's `category` field is fine-grained (ammo_pistol, weapon_revolver, ...) —
@@ -759,11 +760,11 @@ function ItemPickerModal({ onClose, onAdd }: { onClose: () => void; onAdd: (item
   };
 
   return (
-    <Modal title="Select Item to Add" subtitle={`Choose one or more items to add to player inventory (${filtered.length} items found)`} onClose={onClose} width="max-w-3xl">
+    <Modal title={locale('ui_select_item_to_add')} subtitle={locale('ui_choose_one_or_more_items_to_add_to_player_in', filtered.length)} onClose={onClose} width="max-w-3xl">
       <div className="flex gap-2 mb-2">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--rdr-faint)]" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search items..." className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={locale('ui_search_items')} className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]" />
         </div>
         <Dropdown className="w-40 shrink-0" value={category} onChange={setCategory} options={catalogFilterOptions} />
         <input
@@ -771,18 +772,18 @@ function ItemPickerModal({ onClose, onAdd }: { onClose: () => void; onAdd: (item
           onChange={(e) => setCount(e.target.value === '' ? '' : Number(e.target.value))}
           onBlur={() => setCount(clampedCount)}
           className="w-20 shrink-0 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm px-2 py-2 text-sm text-[var(--rdr-text)]"
-          title="Quantity per item"
+          title={locale('ui_quantity_per_item')}
         />
       </div>
 
       <div className="flex items-center justify-between mb-2 h-5">
         {selected.length > 0 ? (
           <>
-            <span className="text-xs text-[var(--rdr-heading)]">{selected.length} item{selected.length === 1 ? '' : 's'} selected</span>
-            <button onClick={() => setSelected([])} className="text-xs text-[var(--rdr-faint)] hover:text-[var(--rdr-muted)]">Clear selection</button>
+            <span className="text-xs text-[var(--rdr-heading)]">{locale('ui_x_items_selected', selected.length)}</span>
+            <button onClick={() => setSelected([])} className="text-xs text-[var(--rdr-faint)] hover:text-[var(--rdr-muted)]">{locale('ui_clear_selection')}</button>
           </>
         ) : (
-          <span className="text-xs text-[var(--rdr-faint)]">Click items to select multiple</span>
+          <span className="text-xs text-[var(--rdr-faint)]">{locale('ui_click_items_to_select_multiple')}</span>
         )}
       </div>
 
@@ -807,21 +808,21 @@ function ItemPickerModal({ onClose, onAdd }: { onClose: () => void; onAdd: (item
               <span className="text-xs font-medium text-[var(--rdr-text)] truncate w-full">{item.label}</span>
               <span className="text-[10px] text-[var(--rdr-faint)] truncate w-full">{item.name.toUpperCase()}</span>
               <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-[var(--rdr-red-15)] text-[var(--rdr-red-bright)] capitalize">
-                {catalogFilterOptions.find((o) => o.value === broadCategory(item.category))?.label ?? 'Other'}
+                {catalogFilterOptions.find((o) => o.value === broadCategory(item.category))?.label ?? locale('ui_other')}
               </span>
             </button>
           );
         })}
-        {pageItems.length === 0 && <p className="col-span-4 text-center text-[var(--rdr-faint)] text-sm py-8">No items found</p>}
+        {pageItems.length === 0 && <p className="col-span-4 text-center text-[var(--rdr-faint)] text-sm py-8">{locale('ui_no_items_found')}</p>}
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--rdr-line)]">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="ghost" onClick={onClose}>{locale('ui_cancel')}</Button>
         <div className="flex items-center gap-2">
-          <span className="text-[var(--rdr-faint)] text-xs">{filtered.length} items total</span>
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="text-xs px-2.5 py-1.5">Previous</Button>
-          <span className="text-xs text-[var(--rdr-muted)]">Page {page} / {totalPages}</span>
-          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="text-xs px-2.5 py-1.5">Next</Button>
+          <span className="text-[var(--rdr-faint)] text-xs">{locale('ui_x_items_total', filtered.length)}</span>
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="text-xs px-2.5 py-1.5">{locale('ui_previous')}</Button>
+          <span className="text-xs text-[var(--rdr-muted)]">{locale('ui_page_x_of_y', page, totalPages)}</span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="text-xs px-2.5 py-1.5">{locale('ui_next')}</Button>
         </div>
         <Button
           variant="solid"
@@ -829,7 +830,7 @@ function ItemPickerModal({ onClose, onAdd }: { onClose: () => void; onAdd: (item
           disabled={selected.length === 0}
           onClick={() => onAdd(selected.map((s) => ({ item: s.name, quantity: clampedCount })))}
         >
-          Add {selected.length} Item{selected.length === 1 ? '' : 's'} to Player
+          {locale('ui_add_x_items_to_player', selected.length)}
         </Button>
       </div>
     </Modal>
@@ -842,7 +843,7 @@ const historyIcon: Record<string, React.ReactNode> = {
   warn: <AlertTriangle size={16} className="text-amber-400" />,
 };
 
-const historyLabel: Record<string, string> = { ban: 'Ban', kick: 'Kick', warn: 'Warning' };
+const historyLabel: Record<string, string> = { ban: locale('ui_ban'), kick: locale('ui_kick'), warn: locale('ui_warning') };
 const historyBadgeCls: Record<string, string> = {
   ban: 'bg-[var(--rdr-red-20)] text-[var(--rdr-red-bright)]',
   kick: 'bg-amber-500/20 text-amber-400',
@@ -861,24 +862,24 @@ function HistoryTab({ citizenid, canManageHistory }: { citizenid: string; canMan
     if (!deleteTarget) return;
     const res = await fetchNui<{ success: boolean }>('deleteHistoryEntry', { id: deleteTarget.id }, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: 'History entry deleted' });
+      toast.push({ type: 'success', title: locale('ui_history_entry_deleted') });
       setDeleteTarget(null);
       load();
     } else {
-      toast.push({ type: 'error', title: 'Failed to delete entry' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_delete_entry') });
     }
   };
 
-  if (history === null) return <p className="text-[var(--rdr-faint)] text-sm text-center py-8">Loading...</p>;
+  if (history === null) return <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_loading')}</p>;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[var(--rdr-heading)] text-sm font-semibold flex items-center gap-2"><HistoryIcon size={15} /> History</p>
-        <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-15)] text-[var(--rdr-red-bright)]">{history.length} entries</span>
+        <p className="text-[var(--rdr-heading)] text-sm font-semibold flex items-center gap-2"><HistoryIcon size={15} /> {locale('ui_history')}</p>
+        <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-red-15)] text-[var(--rdr-red-bright)]">{locale('ui_x_entries', history.length)}</span>
       </div>
       {history.length === 0 ? (
-        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">No warning, kick, or ban history for this player.</p>
+        <p className="text-[var(--rdr-faint)] text-sm text-center py-8">{locale('ui_no_warning_kick_or_ban_history_for_this_play')}</p>
       ) : (
         history.map((h) => (
           <div key={h.id} className="rounded-sm p-3" style={{ background: 'var(--rdr-surface-2)' }}>
@@ -890,7 +891,7 @@ function HistoryTab({ citizenid, canManageHistory }: { citizenid: string; canMan
                 {canManageHistory && (
                   <button
                     onClick={() => setDeleteTarget(h)}
-                    title="Delete entry"
+                    title={locale('ui_delete_entry')}
                     className="text-[var(--rdr-muted)] hover:text-[var(--rdr-red-bright)] p-1 rounded hover:bg-white/5"
                   >
                     <Trash2 size={13} />
@@ -898,16 +899,16 @@ function HistoryTab({ citizenid, canManageHistory }: { citizenid: string; canMan
                 )}
               </div>
             </div>
-            <p className="text-[var(--rdr-muted)] text-sm mt-1">{h.reason || 'No reason given'}</p>
-            <p className="text-[var(--rdr-faint)] text-xs mt-1">By: {h.admin_name || 'Unknown'} · {new Date(h.created_at).toLocaleString()}</p>
+            <p className="text-[var(--rdr-muted)] text-sm mt-1">{h.reason || locale('ui_no_reason_given')}</p>
+            <p className="text-[var(--rdr-faint)] text-xs mt-1">{locale('ui_by_colon_x', h.admin_name || locale('ui_unknown'))} · {new Date(h.created_at).toLocaleString()}</p>
           </div>
         ))
       )}
       {deleteTarget && (
         <ConfirmModal
-          title="Delete History Entry"
-          message={`Permanently delete ${historyLabel[deleteTarget.action] ?? deleteTarget.action} #${deleteTarget.id}? This cannot be undone.`}
-          confirmLabel="Delete"
+          title={locale('ui_delete_history_entry')}
+          message={locale('ui_permanently_delete_x_x_this_cannot_be_undone', historyLabel[deleteTarget.action] ?? deleteTarget.action, deleteTarget.id)}
+          confirmLabel={locale('ui_delete')}
           danger
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}

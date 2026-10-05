@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useState } from 'react';
 import { Webhook } from 'lucide-react';
 import { fetchNui, useNuiData } from '../hooks/useNui';
@@ -44,36 +45,36 @@ export function MasterAdminPanel() {
     const res = await fetchNui<{ success: boolean }>('saveWebhookSettings', webhooks, { success: true });
     setSaving(false);
     if (res.success) {
-      toast.push({ type: 'success', title: 'Webhook settings saved' });
+      toast.push({ type: 'success', title: locale('ui_webhook_settings_saved') });
       refreshWebhooks();
     } else {
-      toast.push({ type: 'error', title: 'Failed to save webhook settings' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_save_webhook_settings') });
     }
   };
 
   return (
     <div className="space-y-4">
-      <Panel icon={<Webhook size={16} />} title="Webhook Configuration" description="Route different log categories to their own Discord channels">
+      <Panel icon={<Webhook size={16} />} title={locale('ui_webhook_configuration')} description={locale('ui_route_different_log_categories_to_their_own')}>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Admin Logs</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_admin_logs')}</label>
             <input className={`${inputCls} mt-1`} placeholder="https://discord.com/api/webhooks/..." value={webhooks.adminLogs} onChange={(e) => setWebhooks((w) => ({ ...w, adminLogs: e.target.value }))} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Reports</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_reports')}</label>
             <input className={`${inputCls} mt-1`} placeholder="https://discord.com/api/webhooks/..." value={webhooks.reports} onChange={(e) => setWebhooks((w) => ({ ...w, reports: e.target.value }))} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Player Management (incl. Finances)</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_player_management_incl_finances')}</label>
             <input className={`${inputCls} mt-1`} placeholder="https://discord.com/api/webhooks/..." value={webhooks.playerManagement} onChange={(e) => setWebhooks((w) => ({ ...w, playerManagement: e.target.value }))} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">World Settings</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_world_settings')}</label>
             <input className={`${inputCls} mt-1`} placeholder="https://discord.com/api/webhooks/..." value={webhooks.worldSettings} onChange={(e) => setWebhooks((w) => ({ ...w, worldSettings: e.target.value }))} />
           </div>
         </div>
-        <p className="text-[var(--rdr-faint)] text-[11px]">These can also be edited directly in config.lua (Config.Webhooks / Config.Reports.Webhooks.Main). Whichever was saved most recently wins.</p>
-        <Button variant="solid" tone="accent" isLoading={saving} onClick={saveWebhooks}>Save Webhook Settings</Button>
+        <p className="text-[var(--rdr-faint)] text-[11px]">{locale('ui_these_can_also_be_edited_directly_in_config')}</p>
+        <Button variant="solid" tone="accent" isLoading={saving} onClick={saveWebhooks}>{locale('ui_save_webhook_settings')}</Button>
       </Panel>
     </div>
   );

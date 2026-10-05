@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, type ReactNode } from 'react';
 import { Button } from './Button';
 
@@ -64,12 +65,12 @@ interface ConfirmModalProps {
   onCancel: () => void;
 }
 
-export function ConfirmModal({ title, message, confirmLabel = 'Confirm', danger, onConfirm, onCancel }: ConfirmModalProps) {
+export function ConfirmModal({ title, message, confirmLabel = locale('ui_confirm'), danger, onConfirm, onCancel }: ConfirmModalProps) {
   return (
     <Modal title={title} onClose={onCancel} width="max-w-sm">
       <p className="text-[var(--rdr-text)] text-sm mb-5">{message}</p>
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button variant="ghost" onClick={onCancel}>{locale('ui_cancel')}</Button>
         <Button variant="solid" tone={danger ? 'red' : 'accent'} onClick={onConfirm}>{confirmLabel}</Button>
       </div>
     </Modal>

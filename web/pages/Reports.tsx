@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useMemo, useState } from 'react';
 import { Search, FileText, Hourglass, CheckCircle2, BarChart2, Fingerprint, MessageCircle, Cpu, Check } from 'lucide-react';
 import { copyToClipboard, fetchNui, useNuiData } from '../hooks/useNui';
@@ -10,17 +11,17 @@ import { Avatar } from '../components/Avatar';
 import type { Permissions, Report, ReportMessage, ReportNearbyPlayer, ReportSeverity, ReportStatus, ReportType } from '../types';
 
 const typeFilterOptions = [
-  { value: 'all' as const, label: 'All Types' },
-  { value: 'bug' as const, label: 'Bug' },
-  { value: 'player' as const, label: 'Player' },
-  { value: 'question' as const, label: 'Question' },
+  { value: 'all' as const, label: locale('ui_all_types') },
+  { value: 'bug' as const, label: locale('ui_bug') },
+  { value: 'player' as const, label: locale('ui_player') },
+  { value: 'question' as const, label: locale('ui_question') },
 ];
 
 const statusFilterOptions = [
-  { value: 'all' as const, label: 'All Status' },
-  { value: 'open' as const, label: 'Open' },
-  { value: 'claimed' as const, label: 'Claimed' },
-  { value: 'resolved' as const, label: 'Resolved' },
+  { value: 'all' as const, label: locale('ui_all_status') },
+  { value: 'open' as const, label: locale('ui_open') },
+  { value: 'claimed' as const, label: locale('ui_claimed') },
+  { value: 'resolved' as const, label: locale('ui_resolved') },
 ];
 
 const statusColors: Record<ReportStatus, string> = {
@@ -30,9 +31,9 @@ const statusColors: Record<ReportStatus, string> = {
   closed: 'bg-zinc-500/20 text-zinc-400',
 };
 
-const typeLabels: Record<string, string> = { bug: 'Bug', player: 'Player Report', question: 'General Question' };
+const typeLabels: Record<string, string> = { bug: locale('ui_bug'), player: locale('ui_player_report'), question: locale('ui_general_question') };
 
-const severityLabels: Record<ReportSeverity, string> = { low: 'Low', medium: 'Medium', high: 'High' };
+const severityLabels: Record<ReportSeverity, string> = { low: locale('ui_low'), medium: locale('ui_medium'), high: locale('ui_high') };
 const severityColors: Record<ReportSeverity, string> = {
   low: 'bg-blue-500/20 text-blue-400',
   medium: 'bg-amber-500/20 text-amber-400',
@@ -76,26 +77,26 @@ export function Reports({ permissions }: { permissions: Permissions | null }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Report Management</h2>
-          <p className="text-[var(--rdr-muted)] mt-1 text-sm">Review and act on player submitted reports</p>
+          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_report_management')}</h2>
+          <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_review_and_act_on_player_submitted_reports')}</p>
         </div>
         <Button
           variant="outline"
           tone="accent"
           className="text-xs"
           isLoading={refreshing}
-          loadingText="Refreshing"
+          loadingText={locale('ui_refreshing')}
           onClick={async () => { setRefreshing(true); try { await load(); } finally { setRefreshing(false); } }}
         >
-          Refresh
+          {locale('ui_refresh')}
         </Button>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <ReportStatCard label="Open Reports" value={counts.open} icon={<FileText size={18} />} color="#e07a6b" />
-        <ReportStatCard label="Claimed Reports" value={counts.claimed} icon={<Hourglass size={18} />} color="#e8b25a" />
-        <ReportStatCard label="Resolved Reports" value={counts.resolved} icon={<CheckCircle2 size={18} />} color="#7fc47c" />
-        <ReportStatCard label="Total Reports" value={counts.total} icon={<BarChart2 size={18} />} color="#6fa8dc" />
+        <ReportStatCard label={locale('ui_open_reports')} value={counts.open} icon={<FileText size={18} />} color="#e07a6b" />
+        <ReportStatCard label={locale('ui_claimed_reports')} value={counts.claimed} icon={<Hourglass size={18} />} color="#e8b25a" />
+        <ReportStatCard label={locale('ui_resolved_reports')} value={counts.resolved} icon={<CheckCircle2 size={18} />} color="#7fc47c" />
+        <ReportStatCard label={locale('ui_total_reports')} value={counts.total} icon={<BarChart2 size={18} />} color="#6fa8dc" />
       </div>
 
       <div className="flex gap-3">
@@ -104,7 +105,7 @@ export function Reports({ permissions }: { permissions: Permissions | null }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search reports..."
+            placeholder={locale('ui_search_reports')}
             className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
           />
         </div>
@@ -117,11 +118,11 @@ export function Reports({ permissions }: { permissions: Permissions | null }) {
           <thead>
             <tr className="bg-[var(--rdr-surface-2)] text-[var(--rdr-muted)] text-xs uppercase tracking-wider">
               <th className="text-left px-4 py-2 font-medium">#</th>
-              <th className="text-left px-4 py-2 font-medium">Type</th>
-              <th className="text-left px-4 py-2 font-medium">Title</th>
-              <th className="text-left px-4 py-2 font-medium">Reporter</th>
-              <th className="text-left px-4 py-2 font-medium">Status</th>
-              <th className="text-left px-4 py-2 font-medium">Assigned</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_type')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_title')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_reporter_2')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_status')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_assigned')}</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +137,7 @@ export function Reports({ permissions }: { permissions: Permissions | null }) {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">No reports</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">{locale('ui_no_reports')}</td></tr>
             )}
           </tbody>
         </table>
@@ -186,9 +187,9 @@ function ReportCopyRow({ icon, label, value }: { icon: React.ReactNode; label: s
       <span className="shrink-0 text-[var(--rdr-muted)]">{icon}</span>
       <span className="flex-1 min-w-0">
         <span className="block text-[var(--rdr-muted)] text-[11px]">{label}</span>
-        <span className="block text-[var(--rdr-text)] text-xs font-medium truncate">{value || 'Unavailable'}</span>
+        <span className="block text-[var(--rdr-text)] text-xs font-medium truncate">{value || locale('ui_unavailable')}</span>
       </span>
-      {value && <span className="text-[11px] text-[var(--rdr-faint)] shrink-0 flex items-center gap-1">{copied ? (<><Check size={11} /> Copied</>) : 'Copy'}</span>}
+      {value && <span className="text-[11px] text-[var(--rdr-faint)] shrink-0 flex items-center gap-1">{copied ? (<><Check size={11} /> {locale('ui_copied')}</>) : locale('ui_copy')}</span>}
     </button>
   );
 }
@@ -228,23 +229,23 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
       <div className="space-y-4">
         <div className="flex items-center gap-1.5 -mt-1">
           <span className="px-2 py-0.5 rounded-sm text-xs bg-[var(--rdr-surface-2)] text-[var(--rdr-text)]">{typeLabels[report.report_type]}</span>
-          <span className={`px-2 py-0.5 rounded-sm text-xs ${severityColors[report.severity]}`}>{severityLabels[report.severity]} Priority</span>
+          <span className={`px-2 py-0.5 rounded-sm text-xs ${severityColors[report.severity]}`}>{locale('ui_x_priority', severityLabels[report.severity])}</span>
           <span className={`px-2 py-0.5 rounded-sm text-xs capitalize ${statusColors[report.status]}`}>{report.status}</span>
         </div>
 
         <p className="text-[var(--rdr-text)] text-sm whitespace-pre-wrap">{report.description}</p>
 
         {report.image_url && (
-          <a href={report.image_url} target="_blank" rel="noreferrer" className="text-[var(--rdr-accent-bright)] text-xs underline">View attached image</a>
+          <a href={report.image_url} target="_blank" rel="noreferrer" className="text-[var(--rdr-accent-bright)] text-xs underline">{locale('ui_view_attached_image')}</a>
         )}
 
         {report.reported_player_name && (
-          <p className="text-xs text-[var(--rdr-muted)]">Reported: <span className="text-[var(--rdr-text)]">{report.reported_player_name}</span></p>
+          <p className="text-xs text-[var(--rdr-muted)]">{locale('ui_reported')} <span className="text-[var(--rdr-text)]">{report.reported_player_name}</span></p>
         )}
 
         {isAdmin ? (
           <div>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1.5">Reporter Information</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1.5">{locale('ui_reporter_information')}</p>
             <div className="rounded-sm p-3 space-y-2" style={{ background: 'var(--rdr-surface-2)' }}>
               <div className="flex items-center gap-3">
                 <Avatar name={report.reporter_name} size={36} imageUrl={report.reporter_discord_avatar} />
@@ -252,22 +253,22 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
                   <p className="text-[var(--rdr-text)] text-sm font-medium">{report.reporter_name}</p>
                   <p className="text-[var(--rdr-faint)] text-xs flex items-center gap-1">
                     {report.reporter_discord_name && <MessageCircle size={11} className="text-[#5865F2]" />}
-                    {report.reporter_discord_name ? `@${report.reporter_discord_name}` : 'Discord not linked'}
+                    {report.reporter_discord_name ? `@${report.reporter_discord_name}` : locale('ui_discord_not_linked')}
                   </p>
                 </div>
               </div>
-              <ReportCopyRow icon={<MessageCircle size={13} />} label="Discord ID" value={report.reporter_discord} />
-              <ReportCopyRow icon={<Cpu size={13} />} label="Steam ID" value={report.reporter_steam} />
-              <ReportCopyRow icon={<Fingerprint size={13} />} label="License" value={report.reporter_license} />
+              <ReportCopyRow icon={<MessageCircle size={13} />} label={locale('ui_discord_id')} value={report.reporter_discord} />
+              <ReportCopyRow icon={<Cpu size={13} />} label={locale('ui_steam_id')} value={report.reporter_steam} />
+              <ReportCopyRow icon={<Fingerprint size={13} />} label={locale('ui_license')} value={report.reporter_license} />
             </div>
           </div>
         ) : (
-          <p className="text-xs text-[var(--rdr-muted)]">Reporter: <span className="text-[var(--rdr-text)]">{report.reporter_name}</span></p>
+          <p className="text-xs text-[var(--rdr-muted)]">{locale('ui_reporter')} <span className="text-[var(--rdr-text)]">{report.reporter_name}</span></p>
         )}
 
         {isAdmin && nearby.length > 0 && (
           <div>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1">Nearby Players ({nearby.length})</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1">{locale('ui_nearby_players_x', nearby.length)}</p>
             <div className="space-y-1">
               {nearby.map((n) => (
                 <button
@@ -275,7 +276,7 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
                   onClick={() => setJumpPlayer({ id: n.player_id, name: n.player_name, citizenid: '' })}
                   className="w-full text-left px-2 py-1.5 rounded-sm bg-[var(--rdr-surface-2)] text-xs text-[var(--rdr-text)] hover:bg-white/5 flex justify-between"
                 >
-                  <span>{n.player_name} (ID: {n.player_id})</span>
+                  <span>{n.player_name} {locale('ui_id_paren_x', n.player_id)}</span>
                   <span className="text-[var(--rdr-faint)]">{n.distance.toFixed(1)}m</span>
                 </button>
               ))}
@@ -284,7 +285,7 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
         )}
 
         <div>
-          <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1">Messages ({messages.length})</p>
+          <p className="text-[var(--rdr-muted)] text-xs uppercase mb-1">{locale('ui_messages_x', messages.length)}</p>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {messages.map((m) => (
               <div key={m.id} className="bg-[var(--rdr-surface-2)] rounded-sm px-3 py-2">
@@ -295,7 +296,7 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
                 <p className="text-[var(--rdr-text)] text-sm mt-0.5">{m.message}</p>
               </div>
             ))}
-            {messages.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">No messages yet</p>}
+            {messages.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_no_messages_yet')}</p>}
           </div>
         </div>
 
@@ -304,16 +305,16 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
             <input
               value={reply}
               onChange={(e) => setReply(e.target.value)}
-              placeholder="Write a reply..."
+              placeholder={locale('ui_write_a_reply')}
               className="flex-1 bg-[var(--rdr-surface-2)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]"
             />
             <Button
               variant="solid"
               tone="accent"
               disabled={reply.trim().length < 5}
-              onClick={async () => { await runAction('replyReport', { message: reply.trim() }); setReply(''); toast.push({ type: 'success', title: 'Reply sent' }); }}
+              onClick={async () => { await runAction('replyReport', { message: reply.trim() }); setReply(''); toast.push({ type: 'success', title: locale('ui_reply_sent') }); }}
             >
-              Reply
+              {locale('ui_reply')}
             </Button>
           </div>
         )}
@@ -321,16 +322,16 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
         {isAdmin && (
           <div className="flex gap-2 flex-wrap pt-2 border-t border-[var(--rdr-line)]">
             {report.status !== 'claimed' && report.status !== 'closed' && (
-              <Button variant="outline" className="text-xs" onClick={() => runAction('claimReport')}>Claim</Button>
+              <Button variant="outline" className="text-xs" onClick={() => runAction('claimReport')}>{locale('ui_claim')}</Button>
             )}
             {report.status === 'claimed' && (
-              <Button variant="outline" className="text-xs" onClick={() => runAction('releaseReport')}>Release</Button>
+              <Button variant="outline" className="text-xs" onClick={() => runAction('releaseReport')}>{locale('ui_release')}</Button>
             )}
             {report.status !== 'resolved' && report.status !== 'closed' && (
-              <Button variant="outline" tone="green" className="text-xs" onClick={() => runAction('resolveReport')}>Mark Resolved</Button>
+              <Button variant="outline" tone="green" className="text-xs" onClick={() => runAction('resolveReport')}>{locale('ui_mark_resolved')}</Button>
             )}
             {report.status !== 'closed' && (
-              <Button variant="outline" tone="red" className="text-xs" onClick={() => setDeleteReason('')}>Delete</Button>
+              <Button variant="outline" tone="red" className="text-xs" onClick={() => setDeleteReason('')}>{locale('ui_delete')}</Button>
             )}
           </div>
         )}
@@ -338,17 +339,17 @@ export function ReportDetail({ id, isAdmin, permissions, onClose, onChanged }: R
 
       {deleteReason !== null && (
         <div className="mt-4 pt-4 border-t border-[var(--rdr-line)]">
-          <label className="text-xs text-[var(--rdr-muted)]">Deletion reason</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_deletion_reason')}</label>
           <input value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} className="w-full mt-1 mb-3 bg-[var(--rdr-surface-2)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]" />
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setDeleteReason(null)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setDeleteReason(null)}>{locale('ui_cancel')}</Button>
             <Button
               variant="solid"
               tone="red"
               disabled={deleteReason.trim().length < 5}
               onClick={async () => { await runAction('deleteReport', { reason: deleteReason.trim() }); setDeleteReason(null); onClose(); }}
             >
-              Confirm Delete
+              {locale('ui_confirm_delete')}
             </Button>
           </div>
         </div>

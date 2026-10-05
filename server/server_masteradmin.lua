@@ -138,10 +138,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getwebhooksettings', func
 end)
 
 local webhookFieldLabels = {
-    webhook_adminlogs = 'Admin Logs',
-    webhook_playermanagement = 'Player Management',
-    webhook_worldsettings = 'World Settings',
-    webhook_reports = 'Reports',
+    webhook_adminlogs = locale('sv_webhook_label_adminlogs'),
+    webhook_playermanagement = locale('sv_webhook_label_playermanagement'),
+    webhook_worldsettings = locale('sv_webhook_label_worldsettings'),
+    webhook_reports = locale('sv_webhook_label_reports'),
 }
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:savewebhooksettings', function(source, cb, data)
@@ -169,8 +169,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:savewebhooksettings', fun
     for key, value in pairs(map) do
         local old = oldValues[key] or ''
         if old ~= value then
-            changeLines[#changeLines + 1] = webhookFieldLabels[key] .. ' webhook:\n  From: ' .. (old ~= '' and old or '(empty)') ..
-                '\n  To:   ' .. (value ~= '' and value or '(empty)')
+            changeLines[#changeLines + 1] = locale('sv_log_webhook_change', webhookFieldLabels[key], (old ~= '' and old or locale('sv_empty')),
+                (value ~= '' and value or locale('sv_empty')))
         end
         MySQL.query(
             'INSERT INTO adminmenu_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
@@ -181,7 +181,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:savewebhooksettings', fun
     end
 
     if #changeLines > 0 then
-        LogAdminAction('admin_action', 'high', src, 'Updated webhook settings', table.concat(changeLines, '\n\n'), nil)
+        LogAdminAction('admin_action', 'high', src, locale('sv_log_updated_webhook_settings'), table.concat(changeLines, '\n\n'), nil)
     end
     cb({ success = true })
 end)
@@ -232,7 +232,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addcustomitem', function(
             cb({ success = false, reason = reason })
             return
         end
-        LogAdminAction('admin_action', 'medium', src, 'Added custom item \'' .. name .. '\'', data.label, nil)
+        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_custom_item', name), data.label, nil)
         cb({ success = true })
     end)
 end)
@@ -247,7 +247,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deletecustomitem', functi
     MySQL.update('DELETE FROM adminmenu_custom_items WHERE name = ?', { name }, function(affected)
         if affected and affected > 0 then
             RSGCore.Functions.RemoveItem(name)
-            LogAdminAction('admin_action', 'medium', src, 'Removed custom item \'' .. tostring(name) .. '\'', nil, nil)
+            LogAdminAction('admin_action', 'medium', src, locale('sv_log_removed_custom_item', tostring(name)), nil, nil)
         end
         cb({ success = affected and affected > 0 })
     end)

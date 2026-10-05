@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { Users, Coins, Clock, Crown, MessageCircle } from 'lucide-react';
 import { useNuiData } from '../hooks/useNui';
 import { StatCard } from '../components/StatCard';
@@ -45,40 +46,40 @@ interface DashboardProps {
 export function Dashboard({ self, onViewAllPlayers }: DashboardProps) {
   const [stats] = useNuiData<DashboardStats>('getDashboardStats', {}, mockStats);
 
-  const firstName = self?.name?.split(' ')[0] || 'Admin';
+  const firstName = self?.name?.split(' ')[0] || locale('ui_admin');
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Hey, {firstName}</h2>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_hey_x', firstName)}</h2>
         <p className="text-[var(--rdr-muted)] mt-1 text-sm">{formatToday()}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Online Users" value={stats?.onlineCount ?? '-'} icon={<Users size={18} />} iconBg="rgba(59,110,165,0.25)" iconColor="#6fa8dc" />
-        <StatCard label="Total money on server" value={stats ? formatMoney(stats.totalMoney) : '-'} icon={<Coins size={18} />} iconBg="rgba(94,143,79,0.25)" iconColor="#7fc47c" />
-        <StatCard label="Server Uptime" value={stats ? formatUptime(stats.serverUptimeSeconds) : '-'} icon={<Clock size={18} />} iconBg="rgba(122,94,168,0.25)" iconColor="#b39ddb" />
-        <StatCard label="Top Player" value={stats?.topPlayer?.name ?? '-'} icon={<Crown size={18} />} iconBg="rgba(200,137,43,0.25)" iconColor="var(--rdr-accent-bright)" />
+        <StatCard label={locale('ui_online_users')} value={stats?.onlineCount ?? '-'} icon={<Users size={18} />} iconBg="rgba(59,110,165,0.25)" iconColor="#6fa8dc" />
+        <StatCard label={locale('ui_total_money_on_server')} value={stats ? formatMoney(stats.totalMoney) : '-'} icon={<Coins size={18} />} iconBg="rgba(94,143,79,0.25)" iconColor="#7fc47c" />
+        <StatCard label={locale('ui_server_uptime')} value={stats ? formatUptime(stats.serverUptimeSeconds) : '-'} icon={<Clock size={18} />} iconBg="rgba(122,94,168,0.25)" iconColor="#b39ddb" />
+        <StatCard label={locale('ui_top_player')} value={stats?.topPlayer?.name ?? '-'} icon={<Crown size={18} />} iconBg="rgba(200,137,43,0.25)" iconColor="var(--rdr-accent-bright)" />
       </div>
 
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-[var(--rdr-heading)] text-base font-semibold flex items-center gap-2">
-              <span></span> Top Players Leaderboard
+              <span></span> {locale('ui_top_players_leaderboard')}
             </h3>
-            <p className="text-[var(--rdr-muted)] text-xs mt-0.5">Most active outlaws and lawmen on the frontier</p>
+            <p className="text-[var(--rdr-muted)] text-xs mt-0.5">{locale('ui_most_active_outlaws_and_lawmen_on_the_fronti')}</p>
           </div>
-          <Button variant="outline" onClick={onViewAllPlayers} className="text-xs">View All Players</Button>
+          <Button variant="outline" onClick={onViewAllPlayers} className="text-xs">{locale('ui_view_all_players')}</Button>
         </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider border-b border-[var(--rdr-line)]">
-              <th className="text-left py-2 font-medium">Rank</th>
-              <th className="text-left py-2 font-medium">Player</th>
-              <th className="text-left py-2 font-medium">Job</th>
-              <th className="text-right py-2 font-medium">Playtime</th>
-              <th className="text-right py-2 font-medium">Money</th>
+              <th className="text-left py-2 font-medium">{locale('ui_rank')}</th>
+              <th className="text-left py-2 font-medium">{locale('ui_player')}</th>
+              <th className="text-left py-2 font-medium">{locale('ui_job')}</th>
+              <th className="text-right py-2 font-medium">{locale('ui_playtime')}</th>
+              <th className="text-right py-2 font-medium">{locale('ui_money')}</th>
             </tr>
           </thead>
           <tbody>

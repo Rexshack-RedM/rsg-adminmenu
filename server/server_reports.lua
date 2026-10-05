@@ -400,7 +400,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getreportdetails', functi
                         messages[i].created_at_text = tostring(msg.created_at)
                     end
                 else
-                    messages[i].created_at_text = 'Unknown'
+                    messages[i].created_at_text = locale('sv_unknown')
                 end
             end
             
@@ -466,7 +466,7 @@ RegisterNetEvent('rsg-adminmenu:server:claimreport', function(data)
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
 
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_claimed'), 'yellow', locale('sv_report_log_claimed_desc', adminName, src, data.reportId), true)
-            LogAdminAction('admin_action', 'low', src, 'Claimed report #' .. tostring(data.reportId), nil, nil)
+            LogAdminAction('admin_action', 'low', src, locale('sv_log_claimed_report', tostring(data.reportId)), nil, nil)
         end
     end)
 end)
@@ -507,7 +507,7 @@ RegisterNetEvent('rsg-adminmenu:server:releasereport', function(data)
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
 
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_released'), 'blue', locale('sv_report_log_released_desc', adminName, src, data.reportId), true)
-            LogAdminAction('admin_action', 'low', src, 'Released report #' .. tostring(data.reportId), nil, nil)
+            LogAdminAction('admin_action', 'low', src, locale('sv_log_released_report', tostring(data.reportId)), nil, nil)
         end
     end)
 end)
@@ -562,7 +562,7 @@ RegisterNetEvent('rsg-adminmenu:server:resolvereport', function(data)
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
 
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_resolved'), 'green', locale('sv_report_log_resolved_desc', adminName, src, data.reportId), true)
-            LogAdminAction('admin_action', 'low', src, 'Resolved report #' .. tostring(data.reportId), nil, nil)
+            LogAdminAction('admin_action', 'low', src, locale('sv_log_resolved_report', tostring(data.reportId)), nil, nil)
         end
     end)
 end)
@@ -604,7 +604,7 @@ RegisterNetEvent('rsg-adminmenu:server:deletereport', function(reportId, reason)
             SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
 
             TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_report_log_deleted'), 'red', locale('sv_report_log_deleted_desc', adminName, src, reportId, reason), true)
-            LogAdminAction('admin_action', 'low', src, 'Deleted report #' .. tostring(reportId), reason, nil)
+            LogAdminAction('admin_action', 'low', src, locale('sv_log_deleted_report', tostring(reportId)), reason, nil)
         end
     end)
 end)
@@ -694,7 +694,7 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
                 SendDiscordWebhook(Config.Reports.Webhooks.Main, embed)
 
                 if senderType == 'admin' then
-                    LogAdminAction('admin_action', 'low', src, 'Replied to report #' .. tostring(reportId), nil, nil)
+                    LogAdminAction('admin_action', 'low', src, locale('sv_log_replied_report', tostring(reportId)), nil, nil)
                 end
             end
         end)

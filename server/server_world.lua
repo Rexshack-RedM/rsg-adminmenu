@@ -55,7 +55,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addteleportlocation', fun
     MySQL.insert('INSERT INTO adminmenu_teleports (name, category, description, x, y, z, heading, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', {
         data.name, data.category or 'special', data.description, data.x, data.y, data.z, data.heading or 0, adminName,
     }, function(insertId)
-        LogAdminAction('admin_action', 'low', src, 'Added teleport location \'' .. tostring(data.name) .. '\'', nil, nil)
+        LogAdminAction('admin_action', 'low', src, locale('sv_log_added_teleport', tostring(data.name)), nil, nil)
         cb({ success = insertId ~= nil, id = insertId })
     end)
 end)
@@ -103,7 +103,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addblip', function(source
     MySQL.insert('INSERT INTO adminmenu_blips (name, sprite, x, y, z, scale, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)', {
         data.name, data.sprite, data.x, data.y, data.z, data.scale or 1, adminName,
     }, function(insertId)
-        LogAdminAction('admin_action', 'low', src, 'Added map blip \'' .. tostring(data.name) .. '\'', nil, nil)
+        LogAdminAction('admin_action', 'low', src, locale('sv_log_added_blip', tostring(data.name)), nil, nil)
         BroadcastBlips()
         cb({ success = insertId ~= nil })
     end)
@@ -153,23 +153,23 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:spawnentity', function(so
     end
     local hash = data.hash and tostring(data.hash):gsub('%s+', '') or ''
     if hash == '' then
-        cb({ success = false, message = 'Hash name required' })
+        cb({ success = false, message = locale('sv_hash_name_required') })
         return
     end
     TriggerClientEvent('rsg-adminmenu:client:spawnentity', src, data.entityType, hash)
-    LogAdminAction('admin_action', 'low', src, 'Spawned entity', data.entityType .. ': ' .. hash, nil)
+    LogAdminAction('admin_action', 'low', src, locale('sv_log_spawned_entity'), data.entityType .. ': ' .. hash, nil)
     cb({ success = true })
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:cleararea', function(source, cb, data)
     local src = source
     if not (RSGCore.Functions.HasPermission(src, permissions['worldtools']) or IsPlayerAceAllowed(src, 'god')) then
-        cb({ success = false, message = 'No permission' })
+        cb({ success = false, message = locale('sv_no_permission') })
         return
     end
     local radius = tonumber(data and data.radius) or 25
     radius = math.max(5.0, math.min(100.0, radius + 0.0))
     TriggerClientEvent('rsg-adminmenu:client:cleararea', src, radius)
-    LogAdminAction('admin_action', 'low', src, 'Cleared area', ('Radius: %.0fm'):format(radius), nil)
+    LogAdminAction('admin_action', 'low', src, locale('sv_log_cleared_area'), locale('sv_log_radius', ('%.0f'):format(radius)), nil)
     cb({ success = true, radius = radius })
 end)

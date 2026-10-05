@@ -84,7 +84,7 @@ local function BanPlayer(src)
             RSGCore.Functions.GetIdentifier(src, 'license'),
             RSGCore.Functions.GetIdentifier(src, 'discord'),
             RSGCore.Functions.GetIdentifier(src, 'ip'),
-            'system banned you',
+            locale('sv_system_banned_you'),
             2524608000,
             'rsg-adminmenu'
         })
@@ -314,7 +314,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallplayersmanaged', fu
                     serverId = onlinePlayer and onlinePlayer.PlayerData.source or nil,
                     name = (charinfo.firstname or '?') .. ' ' .. (charinfo.lastname or ''),
                     accountName = row.name or '',
-                    job = onlinePlayer and onlinePlayer.PlayerData.job.label or (job.label or 'Unemployed'),
+                    job = onlinePlayer and onlinePlayer.PlayerData.job.label or (job.label or locale('sv_unemployed')),
                     money = moneyTotal,
                     playtimeMinutes = row.minutes or 0,
                     lastSeen = row.last_seen,
@@ -350,7 +350,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:unbanplayer', function(so
     MySQL.update('DELETE FROM bans WHERE id = ?', { data.banId }, function(affected)
         local success = affected > 0
         if success then
-            LogAdminAction('player_action', 'medium', src, 'Unbanned player', 'Ban ID: ' .. tostring(data.banId), nil)
+            LogAdminAction('player_action', 'medium', src, locale('sv_log_unbanned_player'), locale('sv_log_ban_id', tostring(data.banId)), nil)
         end
         cb({ success = success })
     end)
@@ -410,7 +410,7 @@ RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
 
     if RSGCore.Functions.HasPermission(src, permissions['revive']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
-        LogAdminAction('player_action', 'low', src, 'Revived player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerClientEvent('ox_lib:notify', source,
@@ -432,7 +432,7 @@ RegisterNetEvent('rsg-adminmenu:server:openinventory', function(player)
 
     if RSGCore.Functions.HasPermission(src, permissions['inventory']) or IsPlayerAceAllowed(src, 'god') then
         exports['rsg-inventory']:OpenInventoryById(src, tonumber(player.id))
-        LogAdminAction('player_action', 'low', src, 'Opened player inventory', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_opened_player_inventory'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -459,7 +459,7 @@ RegisterNetEvent('rsg-adminmenu:server:kickplayer', function(player, reason)
         end
         TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_kicked'), 'red',
             string.format(locale('sv_kicked_a'), GetPlayerName(player), GetPlayerName(src), reason), true)
-        LogAdminAction('player_action', 'medium', src, 'Kicked player', reason, GetPlayerName(player), player)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_kicked_player'), reason, GetPlayerName(player), player)
         DropPlayer(player,
             locale('sv_103') .. ':\n' .. reason .. '\n\n' .. locale('sv_104') .. RSGCore.Config.Server.Discord)
     else
@@ -502,7 +502,7 @@ RegisterNetEvent('rsg-adminmenu:server:banplayer', function(player, time, reason
         })
         TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_a'), 'red',
             string.format(locale('sv_b'), GetPlayerName(player), GetPlayerName(src), reason), true)
-        LogAdminAction('player_action', 'high', src, 'Banned player', reason .. ' | Duration: ' .. tostring(time) .. 's', GetPlayerName(player), player)
+        LogAdminAction('player_action', 'high', src, locale('sv_log_banned_player'), locale('sv_log_ban_details', reason, tostring(time)), GetPlayerName(player), player)
         if banTime >= 2524608000 then
             DropPlayer(player,
                 locale('sv_106') ..
@@ -543,7 +543,7 @@ RegisterNetEvent('rsg-adminmenu:server:gotoplayer', function(player)
         local admin = GetPlayerPed(src)
         local coords = GetEntityCoords(GetPlayerPed(player.id))
         SetEntityCoords(admin, coords)
-        LogAdminAction('player_action', 'low', src, 'Teleported to player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_teleported_to_player'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -568,7 +568,7 @@ RegisterNetEvent('rsg-adminmenu:server:bringplayer', function(player)
         local coords = GetEntityCoords(admin)
         local target = GetPlayerPed(player.id)
         SetEntityCoords(target, coords)
-        LogAdminAction('player_action', 'low', src, 'Brought player to self', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_brought_player_to_self'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -596,13 +596,13 @@ RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
             FreezeEntityPosition(target, true)
             TriggerClientEvent('ox_lib:notify', source,
                 { title = locale('sv_111'), description = locale('sv_112') .. player.name, type = 'inform' })
-            LogAdminAction('player_action', 'low', src, 'Froze player', nil, player.name, player.id)
+            LogAdminAction('player_action', 'low', src, locale('sv_log_froze_player'), nil, player.name, player.id)
         else
             frozenPlayers[player.id] = nil
             FreezeEntityPosition(target, false)
             TriggerClientEvent('ox_lib:notify', source,
                 { title = locale('sv_113'), description = locale('sv_114') .. player.name, type = 'inform' })
-            LogAdminAction('player_action', 'low', src, 'Unfroze player', nil, player.name, player.id)
+            LogAdminAction('player_action', 'low', src, locale('sv_log_unfroze_player'), nil, player.name, player.id)
         end
     else
         BanPlayer(src)
@@ -627,7 +627,7 @@ RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(player)
         local targetped = GetPlayerPed(player.id)
         local coords = GetEntityCoords(targetped)
         TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, player.id, coords)
-        LogAdminAction('player_action', 'low', src, 'Started spectating player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_started_spectating_player'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -649,7 +649,7 @@ RegisterNetEvent('rsg-adminmenu:server:wildattack', function(player)
 
     if RSGCore.Functions.HasPermission(src, permissions['wildattack']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:wildattack', src, player.id)
-        LogAdminAction('player_action', 'medium', src, 'Triggered wild animal attack on player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_triggered_wild_animal_attack_on_player'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -671,7 +671,7 @@ RegisterNetEvent('rsg-adminmenu:server:playerfire', function(player)
 
     if RSGCore.Functions.HasPermission(src, permissions['setonfire']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:playerfire', src, player.id)
-        LogAdminAction('player_action', 'medium', src, 'Set player on fire', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_set_player_on_fire'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -698,7 +698,7 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
         Player_a.Functions.AddItem(item, amount_a)
         TriggerClientEvent('ox_lib:notify', src,
             { title = locale('sv_135'), description = locale('sv_136'), type = 'inform' })
-        LogAdminAction('player_action', 'medium', src, 'Gave item to player', item .. ' x' .. tostring(amount_a), GetPlayerName(id), id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_gave_item_to_player'), item .. ' x' .. tostring(amount_a), GetPlayerName(id), id)
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
@@ -807,7 +807,7 @@ local function DenyAndBan(src)
         firstname .. ' ' .. lastname .. ' ' .. locale('sv_h') .. ' ' .. citizenid .. ' ' .. locale('sv_ban_k'), true)
     TriggerClientEvent('ox_lib:notify', src,
         { title = locale('sv_101'), description = locale('sv_102'), type = 'inform' })
-    LogAdminAction('security', 'high', src, 'Unauthorized action attempt — auto-banned', 'Citizen ID: ' .. citizenid, firstname .. ' ' .. lastname)
+    LogAdminAction('security', 'high', src, locale('sv_log_unauthorized_action_attempt_auto_banned'), locale('sv_log_citizen_id', citizenid), firstname .. ' ' .. lastname)
 end
 
 -----------------------------------------------------------------------
@@ -817,7 +817,7 @@ RegisterNetEvent('rsg-adminmenu:server:healplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['heal']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-medic:client:adminHeal', player.id)
-        LogAdminAction('player_action', 'low', src, 'Healed player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_healed_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -831,7 +831,7 @@ RegisterNetEvent('rsg-adminmenu:server:killplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['kill']) or IsPlayerAceAllowed(src, 'god') then
         SetEntityHealth(GetPlayerPed(player.id), 0)
-        LogAdminAction('player_action', 'medium', src, 'Killed player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_killed_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -847,7 +847,7 @@ RegisterNetEvent('rsg-adminmenu:server:ragdollplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['ragdoll']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:ragdollplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Ragdolled player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_ragdolled_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -857,7 +857,7 @@ RegisterNetEvent('rsg-adminmenu:server:lightningplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['lightning']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:lightningplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Struck player with lightning', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_struck_player_with_lightning'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -871,7 +871,7 @@ RegisterNetEvent('rsg-adminmenu:server:toheavenplayer', function(player)
         local target = GetPlayerPed(player.id)
         local coords = GetEntityCoords(target)
         SetEntityCoords(target, coords.x, coords.y, coords.z + 300.0)
-        LogAdminAction('player_action', 'low', src, 'Launched player skyward', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_launched_player_skyward'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -881,7 +881,7 @@ RegisterNetEvent('rsg-adminmenu:server:drainstaminaplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['drainstamina']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:drainstaminaplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Drained player stamina', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_drained_player_stamina'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -891,7 +891,7 @@ RegisterNetEvent('rsg-adminmenu:server:drunkplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['drunk']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:drunkplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Applied drunk effect to player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_applied_drunk_effect_to_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -906,7 +906,7 @@ RegisterNetEvent('rsg-adminmenu:server:jumpscareplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['jumpscare']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:jumpscareplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Jump scared player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_jump_scared_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -916,7 +916,7 @@ RegisterNetEvent('rsg-adminmenu:server:horsebuckplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['horsebuck']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:horsebuckplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Bucked player from horse', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_bucked_player_from_horse'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -926,7 +926,7 @@ RegisterNetEvent('rsg-adminmenu:server:hauntedplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['haunted']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:hauntedplayer', player.id)
-        LogAdminAction('player_action', 'low', src, 'Applied haunted effect to player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_applied_haunted_effect_to_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -936,7 +936,7 @@ RegisterNetEvent('rsg-adminmenu:server:everyoneattackplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['everyoneattack']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-adminmenu:client:everyoneattackplayer', player.id)
-        LogAdminAction('player_action', 'medium', src, 'Made everyone attack player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_made_everyone_attack_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -952,7 +952,7 @@ RegisterNetEvent('rsg-adminmenu:server:handcuffplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['handcuff']) or IsPlayerAceAllowed(src, 'god') then
         TriggerClientEvent('rsg-lawman:client:getcuffed', player.id, src, false)
-        LogAdminAction('player_action', 'low', src, 'Handcuffed/uncuffed player', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_handcuffed_uncuffed_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -969,8 +969,8 @@ RegisterNetEvent('rsg-adminmenu:server:warnplayer', function(player, reason, sev
         if targetPlayer then
             LogPlayerHistory(targetPlayer.PlayerData.citizenid, 'warn', reason, AdminDisplayName(src), nil, severity)
             TriggerClientEvent('ox_lib:notify', player.id,
-                { title = 'You have been warned', description = reason, type = 'error' })
-            LogAdminAction('player_action', severity or 'medium', src, 'Warned player', reason, GetPlayerName(player.id), player.id)
+                { title = locale('sv_you_have_been_warned'), description = reason, type = 'error' })
+            LogAdminAction('player_action', severity or 'medium', src, locale('sv_log_warned_player'), reason, GetPlayerName(player.id), player.id)
         end
     else
         DenyAndBan(src)
@@ -997,10 +997,10 @@ RegisterNetEvent('rsg-adminmenu:server:setpermission', function(player, level)
             RemoveAdminRole(target.PlayerData.citizenid, player.id)
         end
 
-        local levelLabel = (level and level ~= '') and LabelForRole(level) or 'User'
+        local levelLabel = (level and level ~= '') and LabelForRole(level) or locale('sv_role_user')
         TriggerClientEvent('ox_lib:notify', src,
-            { title = 'Permission Updated', description = 'Set to ' .. levelLabel, type = 'success' })
-        LogAdminAction('admin_action', 'high', src, 'Changed player permission level', 'New level: ' .. levelLabel, targetName, player.id)
+            { title = locale('sv_permission_updated'), description = locale('sv_permission_set_to', levelLabel), type = 'success' })
+        LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_player_permission_level'), locale('sv_log_new_level', levelLabel), targetName, player.id)
     else
         DenyAndBan(src)
     end
@@ -1015,7 +1015,7 @@ RegisterNetEvent('rsg-adminmenu:server:setjob', function(player, job, grade)
         local targetPlayer = RSGCore.Functions.GetPlayer(player.id)
         if targetPlayer then
             targetPlayer.Functions.SetJob(job, tonumber(grade) or 0)
-            LogAdminAction('player_action', 'medium', src, 'Changed player job', 'Job: ' .. tostring(job) .. ' | Grade: ' .. tostring(grade), GetPlayerName(player.id), player.id)
+            LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_job'), locale('sv_log_job_grade', tostring(job), tostring(grade)), GetPlayerName(player.id), player.id)
         end
     else
         DenyAndBan(src)
@@ -1036,7 +1036,7 @@ RegisterNetEvent('rsg-adminmenu:server:setcharfield', function(player, field, va
             targetPlayer.PlayerData.charinfo[field] = value
             targetPlayer.Functions.UpdatePlayerData()
             targetPlayer.Functions.Save()
-            LogAdminAction('player_action', 'medium', src, 'Changed player character field', field .. ' = ' .. tostring(value), GetPlayerName(player.id), player.id)
+            LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_character_field'), field .. ' = ' .. tostring(value), GetPlayerName(player.id), player.id)
         end
     else
         DenyAndBan(src)
@@ -1056,7 +1056,7 @@ RegisterNetEvent('rsg-adminmenu:server:adjustxp', function(player, direction, am
             local delta = tonumber(amount) or 0
             local newXp = direction == 'remove' and math.max(0, current - delta) or current + delta
             targetPlayer.Functions.SetMetaData('xp', newXp)
-            LogAdminAction('economy', 'low', src, 'Adjusted player XP', (direction == 'remove' and '-' or '+') .. tostring(delta) .. ' (new: ' .. tostring(newXp) .. ')', GetPlayerName(player.id), player.id)
+            LogAdminAction('economy', 'low', src, locale('sv_log_adjusted_player_xp'), (direction == 'remove' and '-' or '+') .. tostring(delta) .. ' (new: ' .. tostring(newXp) .. ')', GetPlayerName(player.id), player.id)
         end
     else
         DenyAndBan(src)
@@ -1073,12 +1073,12 @@ RegisterNetEvent('rsg-adminmenu:server:clearweapons', function(player)
         if targetPlayer then
             for _, item in pairs(targetPlayer.PlayerData.items or {}) do
                 if item and RSGCore.Shared.Items[item.name:lower()] and RSGCore.Shared.Items[item.name:lower()].type == 'weapon' then
-                    exports['rsg-inventory']:RemoveItem(player.id, item.name, item.amount, item.slot, 'Admin cleared weapons', false)
+                    exports['rsg-inventory']:RemoveItem(player.id, item.name, item.amount, item.slot, locale('sv_admin_cleared_weapons'), false)
                 end
             end
         end
         TriggerClientEvent('rsg-adminmenu:client:clearweapons', player.id)
-        LogAdminAction('player_action', 'medium', src, 'Cleared player weapons', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_weapons'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -1088,7 +1088,7 @@ RegisterNetEvent('rsg-adminmenu:server:clearitems', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['clearitems']) or IsPlayerAceAllowed(src, 'god') then
         exports['rsg-inventory']:ClearInventory(player.id)
-        LogAdminAction('player_action', 'medium', src, 'Cleared player items', nil, GetPlayerName(player.id), player.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_items'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
     end
@@ -1126,9 +1126,9 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removeplayeritem', functi
         return
     end
 
-    local removed = exports['rsg-inventory']:RemoveItem(data.id, data.item, data.amount, data.slot, 'Admin removed', false)
+    local removed = exports['rsg-inventory']:RemoveItem(data.id, data.item, data.amount, data.slot, locale('sv_admin_removed_item'), false)
     if removed then
-        LogAdminAction('player_action', 'medium', src, 'Removed item from player', data.item .. ' x' .. tostring(data.amount), GetPlayerName(data.id), data.id)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_removed_item_from_player'), data.item .. ' x' .. tostring(data.amount), GetPlayerName(data.id), data.id)
     end
     cb({ success = removed and true or false })
 end)

@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useMemo, useState } from 'react';
 import { MessageCircle, Fingerprint } from 'lucide-react';
 import { fetchNui, useNuiData } from '../hooks/useNui';
@@ -8,13 +9,13 @@ import { Avatar } from '../components/Avatar';
 import type { FinanceData, ManagedPlayer, MoneyType, Permissions } from '../types';
 
 const moneyTypes: { value: MoneyType; label: string }[] = [
-  { value: 'bank', label: 'Std Bank' },
-  { value: 'valbank', label: 'Val Bank' },
-  { value: 'rhobank', label: 'Rho Bank' },
-  { value: 'blkbank', label: 'Blk Bank' },
-  { value: 'armbank', label: 'Arm Bank' },
-  { value: 'cash', label: 'Cash' },
-  { value: 'bloodmoney', label: 'Blood Money' },
+  { value: 'bank', label: locale('ui_std_bank') },
+  { value: 'valbank', label: locale('ui_val_bank') },
+  { value: 'rhobank', label: locale('ui_rho_bank') },
+  { value: 'blkbank', label: locale('ui_blk_bank') },
+  { value: 'armbank', label: locale('ui_arm_bank') },
+  { value: 'cash', label: locale('ui_cash') },
+  { value: 'bloodmoney', label: locale('ui_blood_money') },
 ];
 
 const mockPlayers: ManagedPlayer[] = [
@@ -49,28 +50,28 @@ export function Finances({ permissions }: { permissions: Permissions | null }) {
   const submit = async (action: 'giveMoney' | 'removeMoney') => {
     if (selectedId == null || numericAmount <= 0) return;
     await fetchNui(action, { id: selectedId, type, amount: numericAmount }, { success: true });
-    toast.push({ type: 'success', title: action === 'giveMoney' ? 'Money given' : 'Money removed' });
+    toast.push({ type: 'success', title: action === 'giveMoney' ? locale('ui_money_given') : locale('ui_money_removed') });
     loadData(selectedId);
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Player Finances</h2>
-        <p className="text-[var(--rdr-muted)] mt-1 text-sm">Adjust an online player's money, select a player to begin</p>
+        <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_player_finances')}</h2>
+        <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_adjust_an_online_player_s_money_select_a_pla')}</p>
       </div>
 
       <Dropdown
         value={selectedId != null ? String(selectedId) : ''}
         onChange={(v) => setSelectedId(v ? Number(v) : null)}
-        placeholder="Select a player..."
+        placeholder={locale('ui_select_a_player')}
         options={onlinePlayers.map((p) => ({
           value: String(p.serverId),
           label: `ID: ${p.serverId} | ${p.name}${p.discordName ? ` (@${p.discordName})` : ` (${p.accountName})`}`,
         }))}
       />
       {onlinePlayers.length === 0 && (
-        <p className="text-[var(--rdr-faint)] text-xs">No players online.</p>
+        <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_no_players_online')}</p>
       )}
 
       {selected && data && (
@@ -84,7 +85,7 @@ export function Finances({ permissions }: { permissions: Permissions | null }) {
                 {selected.discordName ? `@${selected.discordName}` : selected.accountName}
               </p>
               <p className="text-[var(--rdr-faint)] text-[11px] mt-1 flex items-center gap-1">
-                <Fingerprint size={11} /> Discord ID: {selected.discordId ?? 'Unavailable'} &middot; Citizen ID: {selected.citizenid}
+                <Fingerprint size={11} /> {locale('ui_discord_id_2')} {selected.discordId ?? locale('ui_unavailable')} {locale('ui_citizen_id_2')} {selected.citizenid}
               </p>
             </div>
           </div>
@@ -101,23 +102,23 @@ export function Finances({ permissions }: { permissions: Permissions | null }) {
           <div className="rounded-sm p-4 space-y-3" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-[var(--rdr-muted)]">Account Type</label>
+                <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_account_type')}</label>
                 <div className="mt-1">
                   <Dropdown value={type} onChange={setType} options={moneyTypes} />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[var(--rdr-muted)]">Amount</label>
+                <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_amount')}</label>
                 <input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value === '' ? '' : Number(e.target.value))} className="w-full mt-1 bg-[var(--rdr-bg-elev)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]" />
               </div>
             </div>
             {canGiveMoney ? (
               <div className="flex gap-2">
-                <Button variant="outline" tone="green" fullWidth onClick={() => submit('giveMoney')}>Give Money</Button>
-                <Button variant="outline" tone="red" fullWidth onClick={() => submit('removeMoney')}>Remove Money</Button>
+                <Button variant="outline" tone="green" fullWidth onClick={() => submit('giveMoney')}>{locale('ui_give_money')}</Button>
+                <Button variant="outline" tone="red" fullWidth onClick={() => submit('removeMoney')}>{locale('ui_remove_money')}</Button>
               </div>
             ) : (
-              <p className="text-[var(--rdr-faint)] text-xs">Your role does not have permission to adjust player money.</p>
+              <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_your_role_does_not_have_permission_to_adjust')}</p>
             )}
           </div>
         </>

@@ -1,3 +1,4 @@
+import { locale } from '../../i18n';
 import { useState } from 'react';
 import {
   Search, Plus, Pencil, Trash2, MapPin, Tent, Fish, Gem, Milestone, Store, ShieldAlert,
@@ -20,24 +21,24 @@ import type { MapBlip } from '../../types';
 // preset here is a plain marker (Waypoint), not one of the ambient icons,
 // to avoid new admin-placed blips silently getting an unwanted native label
 const spritePresets: { sprite: string; label: string; icon: React.ReactNode }[] = [
-  { sprite: 'blip_code_waypoint', label: 'Waypoint', icon: <Flag size={18} /> },
-  { sprite: 'blip_camp', label: 'Camp', icon: <Tent size={18} /> },
-  { sprite: 'blip_mg_fishing', label: 'Fishing', icon: <Fish size={18} /> },
-  { sprite: 'blip_chest', label: 'Treasure', icon: <Gem size={18} /> },
-  { sprite: 'blip_shop_store', label: 'General Store', icon: <Store size={18} /> },
-  { sprite: 'blip_ambient_sheriff', label: 'Sheriff', icon: <ShieldAlert size={18} /> },
-  { sprite: 'blip_shop_train', label: 'Train Station', icon: <TrainFront size={18} /> },
-  { sprite: 'blip_shop_gunsmith', label: 'Gunsmith', icon: <Hammer size={18} /> },
-  { sprite: 'blip_fence_building', label: 'Fence', icon: <Coins size={18} /> },
-  { sprite: 'blip_saloon', label: 'Saloon', icon: <Wine size={18} /> },
-  { sprite: 'blip_shop_doctor', label: 'Doctor', icon: <Stethoscope size={18} /> },
-  { sprite: 'blip_region_hideout', label: 'Gang Hideout', icon: <Users size={18} /> },
-  { sprite: 'blip_ambient_death', label: 'Death', icon: <Cross size={18} /> },
-  { sprite: 'blip_animal_quality_03', label: 'Legendary Animal', icon: <Compass size={18} /> },
-  { sprite: 'blip_animal_dead', label: 'Dead Animal', icon: <Skull size={18} /> },
-  { sprite: 'blip_proc_bounty_poster', label: 'Bounty Board', icon: <Crown size={18} /> },
-  { sprite: 'blip_ambient_horse', label: 'Horse', icon: <MapPin size={18} /> },
-  { sprite: 'blip_ambient_coach', label: 'Coach', icon: <Milestone size={18} /> },
+  { sprite: 'blip_code_waypoint', label: locale('ui_waypoint'), icon: <Flag size={18} /> },
+  { sprite: 'blip_camp', label: locale('ui_camp'), icon: <Tent size={18} /> },
+  { sprite: 'blip_mg_fishing', label: locale('ui_fishing'), icon: <Fish size={18} /> },
+  { sprite: 'blip_chest', label: locale('ui_treasure'), icon: <Gem size={18} /> },
+  { sprite: 'blip_shop_store', label: locale('ui_general_store'), icon: <Store size={18} /> },
+  { sprite: 'blip_ambient_sheriff', label: locale('ui_sheriff'), icon: <ShieldAlert size={18} /> },
+  { sprite: 'blip_shop_train', label: locale('ui_train_station'), icon: <TrainFront size={18} /> },
+  { sprite: 'blip_shop_gunsmith', label: locale('ui_gunsmith'), icon: <Hammer size={18} /> },
+  { sprite: 'blip_fence_building', label: locale('ui_fence'), icon: <Coins size={18} /> },
+  { sprite: 'blip_saloon', label: locale('ui_saloon'), icon: <Wine size={18} /> },
+  { sprite: 'blip_shop_doctor', label: locale('ui_doctor'), icon: <Stethoscope size={18} /> },
+  { sprite: 'blip_region_hideout', label: locale('ui_gang_hideout'), icon: <Users size={18} /> },
+  { sprite: 'blip_ambient_death', label: locale('ui_death'), icon: <Cross size={18} /> },
+  { sprite: 'blip_animal_quality_03', label: locale('ui_legendary_animal'), icon: <Compass size={18} /> },
+  { sprite: 'blip_animal_dead', label: locale('ui_dead_animal'), icon: <Skull size={18} /> },
+  { sprite: 'blip_proc_bounty_poster', label: locale('ui_bounty_board'), icon: <Crown size={18} /> },
+  { sprite: 'blip_ambient_horse', label: locale('ui_horse'), icon: <MapPin size={18} /> },
+  { sprite: 'blip_ambient_coach', label: locale('ui_coach'), icon: <Milestone size={18} /> },
 ];
 
 const mockBlips: MapBlip[] = [
@@ -58,11 +59,11 @@ export function Blips() {
     if (!deleteTarget) return;
     const res = await fetchNui<{ success: boolean }>('deleteBlip', { id: deleteTarget.id }, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: 'Blip deleted' });
+      toast.push({ type: 'success', title: locale('ui_blip_deleted') });
       setDeleteTarget(null);
       refresh();
     } else {
-      toast.push({ type: 'error', title: 'Failed to delete blip' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_delete_blip') });
     }
   };
 
@@ -70,11 +71,11 @@ export function Blips() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Blip Manager</h2>
-          <p className="text-[var(--rdr-muted)] mt-1 text-sm">Manage map blips and markers</p>
+          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_blip_manager')}</h2>
+          <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_manage_map_blips_and_markers')}</p>
         </div>
         <Button variant="outline" tone="green" className="text-xs" onClick={() => setEditing('new')}>
-          <Plus size={13} /> Add Blip
+          <Plus size={13} /> {locale('ui_add_blip')}
         </Button>
       </div>
 
@@ -83,11 +84,11 @@ export function Blips() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search blips..."
+          placeholder={locale('ui_search_blips')}
           className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
         />
       </div>
-      <p className="text-[var(--rdr-faint)] text-xs">Showing {filtered.length} blip{filtered.length === 1 ? '' : 's'}</p>
+      <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_showing_x_blips', filtered.length)}</p>
 
       <div className="grid grid-cols-3 gap-3">
         {filtered.map((b) => (
@@ -102,17 +103,17 @@ export function Blips() {
               </div>
             </div>
             <div className="mt-3 text-xs text-[var(--rdr-muted)] space-y-1">
-              <p>Coordinates: <span className="text-[var(--rdr-text)]">{b.x.toFixed(1)}, {b.y.toFixed(1)}, {b.z.toFixed(1)}</span></p>
-              <p>Scale: <span className="text-[var(--rdr-text)]">{b.scale}x</span></p>
+              <p>{locale('ui_coordinates_2')} <span className="text-[var(--rdr-text)]">{b.x.toFixed(1)}, {b.y.toFixed(1)}, {b.z.toFixed(1)}</span></p>
+              <p>{locale('ui_scale_2')} <span className="text-[var(--rdr-text)]">{b.scale}x</span></p>
             </div>
             <div className="flex gap-2 mt-3">
-              <Button variant="outline" fullWidth className="text-xs" onClick={() => setEditing(b)}><Pencil size={13} /> Edit</Button>
-              <Button variant="outline" tone="red" fullWidth className="text-xs" onClick={() => setDeleteTarget(b)}><Trash2 size={13} /> Delete</Button>
+              <Button variant="outline" fullWidth className="text-xs" onClick={() => setEditing(b)}><Pencil size={13} /> {locale('ui_edit')}</Button>
+              <Button variant="outline" tone="red" fullWidth className="text-xs" onClick={() => setDeleteTarget(b)}><Trash2 size={13} /> {locale('ui_delete')}</Button>
             </div>
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="col-span-3 text-center text-[var(--rdr-faint)] text-sm py-8">No blips found</p>
+          <p className="col-span-3 text-center text-[var(--rdr-faint)] text-sm py-8">{locale('ui_no_blips_found')}</p>
         )}
       </div>
 
@@ -125,11 +126,11 @@ export function Blips() {
       )}
 
       {deleteTarget && (
-        <Modal title="Delete Blip" onClose={() => setDeleteTarget(null)} width="max-w-sm">
-          <p className="text-[var(--rdr-text)] text-sm mb-5">Delete "{deleteTarget.name}"? This cannot be undone.</p>
+        <Modal title={locale('ui_delete_blip')} onClose={() => setDeleteTarget(null)} width="max-w-sm">
+          <p className="text-[var(--rdr-text)] text-sm mb-5">{locale('ui_delete_x_confirm', deleteTarget.name)}</p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="solid" tone="red" onClick={remove}>Delete</Button>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>{locale('ui_cancel')}</Button>
+            <Button variant="solid" tone="red" onClick={remove}>{locale('ui_delete')}</Button>
           </div>
         </Modal>
       )}
@@ -162,22 +163,22 @@ function BlipFormModal({ blip, onClose, onSaved }: { blip: MapBlip | null; onClo
     const payload = { id: blip?.id, name: name.trim(), sprite: sprite.trim(), x: Number(x), y: Number(y), z: Number(z) || 0, scale: Number(scale) || 1 };
     const res = await fetchNui<{ success: boolean }>(blip ? 'updateBlip' : 'addBlip', payload, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: blip ? 'Blip updated' : 'Blip added' });
+      toast.push({ type: 'success', title: blip ? locale('ui_blip_updated') : locale('ui_blip_added') });
       onSaved();
     } else {
-      toast.push({ type: 'error', title: 'Failed to save blip' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_save_blip') });
     }
   };
 
   return (
-    <Modal title={blip ? 'Edit Blip' : 'Add Blip'} onClose={onClose} width="max-w-lg">
+    <Modal title={blip ? locale('ui_edit_blip') : locale('ui_add_blip')} onClose={onClose} width="max-w-lg">
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Blip Name *</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_blip_name')}</label>
             <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Select Blip Icon *</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_select_blip_icon')}</label>
             <div className="grid grid-cols-8 gap-1.5 mt-1 max-h-40 overflow-y-auto p-1">
               {spritePresets.map((s) => (
                 <button
@@ -190,16 +191,16 @@ function BlipFormModal({ blip, onClose, onSaved }: { blip: MapBlip | null; onClo
                 </button>
               ))}
             </div>
-            <input value={sprite} onChange={(e) => setSprite(e.target.value)} placeholder="Sprite name (advanced)" className={`${inputCls} text-xs`} />
+            <input value={sprite} onChange={(e) => setSprite(e.target.value)} placeholder={locale('ui_sprite_name_advanced')} className={`${inputCls} text-xs`} />
           </div>
           <div>
-            <label className="text-xs text-[var(--rdr-muted)]">Scale</label>
+            <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_scale')}</label>
             <input type="number" step="0.1" min={0.1} value={scale} onChange={(e) => setScale(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} />
           </div>
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs text-[var(--rdr-muted)]">Coordinates *</label>
-              <Button variant="outline" className="text-[11px] px-2 py-1" onClick={useCurrentLocation}>Use Current Location</Button>
+              <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_coordinates')}</label>
+              <Button variant="outline" className="text-[11px] px-2 py-1" onClick={useCurrentLocation}>{locale('ui_use_current_location')}</Button>
             </div>
             <div className="grid grid-cols-3 gap-3 mt-1">
               <input type="number" placeholder="X" value={x} onChange={(e) => setX(e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} />
@@ -208,8 +209,8 @@ function BlipFormModal({ blip, onClose, onSaved }: { blip: MapBlip | null; onClo
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button variant="solid" tone="accent" disabled={!valid} onClick={submit}>{blip ? 'Update Blip' : 'Add Blip'}</Button>
+            <Button variant="ghost" onClick={onClose}>{locale('ui_cancel')}</Button>
+            <Button variant="solid" tone="accent" disabled={!valid} onClick={submit}>{blip ? locale('ui_update_blip') : locale('ui_add_blip')}</Button>
           </div>
         </div>
       </Modal>

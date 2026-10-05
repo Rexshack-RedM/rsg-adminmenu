@@ -1,3 +1,4 @@
+import { locale } from '../i18n';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Search, UserCog, ShieldCheck, Crown, MessageCircle, Cpu, Fingerprint, Calendar, Wifi,
@@ -35,7 +36,7 @@ const mockAdmins: AdminEntry[] = [
 ];
 
 function formatDate(value: string | null) {
-  if (!value) return 'Never';
+  if (!value) return locale('ui_never');
   return new Date(value).toLocaleDateString();
 }
 
@@ -51,7 +52,7 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
   const canManageAdmins = permissions?.canManageAdmins ?? false;
   const [roleData] = useNuiData<AdminRoleConfig[]>('getRoleConfig', {}, mockRoleConfig);
   const roles = useMemo(() => [...(roleData ?? [])].sort((a, b) => b.level - a.level), [roleData]);
-  const roleOptions = useMemo(() => [{ value: 'all', label: 'All Roles' }, ...roles.map((r) => ({ value: r.role, label: r.label }))], [roles]);
+  const roleOptions = useMemo(() => [{ value: 'all', label: locale('ui_all_roles') }, ...roles.map((r) => ({ value: r.role, label: r.label }))], [roles]);
 
   const [data, refresh] = useNuiData<AdminEntry[]>('getAdmins', {}, mockAdmins);
   const admins = data ?? [];
@@ -74,29 +75,29 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">Admins</h2>
-          <p className="text-[var(--rdr-muted)] mt-1 text-sm">Manage staff access and role assignments</p>
+          <h2 className="text-[var(--rdr-heading)] text-2xl font-bold">{locale('ui_admins')}</h2>
+          <p className="text-[var(--rdr-muted)] mt-1 text-sm">{locale('ui_manage_staff_access_and_role_assignments')}</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
             className="text-xs"
             isLoading={refreshing}
-            loadingText="Refreshing"
+            loadingText={locale('ui_refreshing')}
             onClick={async () => { setRefreshing(true); try { await refresh(); } finally { setRefreshing(false); } }}
           >
-            Refresh
+            {locale('ui_refresh')}
           </Button>
           {canManageAdmins && (
             <Button variant="outline" tone="accent" className="text-xs" onClick={() => setShowAdd(true)}>
-              <UserPlus /> Add Admin
+              <UserPlus /> {locale('ui_add_admin')}
             </Button>
           )}
         </div>
       </div>
 
       <div className="rounded-lg p-4" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
-        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-3 flex items-center gap-1.5"><Crown size={13} /> Role Hierarchy</p>
+        <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-3 flex items-center gap-1.5"><Crown size={13} /> {locale('ui_role_hierarchy')}</p>
         <div className="flex flex-wrap gap-2">
           {roles.map((r, i) => {
             const color = roleColor(i);
@@ -104,11 +105,11 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
               <div key={r.role} className="flex items-center gap-2 px-3 py-1.5 rounded-sm" style={{ background: `${color}1a`, border: `1px solid ${color}40` }}>
                 <ShieldCheck size={14} style={{ color }} />
                 <span className="text-sm font-medium" style={{ color }}>{r.label}</span>
-                <span className="text-[10px] text-[var(--rdr-faint)]">Level {r.level}</span>
+                <span className="text-[10px] text-[var(--rdr-faint)]">{locale('ui_level')} {r.level}</span>
               </div>
             );
           })}
-          {roles.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">No roles configured</p>}
+          {roles.length === 0 && <p className="text-[var(--rdr-faint)] text-xs">{locale('ui_no_roles_configured')}</p>}
         </div>
       </div>
 
@@ -118,7 +119,7 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search admins..."
+            placeholder={locale('ui_search_admins')}
             className="w-full pl-9 pr-3 py-2 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm text-sm text-[var(--rdr-text)]"
           />
         </div>
@@ -129,12 +130,12 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--rdr-surface-2)] text-[var(--rdr-muted)] text-xs uppercase tracking-wider">
-              <th className="text-left px-4 py-2 font-medium">Admin</th>
-              <th className="text-left px-4 py-2 font-medium">Role</th>
-              <th className="text-left px-4 py-2 font-medium">Reports Resolved</th>
-              <th className="text-left px-4 py-2 font-medium">Last Login</th>
-              <th className="text-left px-4 py-2 font-medium">Status</th>
-              <th className="text-right px-4 py-2 font-medium">Actions</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_admin')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_role')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_reports_resolved')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_last_login')}</th>
+              <th className="text-left px-4 py-2 font-medium">{locale('ui_status')}</th>
+              <th className="text-right px-4 py-2 font-medium">{locale('ui_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -147,7 +148,7 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
                       <p className="text-[var(--rdr-text)] font-medium">{a.name}</p>
                       <p className="text-[var(--rdr-faint)] text-xs flex items-center gap-1">
                         {a.discordName && <MessageCircle size={11} className="text-[#5865F2]" />}
-                        {a.discordName ? `@${a.discordName}` : (a.steamHex || 'No identifiers')}
+                        {a.discordName ? `@${a.discordName}` : (a.steamHex || locale('ui_no_identifiers'))}
                       </p>
                     </div>
                   </div>
@@ -156,21 +157,21 @@ export function Admins({ permissions }: { permissions: Permissions | null }) {
                   <span className="px-2 py-0.5 rounded-sm bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)] text-xs">{a.roleLabel}</span>
                 </td>
                 <td className="px-4 py-2.5 text-[var(--rdr-text)]">{a.reportsResolved}</td>
-                <td className="px-4 py-2.5 text-[var(--rdr-muted)] text-xs">{a.online ? 'Now' : formatDate(a.lastSeen)}</td>
+                <td className="px-4 py-2.5 text-[var(--rdr-muted)] text-xs">{a.online ? locale('ui_now') : formatDate(a.lastSeen)}</td>
                 <td className="px-4 py-2.5">
                   <span className={`px-2 py-0.5 rounded-sm text-xs ${a.online ? 'bg-green-500/20 text-green-400' : 'bg-zinc-500/20 text-zinc-400'}`}>
-                    {a.online ? 'Online' : 'Offline'}
+                    {a.online ? locale('ui_online') : locale('ui_offline')}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <Button variant="outline" tone="accent" className="text-xs px-3 py-1" onClick={() => setSelected(a)}>
-                    <Eye size={13} /> View
+                    <Eye size={13} /> {locale('ui_view')}
                   </Button>
                 </td>
               </tr>
             ))}
             {data !== undefined && filtered.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">No admins found</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--rdr-faint)] text-sm">{locale('ui_no_admins_found')}</td></tr>
             )}
           </tbody>
         </table>
@@ -209,18 +210,18 @@ function AddAdminModal({ roleOptions, onClose, onAdded }: { roleOptions: { value
     const res = await fetchNui<{ success: boolean; message?: string }>('addAdmin', { steamHex: steamHex.trim(), role }, { success: true });
     setSubmitting(false);
     if (res.success) {
-      toast.push({ type: 'success', title: 'Admin added' });
+      toast.push({ type: 'success', title: locale('ui_admin_added') });
       onAdded();
     } else {
-      toast.push({ type: 'error', title: 'Failed to add admin', description: res.message });
+      toast.push({ type: 'error', title: locale('ui_failed_to_add_admin'), description: res.message });
     }
   };
 
   return (
-    <Modal title="Add Admin" subtitle="The target player must be currently online" onClose={onClose} width="max-w-sm">
+    <Modal title={locale('ui_add_admin')} subtitle={locale('ui_the_target_player_must_be_currently_online')} onClose={onClose} width="max-w-sm">
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Steam Hex Identifier</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_steam_hex_identifier')}</label>
           <input
             autoFocus
             value={steamHex}
@@ -230,12 +231,12 @@ function AddAdminModal({ roleOptions, onClose, onAdded }: { roleOptions: { value
           />
         </div>
         <div>
-          <label className="text-xs text-[var(--rdr-muted)]">Role</label>
+          <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_role')}</label>
           <div className="mt-1"><Dropdown value={role} onChange={setRole} options={roleOptions} /></div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="solid" tone="accent" disabled={!steamHex.trim() || submitting} isLoading={submitting} onClick={submit}>Add Admin</Button>
+          <Button variant="ghost" onClick={onClose}>{locale('ui_cancel')}</Button>
+          <Button variant="solid" tone="accent" disabled={!steamHex.trim() || submitting} isLoading={submitting} onClick={submit}>{locale('ui_add_admin')}</Button>
         </div>
       </div>
     </Modal>
@@ -275,22 +276,22 @@ function AdminProfileModal({
   const changeRole = async () => {
     const res = await fetchNui<{ success: boolean }>('changeAdminRole', { citizenid: admin.citizenid, name: admin.name, role: newRole }, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: 'Role updated' });
+      toast.push({ type: 'success', title: locale('ui_role_updated') });
       setChangingRole(false);
       onChanged();
     } else {
-      toast.push({ type: 'error', title: 'Failed to update role' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_update_role') });
     }
   };
 
   const removeAdmin = async () => {
     const res = await fetchNui<{ success: boolean }>('removeAdmin', { citizenid: admin.citizenid, name: admin.name }, { success: true });
     if (res.success) {
-      toast.push({ type: 'success', title: 'Admin access removed' });
+      toast.push({ type: 'success', title: locale('ui_admin_access_removed') });
       onChanged();
       onClose();
     } else {
-      toast.push({ type: 'error', title: 'Failed to remove admin' });
+      toast.push({ type: 'error', title: locale('ui_failed_to_remove_admin') });
     }
   };
 
@@ -311,7 +312,7 @@ function AdminProfileModal({
               <p className="text-[var(--rdr-muted)] text-xs mt-0.5">{admin.discordName ? `@${admin.discordName}` : admin.citizenid}</p>
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-semibold uppercase bg-[var(--rdr-accent-20)] text-[var(--rdr-accent-bright)]">{admin.roleLabel}</span>
-                <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-semibold ${admin.online ? 'bg-green-500/20 text-green-400' : 'bg-zinc-500/20 text-zinc-400'}`}>{admin.online ? 'Online' : 'Offline'}</span>
+                <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-semibold ${admin.online ? 'bg-green-500/20 text-green-400' : 'bg-zinc-500/20 text-zinc-400'}`}>{admin.online ? locale('ui_online') : locale('ui_offline')}</span>
               </div>
             </div>
           </div>
@@ -320,49 +321,49 @@ function AdminProfileModal({
 
         <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <StatCard label="Reports Resolved" value={String(admin.reportsResolved)} icon={<CheckCircle2 size={16} />} />
-            <StatCard label="Admin Since" value={formatDate(admin.createdAt)} icon={<Calendar size={16} />} />
-            <StatCard label="Last Login" value={admin.online ? 'Now' : formatDate(admin.lastSeen)} icon={<Wifi size={16} />} />
+            <StatCard label={locale('ui_reports_resolved')} value={String(admin.reportsResolved)} icon={<CheckCircle2 size={16} />} />
+            <StatCard label={locale('ui_admin_since')} value={formatDate(admin.createdAt)} icon={<Calendar size={16} />} />
+            <StatCard label={locale('ui_last_login')} value={admin.online ? locale('ui_now') : formatDate(admin.lastSeen)} icon={<Wifi size={16} />} />
           </div>
 
           <div>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Identifiers</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_identifiers')}</p>
             <div className="space-y-1.5">
-              <IdRow icon={<Fingerprint size={14} />} label="Citizen ID" value={admin.citizenid} />
-              <IdRow icon={<Cpu size={14} />} label="Steam Hex" value={admin.steamHex} />
-              <IdRow icon={<MessageCircle size={14} />} label="Discord ID" value={admin.discordId} />
-              <IdRow icon={<Award size={14} />} label="Granted By" value={admin.grantedBy ?? undefined} />
+              <IdRow icon={<Fingerprint size={14} />} label={locale('ui_citizen_id')} value={admin.citizenid} />
+              <IdRow icon={<Cpu size={14} />} label={locale('ui_steam_hex')} value={admin.steamHex} />
+              <IdRow icon={<MessageCircle size={14} />} label={locale('ui_discord_id')} value={admin.discordId} />
+              <IdRow icon={<Award size={14} />} label={locale('ui_granted_by')} value={admin.grantedBy ?? undefined} />
             </div>
           </div>
 
           <div>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">Admin Actions</p>
-            {!admin.online && <p className="text-[var(--rdr-faint)] text-xs mb-2">Spectate, teleport, and kick require this admin to be online.</p>}
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2">{locale('ui_admin_actions')}</p>
+            {!admin.online && <p className="text-[var(--rdr-faint)] text-xs mb-2">{locale('ui_spectate_teleport_and_kick_require_this_admi')}</p>}
             <div className="grid grid-cols-3 gap-2">
               <Button variant="outline" disabled={!admin.online} className="justify-start" onClick={() => act('toggleSpectate')}>
-                <Eye /> Spectate
+                <Eye /> {locale('ui_spectate')}
               </Button>
               <Button variant="outline" disabled={!admin.online} className="justify-start" onClick={() => act('goToPlayer')}>
-                <MapPin /> Teleport
+                <MapPin /> {locale('ui_teleport')}
               </Button>
               <Button variant="outline" tone="red" disabled={!admin.online} className="justify-start" onClick={() => setKicking(true)}>
-                <LogOut /> Kick
+                <LogOut /> {locale('ui_kick')}
               </Button>
               {canManageAdmins && (
                 <Button variant="outline" tone="amber" className="justify-start" onClick={() => setChangingRole(true)}>
-                  <KeyRound /> Change Role
+                  <KeyRound /> {locale('ui_change_role')}
                 </Button>
               )}
               {canManageAdmins && (
                 <Button variant="outline" tone="red" className="justify-start" onClick={() => setRemoving(true)}>
-                  <Trash2 /> Remove Admin
+                  <Trash2 /> {locale('ui_remove_admin')}
                 </Button>
               )}
             </div>
           </div>
 
           <div>
-            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><UserCog size={13} /> Admin Activity Log</p>
+            <p className="text-[var(--rdr-muted)] text-xs uppercase tracking-wider font-medium mb-2 flex items-center gap-1.5"><UserCog size={13} /> {locale('ui_admin_activity_log')}</p>
             <div className="max-h-56 overflow-y-auto rounded-sm" style={{ border: '1px solid var(--rdr-border)' }}>
               <Logs embedded adminCitizenid={admin.citizenid} />
             </div>
@@ -371,37 +372,37 @@ function AdminProfileModal({
       </div>
 
       {changingRole && (
-        <Modal title="Change Role" onClose={() => setChangingRole(false)} width="max-w-sm">
+        <Modal title={locale('ui_change_role')} onClose={() => setChangingRole(false)} width="max-w-sm">
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-[var(--rdr-muted)]">New Role</label>
+              <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_new_role')}</label>
               <div className="mt-1"><Dropdown value={newRole} onChange={setNewRole} options={roleOptions} /></div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setChangingRole(false)}>Cancel</Button>
-              <Button variant="solid" tone="accent" onClick={changeRole}>Update Role</Button>
+              <Button variant="ghost" onClick={() => setChangingRole(false)}>{locale('ui_cancel')}</Button>
+              <Button variant="solid" tone="accent" onClick={changeRole}>{locale('ui_update_role')}</Button>
             </div>
           </div>
         </Modal>
       )}
 
       {kicking && (
-        <Modal title="Kick Admin" onClose={() => setKicking(false)} width="max-w-sm">
+        <Modal title={locale('ui_kick_admin')} onClose={() => setKicking(false)} width="max-w-sm">
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-[var(--rdr-muted)]">Reason for Kick</label>
+              <label className="text-xs text-[var(--rdr-muted)]">{locale('ui_reason_for_kick_2')}</label>
               <input
                 autoFocus value={kickReason} onChange={(e) => setKickReason(e.target.value)}
                 className="w-full mt-1 bg-[var(--rdr-surface)] border border-[var(--rdr-border)] rounded-sm px-3 py-2 text-sm text-[var(--rdr-text)]"
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setKicking(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => setKicking(false)}>{locale('ui_cancel')}</Button>
               <Button
                 variant="solid" tone="red" disabled={!kickReason.trim()}
-                onClick={async () => { await act('kickPlayer', { reason: kickReason.trim() }, 'Admin kicked'); setKicking(false); onChanged(); }}
+                onClick={async () => { await act('kickPlayer', { reason: kickReason.trim() }, locale('ui_admin_kicked')); setKicking(false); onChanged(); }}
               >
-                Kick
+                {locale('ui_kick')}
               </Button>
             </div>
           </div>
@@ -409,11 +410,11 @@ function AdminProfileModal({
       )}
 
       {removing && (
-        <Modal title="Remove Admin Access" onClose={() => setRemoving(false)} width="max-w-sm">
-          <p className="text-[var(--rdr-text)] text-sm mb-5">Remove admin access from {admin.name}? Their permission level will be revoked immediately.</p>
+        <Modal title={locale('ui_remove_admin_access')} onClose={() => setRemoving(false)} width="max-w-sm">
+          <p className="text-[var(--rdr-text)] text-sm mb-5">{locale('ui_remove_admin_access_confirm', admin.name)}</p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setRemoving(false)}>Cancel</Button>
-            <Button variant="solid" tone="red" onClick={removeAdmin}>Remove Access</Button>
+            <Button variant="ghost" onClick={() => setRemoving(false)}>{locale('ui_cancel')}</Button>
+            <Button variant="solid" tone="red" onClick={removeAdmin}>{locale('ui_remove_access')}</Button>
           </div>
         </Modal>
       )}
@@ -438,9 +439,9 @@ function IdRow({ icon, label, value }: { icon: React.ReactNode; label: string; v
       <span className="w-8 h-8 rounded-sm flex items-center justify-center shrink-0 text-[var(--rdr-muted)]" style={{ background: 'var(--rdr-surface)' }}>{icon}</span>
       <span className="flex-1 min-w-0">
         <span className="block text-[var(--rdr-muted)] text-xs">{label}</span>
-        <span className="block text-[var(--rdr-text)] text-sm font-medium truncate">{value || 'Unavailable'}</span>
+        <span className="block text-[var(--rdr-text)] text-sm font-medium truncate">{value || locale('ui_unavailable')}</span>
       </span>
-      {value && <span className="text-xs text-[var(--rdr-faint)] shrink-0">{copied ? 'Copied' : 'Copy'}</span>}
+      {value && <span className="text-xs text-[var(--rdr-faint)] shrink-0">{copied ? locale('ui_copied') : locale('ui_copy')}</span>}
     </button>
   );
 }
