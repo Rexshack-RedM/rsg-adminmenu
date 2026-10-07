@@ -127,6 +127,10 @@ end)
 -- target-side effect handlers — these run on the affected player's own
 -- client since ragdoll/stamina/camera natives only apply locally
 -------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:client:killplayer', function()
+    SetEntityHealth(PlayerPedId(), 0)
+end)
+
 RegisterNetEvent('rsg-adminmenu:client:ragdollplayer', function()
     SetPedToRagdoll(PlayerPedId(), 3000, 3000, 0, false, false, false)
 end)

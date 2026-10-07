@@ -824,13 +824,12 @@ RegisterNetEvent('rsg-adminmenu:server:healplayer', function(player)
 end)
 
 -----------------------------------------------------------------------
--- kill (entity health is networked, so — like GoTo/Bring/Freeze above —
--- this is a direct server-side native call, no client relay needed)
+-- kill (SetEntityHealth is client-only in RedM, so relay to the target's client)
 -----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:server:killplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['kill']) or IsPlayerAceAllowed(src, 'god') then
-        SetEntityHealth(GetPlayerPed(player.id), 0)
+        TriggerClientEvent('rsg-adminmenu:client:killplayer', player.id)
         LogAdminAction('player_action', 'medium', src, locale('sv_log_killed_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)

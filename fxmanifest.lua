@@ -4,7 +4,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-adminmenu'
-version '3.0.0'
+version '3.0.1'
 
 ui_page 'web/dist/index.html'
 
