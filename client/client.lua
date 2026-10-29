@@ -186,7 +186,7 @@ RegisterNuiCallback('teleportToMarker', function(_, cb)
 end)
 
 RegisterNuiCallback('selfRevive', function(_, cb)
-    TriggerEvent('rsg-medic:client:playerRevive')
+    TriggerServerEvent('rsg-adminmenu:server:selfrevive')
     cb({ success = true })
 end)
 

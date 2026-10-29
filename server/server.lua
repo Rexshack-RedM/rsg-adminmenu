@@ -409,7 +409,9 @@ RegisterNetEvent('rsg-adminmenu:server:playerrevive', function(player)
     local citizenid = Player.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['revive']) or IsPlayerAceAllowed(src, 'god') then
-        TriggerClientEvent('rsg-medic:client:adminRevive', player.id)
+        local Target = RSGCore.Functions.GetPlayer(tonumber(player.id))
+        if Target then Target.Functions.SetMetaData('isdead', false) end
+        TriggerClientEvent('rsg-medic:client:revive', player.id)
         LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(player.id), player.id)
     else
         BanPlayer(src)
@@ -816,7 +818,7 @@ end
 RegisterNetEvent('rsg-adminmenu:server:healplayer', function(player)
     local src = source
     if RSGCore.Functions.HasPermission(src, permissions['heal']) or IsPlayerAceAllowed(src, 'god') then
-        TriggerClientEvent('rsg-medic:client:adminHeal', player.id)
+        TriggerClientEvent('rsg-medic:client:heal', player.id, -1)
         LogAdminAction('player_action', 'low', src, locale('sv_log_healed_player'), nil, GetPlayerName(player.id), player.id)
     else
         DenyAndBan(src)
@@ -1138,4 +1140,18 @@ end)
 RSGCore.Commands.Add('report', locale('sv_report_command_desc'), {}, false, function(source)
     local src = source
     TriggerClientEvent('rsg-adminmenu:client:openreportmenu', src)
+end)
+-----------------------------------------------------------------------
+-- self revive (server-side so rsg-medic's isdead metadata is cleared)
+-----------------------------------------------------------------------
+RegisterNetEvent('rsg-adminmenu:server:selfrevive', function()
+    local src = source
+    if RSGCore.Functions.HasPermission(src, permissions['revive']) or IsPlayerAceAllowed(src, 'god') then
+        local Player = RSGCore.Functions.GetPlayer(src)
+        if Player then Player.Functions.SetMetaData('isdead', false) end
+        TriggerClientEvent('rsg-medic:client:revive', src)
+        LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(src), src)
+    else
+        DenyAndBan(src)
+    end
 end)
