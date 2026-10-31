@@ -12,6 +12,7 @@ import { Reports } from './pages/Reports';
 import { Admins } from './pages/Admins';
 import { Logs } from './pages/Logs';
 import { AdminChat } from './pages/AdminChat';
+import { SelfTools } from './pages/SelfTools';
 import { Teleports } from './pages/world/Teleports';
 import { Coords } from './pages/world/Coords';
 import { Blips } from './pages/world/Blips';
@@ -147,6 +148,7 @@ function AppInner() {
                 {page === 'reports' && <Reports permissions={permissions} />}
                 {page === 'admins' && <Admins permissions={permissions} />}
                 {page === 'logs' && <Logs />}
+                {page === 'selftools' && <SelfTools permissions={permissions} />}
                 {page === 'adminchat' && <AdminChat self={self} onNavigate={setPage} />}
                 {page === 'teleports' && <Teleports permissions={permissions} />}
                 {page === 'coords' && <Coords />}

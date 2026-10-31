@@ -40,12 +40,13 @@ end
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerhistory', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'playerinfo') then
         cb(nil)
         return
     end
 
-    MySQL.query('SELECT * FROM admin_player_history WHERE citizenid = ? ORDER BY created_at DESC LIMIT 50', { data.citizenid }, function(rows)
+    if type(data) ~= 'table' or not data.citizenid then return cb({}) end
+    MySQL.query('SELECT * FROM admin_player_history WHERE citizenid = ? ORDER BY created_at DESC LIMIT 50', { tostring(data.citizenid) }, function(rows)
         cb(rows or {})
     end)
 end)

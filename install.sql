@@ -6,10 +6,6 @@
 -- It's provided for admins who prefer to set the schema up explicitly
 -- before first start, review it, or run it as part of a scripted deploy.
 -- Safe to run more than once, everything here is IF NOT EXISTS.
---
--- The one exception: `admin_reports` and its two related tables are NOT
--- self-migrated (existing installs may already have their own copy with
--- extra columns), so this file is the actual source of truth for those.
 
 -- ============================================================
 -- Admins & permissions

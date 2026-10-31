@@ -51,7 +51,7 @@ function SendDiscordEmbed(url, title, adminName, body, color, targetName)
         embeds = { {
             title = title,
             author = { name = adminName or locale('sv_system') },
-            description = '```\n' .. (body or locale('sv_no_additional_details')) .. '\n```',
+            description = '```\n' .. tostring(body or locale('sv_no_additional_details')):sub(1, 3900) .. '\n```',
             color = color or 3447003,
             fields = fields,
             timestamp = os.date('!%Y-%m-%dT%H:%M:%SZ'),
@@ -82,8 +82,9 @@ function LogAdminAction(category, severity, src, action, details, targetName, ta
         if targetDiscordName then targetName = targetDiscordName end
     end
 
+    if details ~= nil then details = tostring(details):sub(1, 500) end
     MySQL.insert('INSERT INTO admin_logs (category, severity, admin_citizenid, admin_name, action, details, target_name, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', {
-        category, severity, adminCitizenid, adminName, action, details, targetName, ip,
+        category, severity, adminCitizenid, adminName, tostring(action):sub(1, 255), details, targetName, ip,
     })
 
     -- system events (src == nil, e.g. resource start/stop) aren't "something
@@ -112,7 +113,7 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getlogs', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'playerinfo') then
         cb(nil)
         return
     end
@@ -173,7 +174,7 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendlogtodiscord', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'playerinfo') then
         cb({ success = false })
         return
     end

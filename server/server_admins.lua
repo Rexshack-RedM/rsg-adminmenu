@@ -90,6 +90,14 @@ local function GetRoleLevel(role)
     return GetRoleLevels()[role] or 0
 end
 
+-- staff can only grant, change or remove roles strictly below their own.
+-- The 'god' ACE (server owner) can manage everything.
+function CanManageRole(src, role)
+    if IsPlayerAceAllowed(src, 'god') then return true end
+    if not role or role == '' or role == 'user' then return true end
+    return GetRoleLevel(role) < GetRoleLevel(GetPlayerRole(src))
+end
+
 -- shared path for every role change in the panel (the Admins page's "Change
 -- Role"/"Add Admin" and PlayerManageModal's "Set Permission" both call this)
 -- so the persisted table and live ACE state can never drift apart
@@ -126,6 +134,7 @@ end
 -- role hierarchy config (drives the banner + the role dropdowns)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getroleconfig', function(source, cb)
+    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
     local levels = GetRoleLevels()
     local roles = {}
     for _, role in ipairs(RSGCore.Config.Server.Permissions) do
@@ -150,7 +159,7 @@ end
 -- a large admin team, on every single Admins page load/refresh.
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(source, cb)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'playerinfo') then
         cb(nil)
         return
     end
@@ -224,12 +233,21 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['setpermission']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
         cb({ success = false, message = locale('sv_not_allowed') })
         return
     end
 
+    if not CanManageRole(src, data.role) then
+        cb({ success = false, message = locale('sv_role_too_high') })
+        return
+    end
+
     local steamHex = data.steamHex
+    if type(steamHex) ~= 'string' or steamHex == '' then
+        cb({ success = false, message = locale('sv_invalid_input') })
+        return
+    end
     local targetSrc = nil
     for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
         if RSGCore.Functions.GetIdentifier(playerId, 'steam') == steamHex then
@@ -243,9 +261,13 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(sourc
         return
     end
 
+    local target = RSGCore.Functions.GetPlayer(targetSrc)
+    if not target or not CanManageRole(src, GetPlayerRole(targetSrc)) then
+        cb({ success = false, message = locale('sv_role_too_high') })
+        return
+    end
     local admin = RSGCore.Functions.GetPlayer(src)
     local adminName = admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname
-    local target = RSGCore.Functions.GetPlayer(targetSrc)
     local targetName = target.PlayerData.charinfo.firstname .. ' ' .. target.PlayerData.charinfo.lastname
     local targetDiscord = RSGCore.Functions.GetIdentifier(targetSrc, 'discord')
 
@@ -262,8 +284,14 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:changeadminrole', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['setpermission']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
         cb({ success = false })
+        return
+    end
+
+    local currentRole = MySQL.scalar.await('SELECT role FROM admin_roles WHERE citizenid = ?', { tostring(data.citizenid) })
+    if not CanManageRole(src, data.role) or not CanManageRole(src, currentRole) then
+        cb({ success = false, message = locale('sv_role_too_high') })
         return
     end
 
@@ -284,8 +312,14 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removeadmin', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['setpermission']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
         cb({ success = false })
+        return
+    end
+
+    local currentRole = MySQL.scalar.await('SELECT role FROM admin_roles WHERE citizenid = ?', { tostring(data.citizenid) })
+    if not CanManageRole(src, currentRole) then
+        cb({ success = false, message = locale('sv_role_too_high') })
         return
     end
 

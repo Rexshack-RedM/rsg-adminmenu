@@ -64,30 +64,9 @@ RegisterNuiCallback('close', function(_, cb)
     cb({ success = true })
 end)
 
--- Hands the active ox_lib locale dictionary to the React UI at boot so every
--- UI label comes from locales/<lang>.json (falls back to en.json).
-local function GetUiLocales()
-    if lib.getLocales then
-        local ok, dict = pcall(lib.getLocales)
-        if ok and type(dict) == 'table' and next(dict) then return dict end
-    end
-    local resource = GetCurrentResourceName()
-    local lang = GetConvar('ox:locale', 'en')
-    local raw = LoadResourceFile(resource, ('locales/%s.json'):format(lang))
-        or LoadResourceFile(resource, 'locales/en.json')
-    return raw and json.decode(raw) or {}
-end
-
+-- hands the active locale dictionary (rsg-core locale loader) to the React UI
 RegisterNuiCallback('getLocales', function(_, cb)
-    cb(GetUiLocales())
-end)
-
-RegisterNuiCallback('copyToClipboard', function(data, cb)
-    local text = data and data.text
-    if type(text) == 'string' and text ~= '' then
-        lib.setClipboard(text)
-    end
-    cb({ success = true })
+    cb(locale() or {})
 end)
 
 AddEventHandler('onClientResourceStop', function(resourceName)

@@ -1,8 +1,10 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local function CanUseMasterAdmin(src)
-    return RSGCore.Functions.HasPermission(src, permissions['serversettings']) or IsPlayerAceAllowed(src, 'god')
+    return HasAdminPermission(src, 'serversettings')
 end
+
+local CONFIG_FILE = 'server/sv_config.lua'
 
 -----------------------------------------------------------------------
 -- persisted settings (webhook URLs, etc.) — a generic key/value store so
@@ -51,7 +53,7 @@ local function ApplySetting(key, value)
     node[path[#path]] = value
 end
 
--- writes a setting straight into config.lua's source text (not just the live
+-- writes a setting straight into server/sv_config.lua's source text (not just the live
 -- Config table + DB) so it's visible in the file and stays the default on a
 -- fresh migration. Only safe because config.lua lives inside THIS resource's
 -- own folder — SaveResourceFile can't write outside the calling resource,
@@ -61,7 +63,7 @@ local function WriteConfigFile(key, value)
     if not path then return false end
     local fieldName = path[#path]
 
-    local content = LoadResourceFile(GetCurrentResourceName(), 'config.lua')
+    local content = LoadResourceFile(GetCurrentResourceName(), CONFIG_FILE)
     if not content then return false end
 
     -- keep the value a valid single-line Lua string literal
@@ -73,7 +75,7 @@ local function WriteConfigFile(key, value)
     local newContent, count = content:gsub(pattern, '%1' .. replacement .. '%2', 1)
     if count == 0 then return false end
 
-    SaveResourceFile(GetCurrentResourceName(), 'config.lua', newContent, -1)
+    SaveResourceFile(GetCurrentResourceName(), CONFIG_FILE, newContent, -1)
     return true
 end
 
@@ -150,12 +152,31 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:savewebhooksettings', fun
         cb({ success = false })
         return
     end
+    if type(data) ~= 'table' then
+        cb({ success = false })
+        return
+    end
+    -- only accept empty values or real Discord webhook URLs
+    local function webhook(value)
+        value = CleanText(value, 300) or ''
+        if value ~= '' and not value:match('^https://discord%.com/api/webhooks/%d+/[%w_%-]+$')
+            and not value:match('^https://discordapp%.com/api/webhooks/%d+/[%w_%-]+$') then
+            return nil
+        end
+        return value
+    end
     local map = {
-        webhook_adminlogs = data.adminLogs or '',
-        webhook_playermanagement = data.playerManagement or '',
-        webhook_worldsettings = data.worldSettings or '',
-        webhook_reports = data.reports or '',
+        webhook_adminlogs = webhook(data.adminLogs),
+        webhook_playermanagement = webhook(data.playerManagement),
+        webhook_worldsettings = webhook(data.worldSettings),
+        webhook_reports = webhook(data.reports),
     }
+    for _, v in pairs(map) do
+        if v == nil then
+            cb({ success = false, message = locale('sv_invalid_input') })
+            return
+        end
+    end
     -- capture the old value of each field before anything gets overwritten,
     -- so the change log below can show a real from -> to, not just "updated"
     local oldValues = {
@@ -211,28 +232,33 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addcustomitem', function(
         cb({ success = false })
         return
     end
-    local name = data.name and tostring(data.name):lower():gsub('[^%w_]', '_')
-    if not name or name == '' or not data.label or data.label == '' or not data.image or data.image == '' then
-        cb({ success = false })
+    if type(data) ~= 'table' then return cb({ success = false }) end
+    local name = CleanText(data.name, 64)
+    name = name and (name:lower():gsub('[^%w_]', '_')) or nil
+    local label = CleanText(data.label, 100)
+    local image = CleanText(data.image, 150)
+    local description = CleanText(data.description, 255)
+    if not name or not label or not image or not image:match('^[%w_%-%.]+%.png$') then
+        cb({ success = false, reason = 'invalid_input' })
         return
     end
 
     local adminName = AdminDisplayName(src)
-    local weight = tonumber(data.weight) or 0
-    local itemType = data.itemType or 'item'
+    local weight = math.max(0, math.floor(tonumber(data.weight) or 0))
+    local itemType = data.itemType == 'weapon' and 'weapon' or 'item'
 
     MySQL.insert([[
         INSERT INTO adminmenu_custom_items (name, label, description, weight, type, image, created_by)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE label = VALUES(label), description = VALUES(description),
             weight = VALUES(weight), type = VALUES(type), image = VALUES(image)
-    ]], { name, data.label, data.description, weight, itemType, data.image, adminName }, function()
-        local ok, reason = RegisterItem(BuildItemData(name, data.label, weight, itemType, data.image, data.description))
+    ]], { name, label, description, weight, itemType, image, adminName }, function()
+        local ok, reason = RegisterItem(BuildItemData(name, label, weight, itemType, image, description))
         if not ok then
             cb({ success = false, reason = reason })
             return
         end
-        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_custom_item', name), data.label, nil)
+        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_custom_item', name), label, nil)
         cb({ success = true })
     end)
 end)
@@ -243,7 +269,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deletecustomitem', functi
         cb({ success = false })
         return
     end
-    local name = data and data.name
+    local name = type(data) == 'table' and CleanText(data.name, 64) or nil
+    if not name then return cb({ success = false }) end
     MySQL.update('DELETE FROM adminmenu_custom_items WHERE name = ?', { name }, function(affected)
         if affected and affected > 0 then
             RSGCore.Functions.RemoveItem(name)

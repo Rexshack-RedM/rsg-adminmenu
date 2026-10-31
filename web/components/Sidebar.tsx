@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard, BarChart3, Users, ShieldCheck, Ticket, Wallet,
   LogOut, PanelLeftClose, PanelLeftOpen, UserCog, ScrollText, MessagesSquare,
-  Navigation, MapPinned, Bookmark, Sparkles, SlidersHorizontal, Boxes, ShieldAlert,
+  Navigation, MapPinned, Bookmark, Sparkles, SlidersHorizontal, Boxes, ShieldAlert, UserCheck,
 } from 'lucide-react';
 import { fetchNui } from '../hooks/useNui';
 import { Avatar } from './Avatar';
@@ -13,7 +13,7 @@ export type AdminPage =
   | 'dashboard' | 'statistics'
   | 'players' | 'whitelist' | 'reports' | 'finances'
   | 'admins' | 'logs' | 'adminchat'
-  | 'teleports' | 'coords' | 'blips' | 'spawner'
+  | 'selftools' | 'teleports' | 'coords' | 'blips' | 'spawner'
   | 'serversettings' | 'resourcelookup' | 'masteractions';
 
 interface SidebarProps {
@@ -59,6 +59,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: locale('ui_world'),
     items: [
+      { id: 'selftools', label: locale('ui_self_tools'), icon: UserCheck },
       { id: 'teleports', label: locale('ui_teleports'), icon: Navigation, minRole: 'mod' },
       { id: 'coords', label: locale('ui_coords'), icon: MapPinned, minRole: 'mod' },
       { id: 'blips', label: locale('ui_blips'), icon: Bookmark, minRole: 'mod' },

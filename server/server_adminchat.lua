@@ -19,7 +19,7 @@ MySQL.query("ALTER TABLE admin_chat_messages ADD COLUMN IF NOT EXISTS sender_dis
 local function GetOnlineAdmins()
     local admins = {}
     for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
-        if RSGCore.Functions.HasPermission(playerId, permissions['adminmenu']) then
+        if HasAdminPermission(playerId, 'adminmenu') then
             admins[#admins + 1] = playerId
         end
     end
@@ -31,13 +31,13 @@ end
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:createadminchatmessage', function(source, cb, data)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['adminmenu']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'adminmenu') then
         cb({ success = false })
         return
     end
 
-    local message = data and data.message and data.message:sub(1, 500) or ''
-    if message == '' then
+    local message = type(data) == 'table' and CleanText(data.message, 500)
+    if not message then
         cb({ success = false })
         return
     end
@@ -73,7 +73,7 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadminchatmessages', function(source, cb)
     local src = source
-    if not (RSGCore.Functions.HasPermission(src, permissions['adminmenu']) or IsPlayerAceAllowed(src, 'god')) then
+    if not HasAdminPermission(src, 'adminmenu') then
         cb({})
         return
     end

@@ -1,5 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 local reportCooldown = false
 
@@ -67,7 +66,7 @@ RegisterNuiCallback('getReportDetails', function(data, cb)
 end)
 
 RegisterNuiCallback('replyReport', function(data, cb)
-    TriggerServerEvent('rsg-adminmenu:server:replyreport', data.id, data.message, 'player')
+    TriggerServerEvent('rsg-adminmenu:server:replyreport', data.id, data.message)
     cb({ success = true })
 end)
 
@@ -98,8 +97,8 @@ end)
 -- notifications (still fire as native HUD notifications regardless of NUI state)
 -----------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:newreportnotification', function(reportData)
-    local typeText = locale('cl_report_type_' .. reportData.report_type)
-    lib.notify({
+    local typeText = locale('cl_report_type_' .. tostring(reportData.report_type))
+    RSGCore.Functions.Notify({
         title = locale('cl_report_new_notification'),
         description = locale('cl_report_new_desc', reportData.id, reportData.reporter_name, typeText),
         type = 'inform',
@@ -109,7 +108,7 @@ RegisterNetEvent('rsg-adminmenu:client:newreportnotification', function(reportDa
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:reportreplynotification', function(reportData)
-    lib.notify({
+    RSGCore.Functions.Notify({
         title = locale('cl_report_reply_notification'),
         description = locale('cl_report_reply_notification_desc', reportData.reportId, reportData.adminName),
         type = 'inform',

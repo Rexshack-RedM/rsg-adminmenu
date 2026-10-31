@@ -1,5 +1,4 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 RegisterNuiCallback('getFinanceData', function(data, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getPlayerData', function(result)

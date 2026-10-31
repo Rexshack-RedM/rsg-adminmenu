@@ -8,6 +8,7 @@ RegisterNuiCallback('getCurrentCoords', function(_, cb)
 end)
 
 RegisterNuiCallback('teleportToCoords', function(data, cb)
+    if not tonumber(data.x) or not tonumber(data.y) or not tonumber(data.z) then return cb({ success = false }) end
     local ped = PlayerPedId()
     SetEntityCoordsNoOffset(ped, data.x + 0.0, data.y + 0.0, data.z + 0.0, false, false, false)
     if data.heading then
@@ -143,7 +144,7 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     local kind = entityType == 'horse' and 'animal' or entityType
     local model = loadModel(hash, kind == 'prop')
     if not model then
-        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_load_model', tostring(hash)), type = 'error' })
+        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_load_model', tostring(hash)), type = 'error' })
         return
     end
 
@@ -180,11 +181,11 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     SetModelAsNoLongerNeeded(model)
 
     if not waitForEntity(entity) then
-        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_spawn_as', tostring(kind), tostring(hash)), type = 'error' })
+        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_spawn_as', tostring(kind), tostring(hash)), type = 'error' })
     else
         SetEntityAsMissionEntity(entity, true, true)
         spawnedByMenu[entity] = true
-        lib.notify({ title = locale('cl_world_spawner'), description = locale('cl_world_spawned', tostring(kind), tostring(hash)), type = 'success' })
+        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_spawned', tostring(kind), tostring(hash)), type = 'success' })
     end
 end)
 
@@ -281,9 +282,15 @@ RegisterNetEvent('rsg-adminmenu:client:cleararea', function(radius)
         end
     end
 
-    lib.notify({
+    RSGCore.Functions.Notify({
         title = locale('cl_world_clear_area'),
         description = removed > 0 and locale('cl_world_removed_entities', removed) or locale('cl_world_nothing_to_clear'),
         type = removed > 0 and 'success' or 'inform',
     })
+end)
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    for _, handle in ipairs(activeBlipHandles) do RemoveBlip(handle) end
+    activeBlipHandles = {}
 end)

@@ -35,14 +35,18 @@ CreateThread(function()
     while true do
         Wait(60000)
 
+        -- one batched query per minute instead of one per online player
+        local rows, params = {}, {}
         for _, Player in pairs(RSGCore.Functions.GetRSGPlayers()) do
             local citizenid = Player.PlayerData.citizenid
             if citizenid then
-                MySQL.insert(
-                    'INSERT INTO player_playtime (citizenid, minutes, last_seen) VALUES (?, 1, NOW()) ON DUPLICATE KEY UPDATE minutes = minutes + 1, last_seen = NOW()',
-                    { citizenid }
-                )
+                rows[#rows + 1] = '(?, 1, NOW())'
+                params[#params + 1] = citizenid
             end
+        end
+        if #rows > 0 then
+            MySQL.insert('INSERT INTO player_playtime (citizenid, minutes, last_seen) VALUES ' .. table.concat(rows, ', ') ..
+                ' ON DUPLICATE KEY UPDATE minutes = minutes + 1, last_seen = NOW()', params)
         end
     end
 end)
@@ -125,6 +129,7 @@ end)
 -- dashboard stats: online count, server-wide money total, uptime, leaderboard
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getdashboardstats', function(source, cb)
+    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
     local onlineCount = #RSGCore.Functions.GetPlayers()
 
     -- reads the value SampleActivity() already computed (every 15 minutes),
@@ -193,9 +198,10 @@ end)
 -----------------------------------------------------------------------
 -- statistics page: player activity history, job distribution, economy, performance
 -----------------------------------------------------------------------
-local moneyTypes = { 'cash', 'bank', 'bloodmoney', 'valbank', 'rhobank', 'blkbank', 'armbank' }
+local moneyTypes = { 'cash', 'bank', 'gold', 'bloodmoney' }
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getstatistics', function(source, cb)
+    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
     -- DATE_FORMAT is used (rather than DATE()) so this always comes back as a plain
     -- string — a raw DATE column gets deserialized as a JS Date/epoch value somewhere
     -- along the oxmysql -> Lua -> JSON round trip, which showed up client-side as a

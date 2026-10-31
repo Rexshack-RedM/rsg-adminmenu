@@ -18,7 +18,7 @@ MySQL.query([[
 ]])
 
 local function IsWhitelistAdmin(src)
-    return RSGCore.Functions.HasPermission(src, permissions['whitelist']) or IsPlayerAceAllowed(src, 'god')
+    return HasAdminPermission(src, 'whitelist')
 end
 
 -----------------------------------------------------------------------
@@ -61,6 +61,13 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addwhitelist', function(s
         return
     end
 
+    local citizenid = type(data) == 'table' and CleanText(data.citizenid, 50)
+    local playerName = type(data) == 'table' and CleanText(data.playerName)
+    if not citizenid or not playerName then
+        cb({ success = false, message = locale('sv_invalid_input') })
+        return
+    end
+    data.reason, data.accountName = CleanText(data.reason), CleanText(data.accountName)
     local admin = RSGCore.Functions.GetPlayer(src)
     local adminName = admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname
 
@@ -74,8 +81,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addwhitelist', function(s
         VALUES (?, ?, ?, 'active', ?, ?, ?)
         ON DUPLICATE KEY UPDATE status = 'active', player_name = ?, account_name = ?, reason = ?, added_by_name = ?, expires_at = ?
     ]], {
-        data.citizenid, data.playerName, data.accountName, data.reason, adminName, expiresAt,
-        data.playerName, data.accountName, data.reason, adminName, expiresAt,
+        citizenid, playerName, data.accountName, data.reason, adminName, expiresAt,
+        playerName, data.accountName, data.reason, adminName, expiresAt,
     }, function()
         LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_player_to_whitelist'), data.reason, data.playerName)
         cb({ success = true })
@@ -92,8 +99,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setwhiteliststatus', func
         return
     end
 
-    MySQL.update('UPDATE admin_whitelist SET status = ? WHERE id = ?', { data.status, data.id }, function(affected)
-        local success = affected > 0
+    local allowedStatus = { active = true, suspended = true }
+    if type(data) ~= 'table' or not allowedStatus[data.status] or not tonumber(data.id) then return cb({ success = false }) end
+    MySQL.update('UPDATE admin_whitelist SET status = ? WHERE id = ?', { data.status, tonumber(data.id) }, function(affected)
+        local success = (affected or 0) > 0
         if success then
             LogAdminAction('admin_action', 'medium', src, locale('sv_log_changed_whitelist_status'), locale('sv_log_new_status', tostring(data.status)), nil)
         end
@@ -111,8 +120,9 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removewhitelist', functio
         return
     end
 
-    MySQL.update('DELETE FROM admin_whitelist WHERE id = ?', { data.id }, function(affected)
-        local success = affected > 0
+    if type(data) ~= 'table' or not tonumber(data.id) then return cb({ success = false }) end
+    MySQL.update('DELETE FROM admin_whitelist WHERE id = ?', { tonumber(data.id) }, function(affected)
+        local success = (affected or 0) > 0
         if success then
             LogAdminAction('admin_action', 'medium', src, locale('sv_log_removed_player_from_whitelist'), nil, nil)
         end

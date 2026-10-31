@@ -1,7 +1,7 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local function CanUseServerSettings(src)
-    return RSGCore.Functions.HasPermission(src, permissions['serversettings']) or IsPlayerAceAllowed(src, 'god')
+    return HasAdminPermission(src, 'serversettings')
 end
 
 local serverClosed = false
@@ -16,6 +16,7 @@ AddEventHandler('playerConnecting', function(_, _, deferrals)
 end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getserverstate', function(source, cb)
+    if not HasAdminPermission(source, 'adminmenu') then return cb({ closed = false }) end
     cb({ closed = serverClosed })
 end)
 
@@ -68,14 +69,14 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendannouncement', functi
         cb({ success = false })
         return
     end
-    local message = data and data.message
-    if not message or message == '' then
+    local message = type(data) == 'table' and CleanText(data.message, 500)
+    if not message then
         cb({ success = false })
         return
     end
     TriggerClientEvent('chat:addMessage', -1, {
-        template = "<div class='chat-message server'><strong>[" .. locale('sv_announcement') .. "] " .. AdminDisplayName(src) .. ":</strong> {0}</div>",
-        args = { message },
+        template = "<div class='chat-message server'><strong>[" .. locale('sv_announcement') .. "] {0}:</strong> {1}</div>",
+        args = { AdminDisplayName(src), message },
     })
     LogAdminAction('server_event', 'medium', src, locale('sv_log_sent_server_announcement'), message, nil)
     cb({ success = true })
@@ -88,15 +89,30 @@ local worldSettings = {
     wind = { direction = 0, speed = 0, freeze = false },
 }
 
+-- nothing is pushed to players until an admin changes a setting, so by default
+-- rsg-weather stays in charge of time and weather. Only the sections an admin
+-- has touched are sent.
+local touched = {}
+
 local function BroadcastWorldSettings(target)
-    TriggerClientEvent('rsg-adminmenu:client:applyworldsettings', target or -1, worldSettings)
+    if not next(touched) then return end
+    local payload = {}
+    for key in pairs(touched) do payload[key] = worldSettings[key] end
+    TriggerClientEvent('rsg-adminmenu:client:applyworldsettings', target or -1, payload)
 end
 
 AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
     BroadcastWorldSettings(Player.PlayerData.source)
 end)
 
+local function clampNum(v, min, max, default)
+    v = tonumber(v)
+    if not v or v ~= v then return default end
+    return math.max(min, math.min(max, v))
+end
+
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getworldsettings', function(source, cb)
+    if not CanUseServerSettings(source) then return cb({}) end
     cb(worldSettings)
 end)
 
@@ -106,14 +122,16 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:settimesettings', functio
         cb({ success = false })
         return
     end
+    if type(data) ~= 'table' then return cb({ success = false }) end
     worldSettings.time = {
-        day = data.day,
-        hour = tonumber(data.hour) or 0,
-        minute = tonumber(data.minute) or 0,
-        second = tonumber(data.second) or 0,
-        transition = tonumber(data.transition) or 0,
+        day = type(data.day) == 'string' and data.day or nil,
+        hour = math.floor(clampNum(data.hour, 0, 23, 0)),
+        minute = math.floor(clampNum(data.minute, 0, 59, 0)),
+        second = math.floor(clampNum(data.second, 0, 59, 0)),
+        transition = clampNum(data.transition, 0, 600, 0),
         freeze = data.freeze and true or false,
     }
+    touched.time = true
     BroadcastWorldSettings()
     LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_time_settings'), nil, nil)
     cb({ success = true })
@@ -125,9 +143,11 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setweathersettings', func
         cb({ success = false })
         return
     end
+    if type(data) ~= 'table' then return cb({ success = false }) end
+    touched.weather = true
     worldSettings.weather = {
-        type = data.type or 'SUNNY',
-        transition = tonumber(data.transition) or 0,
+        type = type(data.type) == 'string' and data.type:upper():gsub('[^%w_]', '') or 'SUNNY',
+        transition = clampNum(data.transition, 0, 600, 0),
         freeze = data.freeze and true or false,
         snow = data.snow and true or false,
     }
@@ -142,7 +162,9 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:settimescale', function(s
         cb({ success = false })
         return
     end
-    worldSettings.timescale = tonumber(data.timescale) or 1
+    if type(data) ~= 'table' then return cb({ success = false }) end
+    touched.timescale = true
+    worldSettings.timescale = clampNum(data.timescale, 0.0, 10.0, 1)
     BroadcastWorldSettings()
     LogAdminAction('server_event', 'low', src, locale('sv_log_updated_server_timescale'), tostring(worldSettings.timescale), nil)
     cb({ success = true })
@@ -154,9 +176,11 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setwindsettings', functio
         cb({ success = false })
         return
     end
+    if type(data) ~= 'table' then return cb({ success = false }) end
+    touched.wind = true
     worldSettings.wind = {
-        direction = tonumber(data.direction) or 0,
-        speed = tonumber(data.speed) or 0,
+        direction = clampNum(data.direction, 0, 360, 0),
+        speed = clampNum(data.speed, 0, 100, 0),
         freeze = data.freeze and true or false,
     }
     BroadcastWorldSettings()
@@ -168,10 +192,11 @@ end)
 -- resource management
 -----------------------------------------------------------------------
 -- Refresh Resources on the Server Settings page still needs command.refresh.
+-- needs this line in server.cfg:  add_ace resource.rsg-adminmenu command.refresh allow
 CreateThread(function()
-    pcall(function()
-        exports.ox_lib.addAce('resource.' .. GetCurrentResourceName(), 'command.refresh', true)
-    end)
+    if not IsPrincipalAceAllowed('resource.' .. GetCurrentResourceName(), 'command.refresh') then
+        print(('^3[%s] Refresh Resources needs: add_ace resource.%s command.refresh allow^7'):format(GetCurrentResourceName(), GetCurrentResourceName()))
+    end
 end)
 
 local function collectMetadata(name, key)

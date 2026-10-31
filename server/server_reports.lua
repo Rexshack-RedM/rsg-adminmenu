@@ -1,11 +1,82 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 -- covers installs from before these columns existed — admin_reports itself is
 -- created externally (no CREATE TABLE anywhere in this codebase), so this
 -- only ever adds columns, never the table
-MySQL.query("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `severity` VARCHAR(20) DEFAULT 'medium'")
-MySQL.query("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `reporter_steam` VARCHAR(50) DEFAULT NULL")
+-- self-migrating (runs in order so the ALTERs never hit a missing table)
+CreateThread(function()
+    MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `admin_reports` (
+            `id` INT(11) NOT NULL AUTO_INCREMENT,
+            `report_type` VARCHAR(50) NOT NULL,
+            `severity` VARCHAR(20) DEFAULT 'medium',
+            `reporter_id` INT(11) NOT NULL,
+            `reporter_name` VARCHAR(255) NOT NULL,
+            `reporter_license` VARCHAR(255) NOT NULL,
+            `reporter_steam` VARCHAR(50) DEFAULT NULL,
+            `reporter_discord` VARCHAR(255) DEFAULT NULL,
+            `reporter_coords` VARCHAR(255) NOT NULL,
+            `reported_player_id` INT(11) DEFAULT NULL,
+            `reported_player_name` VARCHAR(255) DEFAULT NULL,
+            `reported_player_license` VARCHAR(255) DEFAULT NULL,
+            `reported_player_discord` VARCHAR(255) DEFAULT NULL,
+            `title` VARCHAR(255) NOT NULL,
+            `description` TEXT NOT NULL,
+            `image_url` VARCHAR(500) DEFAULT NULL,
+            `status` VARCHAR(50) DEFAULT 'open',
+            `assigned_admin_id` INT(11) DEFAULT NULL,
+            `assigned_admin_name` VARCHAR(255) DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ]])
+    MySQL.query.await("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `severity` VARCHAR(20) DEFAULT 'medium'")
+    MySQL.query.await("ALTER TABLE `admin_reports` ADD COLUMN IF NOT EXISTS `reporter_steam` VARCHAR(50) DEFAULT NULL")
+    MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `admin_report_messages` (
+            `id` INT(11) NOT NULL AUTO_INCREMENT,
+            `report_id` INT(11) NOT NULL,
+            `sender_type` VARCHAR(50) NOT NULL,
+            `sender_id` INT(11) NOT NULL,
+            `sender_name` VARCHAR(255) NOT NULL,
+            `message` TEXT NOT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            FOREIGN KEY (`report_id`) REFERENCES `admin_reports`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ]])
+    MySQL.query.await([[
+        CREATE TABLE IF NOT EXISTS `admin_report_nearby_players` (
+            `id` INT(11) NOT NULL AUTO_INCREMENT,
+            `report_id` INT(11) NOT NULL,
+            `player_id` INT(11) NOT NULL,
+            `player_name` VARCHAR(255) NOT NULL,
+            `player_license` VARCHAR(255) NOT NULL,
+            `distance` FLOAT NOT NULL,
+            PRIMARY KEY (`id`),
+            FOREIGN KEY (`report_id`) REFERENCES `admin_reports`(`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ]])
+end)
+
+local MAX_TITLE, MAX_DESCRIPTION, MAX_MESSAGE = 100, 1000, 1000
+local allowedReportTypes = { bug = true, player = true, question = true }
+local reportCooldowns, replyCooldowns = {}, {}
+
+AddEventHandler('playerDropped', function()
+    replyCooldowns[source] = nil
+end)
+
+-- report rows store the reporter's server id at the time; only notify that id
+-- if it still belongs to the same person (ids get reused after a disconnect)
+local function OnlineReporter(report)
+    local id = tonumber(report and report.reporter_id)
+    if id and GetPlayerName(id) and RSGCore.Functions.GetIdentifier(id, 'license') == report.reporter_license then
+        return id
+    end
+    return nil
+end
 
 -----------------------------------------------------------------------
 -- Permissions
@@ -25,7 +96,8 @@ local function SendDiscordWebhook(webhookUrl, embed, includeMention)
     
     local payload = {
         username = locale('sv_webhook_username'),
-        embeds = { embed }
+        embeds = { embed },
+        allowed_mentions = { parse = {}, roles = {} },
     }
     
     -- Add role mentions if enabled and requested
@@ -36,6 +108,7 @@ local function SendDiscordWebhook(webhookUrl, embed, includeMention)
         end
         if mentions ~= "" then
             payload.content = mentions
+            payload.allowed_mentions.roles = Config.Reports.Discord.RolesToMention
         end
     end
     
@@ -119,11 +192,11 @@ local function ValidateImageUrl(url)
         'prnt.sc'
     }
     
-    local domain = string.match(url, '^https?://([%w%-%.]+)')
+    local domain = (string.match(url, '^https?://([%w%-%.]+)') or ''):lower()
     local domainAllowed = false
     
     for _, allowedDomain in ipairs(allowedDomains) do
-        if string.find(domain, allowedDomain, 1, true) then
+        if domain == allowedDomain or domain:sub(-(#allowedDomain + 1)) == '.' .. allowedDomain then
             domainAllowed = true
             break
         end
@@ -143,10 +216,25 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
     
-    if not Player then return end
-    
-    local reporterName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
+    if not Player or type(reportData) ~= 'table' then return end
+
     local reporterLicense = RSGCore.Functions.GetIdentifier(src, 'license')
+    local now = os.time()
+    if reportCooldowns[reporterLicense] and now < reportCooldowns[reporterLicense] then
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('sv_report_error'), description = locale('sv_report_wait'), type = 'error' })
+        return
+    end
+
+    reportData.title = CleanText(reportData.title, MAX_TITLE)
+    reportData.description = CleanText(reportData.description, MAX_DESCRIPTION)
+    reportData.reportedPlayerId = tonumber(reportData.reportedPlayerId)
+    if not allowedReportTypes[reportData.reportType] or not reportData.title or not reportData.description then
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('sv_report_error'), description = locale('sv_invalid_input'), type = 'error' })
+        return
+    end
+    reportCooldowns[reporterLicense] = now + (Config.Reports.Cooldown or 60)
+
+    local reporterName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     local reporterDiscord = GetPlayerDiscord(src)
     local reporterSteam = RSGCore.Functions.GetIdentifier(src, 'steam')
     local coords = GetEntityCoords(GetPlayerPed(src))
@@ -165,7 +253,7 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
         
         if not ReportedPlayer then
             -- The player does not exist or is not connected
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_player_not_found'),
                 description = locale('sv_report_player_not_found_desc'),
                 type = 'error'
@@ -183,7 +271,7 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
         local isValid, validatedUrl = ValidateImageUrl(reportData.imageUrl)
         
         if not isValid then
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_error'),
                 description = locale(validatedUrl),  -- validatedUrl contains the locale key error
                 type = 'error'
@@ -228,7 +316,7 @@ RegisterNetEvent('rsg-adminmenu:server:createreport', function(reportData)
             end
             
             -- Notify the reporter
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_created'),
                 description = locale('sv_report_created_desc', reportId),
                 type = 'success'
@@ -348,6 +436,8 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getreportdetails', function(source, cb, reportId)
     local src = source
+    reportId = tonumber(reportId)
+    if not reportId then return cb(nil) end
     
     MySQL.single('SELECT * FROM admin_reports WHERE id = ?', { reportId }, function(report)
         if not report then
@@ -438,6 +528,8 @@ RegisterNetEvent('rsg-adminmenu:server:claimreport', function(data)
     if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
+    if type(data) ~= 'table' or not tonumber(data.reportId) then return end
+    data.reportId = tonumber(data.reportId)
     
     local adminName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     
@@ -448,7 +540,7 @@ RegisterNetEvent('rsg-adminmenu:server:claimreport', function(data)
         data.reportId
     }, function(affectedRows)
         if affectedRows > 0 then
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_claimed'),
                 description = locale('sv_report_claimed_desc', data.reportId),
                 type = 'success'
@@ -481,6 +573,8 @@ RegisterNetEvent('rsg-adminmenu:server:releasereport', function(data)
     if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
+    if type(data) ~= 'table' or not tonumber(data.reportId) then return end
+    data.reportId = tonumber(data.reportId)
     
     local adminName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     
@@ -489,7 +583,7 @@ RegisterNetEvent('rsg-adminmenu:server:releasereport', function(data)
         data.reportId
     }, function(affectedRows)
         if affectedRows > 0 then
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_released'),
                 description = locale('sv_report_released_desc', data.reportId),
                 type = 'success'
@@ -522,6 +616,8 @@ RegisterNetEvent('rsg-adminmenu:server:resolvereport', function(data)
     if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
+    if type(data) ~= 'table' or not tonumber(data.reportId) then return end
+    data.reportId = tonumber(data.reportId)
     
     local adminName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     
@@ -530,17 +626,17 @@ RegisterNetEvent('rsg-adminmenu:server:resolvereport', function(data)
         data.reportId
     }, function(affectedRows)
         if affectedRows > 0 then
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_resolved'),
                 description = locale('sv_report_resolved_desc', data.reportId),
                 type = 'success'
             })
             
-            MySQL.single('SELECT reporter_id FROM admin_reports WHERE id = ?', { data.reportId }, function(report)
-                if report and report.reporter_id then
-                    local reporterPlayer = RSGCore.Functions.GetPlayer(report.reporter_id)
-                    if reporterPlayer then
-                        TriggerClientEvent('ox_lib:notify', report.reporter_id, {
+            MySQL.single('SELECT reporter_id, reporter_license FROM admin_reports WHERE id = ?', { data.reportId }, function(report)
+                local reporterId = OnlineReporter(report)
+                if reporterId then
+                    do
+                        TriggerClientEvent('RSGCore:Client:Notify', reporterId, {
                             title = locale('sv_report_resolved_player'),
                             description = locale('sv_report_resolved_player_desc', data.reportId),
                             type = 'success',
@@ -577,6 +673,9 @@ RegisterNetEvent('rsg-adminmenu:server:deletereport', function(reportId, reason)
     if not RSGCore.Functions.HasPermission(src, reportPermissions['managereports']) and not IsPlayerAceAllowed(src, 'god') then
         return
     end
+    reportId = tonumber(reportId)
+    reason = CleanText(reason) or locale('sv_no_reason')
+    if not reportId then return end
     
     local adminName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     
@@ -585,7 +684,7 @@ RegisterNetEvent('rsg-adminmenu:server:deletereport', function(reportId, reason)
         reportId
     }, function(affectedRows)
         if affectedRows > 0 then
-            TriggerClientEvent('ox_lib:notify', src, {
+            TriggerClientEvent('RSGCore:Client:Notify', src, {
                 title = locale('sv_report_deleted'),
                 description = locale('sv_report_deleted_desc', reportId),
                 type = 'success'
@@ -612,12 +711,18 @@ end)
 -----------------------------------------------------------------------
 -- Reply to a report
 -----------------------------------------------------------------------
-RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message, senderType)
+RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message)
     local src = source
     local Player = RSGCore.Functions.GetPlayer(src)
-    
-    if not Player then return end
-    
+    reportId = tonumber(reportId)
+    message = CleanText(message, MAX_MESSAGE)
+    if not Player or not reportId or not message then return end
+
+    local now = GetGameTimer()
+    if replyCooldowns[src] and now < replyCooldowns[src] then return end
+    replyCooldowns[src] = now + (Config.Reports.ReplyCooldown or 3) * 1000
+    local senderType
+
     local senderName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     
     MySQL.single('SELECT * FROM admin_reports WHERE id = ?', { reportId }, function(report)
@@ -629,7 +734,11 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
         if report.reporter_license ~= reporterLicense and not isAdmin then
             return
         end
-        
+        if report.status == 'closed' then
+            TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('sv_report_error'), description = locale('sv_report_closed'), type = 'error' })
+            return
+        end
+
         if isAdmin then
             senderType = 'admin'
         else
@@ -644,16 +753,16 @@ RegisterNetEvent('rsg-adminmenu:server:replyreport', function(reportId, message,
             message
         }, function(messageId)
             if messageId then
-                TriggerClientEvent('ox_lib:notify', src, {
+                TriggerClientEvent('RSGCore:Client:Notify', src, {
                     title = locale('sv_report_reply_sent'),
                     description = locale('sv_report_reply_sent_desc'),
                     type = 'success'
                 })
                 
                 if senderType == 'admin' then
-                    local reporterPlayer = RSGCore.Functions.GetPlayer(report.reporter_id)
-                    if reporterPlayer then
-                        TriggerClientEvent('rsg-adminmenu:client:reportreplynotification', report.reporter_id, {
+                    local reporterId = OnlineReporter(report)
+                    if reporterId then
+                        TriggerClientEvent('rsg-adminmenu:client:reportreplynotification', reporterId, {
                             reportId = reportId,
                             adminName = senderName
                         })

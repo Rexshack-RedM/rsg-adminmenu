@@ -103,7 +103,7 @@ local function ApplyAll(settings)
     latestSettings = settings
     ApplyTime(settings.time)
     ApplyWeather(settings.weather)
-    SetTimeScale((tonumber(settings.timescale) or 1) + 0.0)
+    if settings.timescale ~= nil then SetTimeScale((tonumber(settings.timescale) or 1) + 0.0) end
     ApplyWind(settings.wind)
 end
 
@@ -112,17 +112,19 @@ RegisterNetEvent('rsg-adminmenu:client:applyworldsettings', function(settings)
 end)
 
 
+-- re-apply frozen settings every 5s so other scripts can't drift them
 CreateThread(function()
     while true do
-        Wait(5000)
-        if latestSettings then
-            if latestSettings.time and latestSettings.time.freeze then ApplyTime(latestSettings.time) end
-            if latestSettings.weather and latestSettings.weather.freeze then ApplyWeather(latestSettings.weather) end
-            if latestSettings.wind and latestSettings.wind.freeze then ApplyWind(latestSettings.wind) end
+        local s = latestSettings
+        local frozen = s and ((s.time and s.time.freeze) or (s.weather and s.weather.freeze) or (s.wind and s.wind.freeze))
+        if frozen then
+            if s.time and s.time.freeze then ApplyTime(s.time) end
+            if s.weather and s.weather.freeze then ApplyWeather(s.weather) end
+            if s.wind and s.wind.freeze then ApplyWind(s.wind) end
         end
+        Wait(frozen and 5000 or 15000)
     end
 end)
-
 
 RegisterNuiCallback('getResources', function(_, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getresources', function(result)
