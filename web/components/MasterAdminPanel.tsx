@@ -42,13 +42,13 @@ export function MasterAdminPanel() {
 
   const saveWebhooks = async () => {
     setSaving(true);
-    const res = await fetchNui<{ success: boolean }>('saveWebhookSettings', webhooks, { success: true });
+    const res = await fetchNui<{ success: boolean; message?: string }>('saveWebhookSettings', webhooks, { success: true });
     setSaving(false);
     if (res.success) {
       toast.push({ type: 'success', title: locale('ui_webhook_settings_saved') });
       refreshWebhooks();
     } else {
-      toast.push({ type: 'error', title: locale('ui_failed_to_save_webhook_settings') });
+      toast.push({ type: 'error', title: locale('ui_failed_to_save_webhook_settings'), description: res.message });
     }
   };
 

@@ -85,10 +85,10 @@ export function ServerSettings() {
 
   const run = async (key: string, event: string, data: Record<string, unknown>, successMsg: string) => {
     setBusy(key);
-    const res = await fetchNui<{ success: boolean }>(event, data, { success: true });
+    const res = await fetchNui<{ success: boolean; message?: string }>(event, data, { success: true });
     setBusy(null);
     if (res.success) toast.push({ type: 'success', title: successMsg });
-    else toast.push({ type: 'error', title: locale('ui_action_failed') });
+    else toast.push({ type: 'error', title: locale('ui_action_failed'), description: res.message });
     return res.success;
   };
 

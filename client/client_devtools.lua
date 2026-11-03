@@ -83,11 +83,14 @@ local function ApplyTime(t)
     PauseClock(t.freeze and true or false)
 end
 
+local SNOW_COVERAGE_XMAS, SNOW_COVERAGE_PRIMARY = 2, 0 -- eSnowCoverageType (natives db: _SET_SNOW_COVERAGE_TYPE)
+
 local function ApplyWeather(w)
     if not w then return end
-
-    Citizen.InvokeNative(0x59174F1AFE095B5A, GetHashKey(w.type or 'SUNNY'), true, true, true,
-        (tonumber(w.transition) or 0) + 0.0, false)
+    -- SET_WEATHER_TYPE
+    Citizen.InvokeNative(0x59174F1AFE095B5A, joaat(w.type or 'SUNNY'), true, true, true, (tonumber(w.transition) or 0) + 0.0, false)
+    -- _SET_SNOW_COVERAGE_TYPE ("permanent snow mode" in the panel)
+    Citizen.InvokeNative(0xF02A9C330BBFC5C7, w.snow and SNOW_COVERAGE_XMAS or SNOW_COVERAGE_PRIMARY)
 end
 
 local function ApplyWind(w)
@@ -97,32 +100,28 @@ local function ApplyWind(w)
     SetWindDirection(math.rad(tonumber(w.direction) or 0))
 end
 
+-- the server only sends sections an admin has actually set
 local latestSettings = nil
 
-local function ApplyAll(settings)
+RegisterNetEvent('rsg-adminmenu:client:applyworldsettings', function(settings)
+    if type(settings) ~= 'table' then return end
     latestSettings = settings
     ApplyTime(settings.time)
     ApplyWeather(settings.weather)
-    if settings.timescale ~= nil then SetTimeScale((tonumber(settings.timescale) or 1) + 0.0) end
+    if settings.timescale then SetTimeScale((tonumber(settings.timescale) or 1) + 0.0) end
     ApplyWind(settings.wind)
-end
-
-RegisterNetEvent('rsg-adminmenu:client:applyworldsettings', function(settings)
-    ApplyAll(settings)
 end)
 
-
--- re-apply frozen settings every 5s so other scripts can't drift them
+-- frozen sections are re-applied so other weather/time scripts can't drift them
 CreateThread(function()
     while true do
+        Wait(5000)
         local s = latestSettings
-        local frozen = s and ((s.time and s.time.freeze) or (s.weather and s.weather.freeze) or (s.wind and s.wind.freeze))
-        if frozen then
+        if s then
             if s.time and s.time.freeze then ApplyTime(s.time) end
             if s.weather and s.weather.freeze then ApplyWeather(s.weather) end
             if s.wind and s.wind.freeze then ApplyWind(s.wind) end
         end
-        Wait(frozen and 5000 or 15000)
     end
 end)
 
@@ -145,20 +144,3 @@ RegisterNuiCallback('saveWebhookSettings', function(data, cb)
     end, data)
 end)
 
-RegisterNuiCallback('getCustomItems', function(_, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getcustomitems', function(result)
-        cb(result or {})
-    end)
-end)
-
-RegisterNuiCallback('addCustomItem', function(data, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:addcustomitem', function(result)
-        cb(result or { success = false })
-    end, data)
-end)
-
-RegisterNuiCallback('deleteCustomItem', function(data, cb)
-    RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:deletecustomitem', function(result)
-        cb(result or { success = false })
-    end, data)
-end)

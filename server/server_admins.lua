@@ -1,29 +1,10 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
--- self-migrating: the persisted source of truth for "who is an admin and what
--- role do they hold" — ACE principals granted via AddPermission are session-only
--- (lost on disconnect), so this table is what makes a role assignment durable
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_roles` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `citizenid` VARCHAR(50) NOT NULL,
-        `license` VARCHAR(100) DEFAULT NULL,
-        `discord` VARCHAR(50) DEFAULT NULL,
-        `name` VARCHAR(255) DEFAULT NULL,
-        `role` VARCHAR(20) NOT NULL,
-        `granted_by` VARCHAR(255) DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        UNIQUE KEY `citizenid` (`citizenid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-
--- re-sync ACE from the persisted table on every connect (carries a DB-stored
--- role across sessions without ever touching server.cfg) — and the other way
--- around: an admin granted straight through server.cfg (e.g. the bootstrap
--- owner/'god' account) has no admin_roles row yet, so without this they'd
--- never appear in the Admins page at all. Only backfills when no row exists
--- yet, so it never silently overwrites a role someone changed via the panel.
+-- admin_roles is the persisted source of truth for "who is an admin and what
+-- role do they hold" — ACE principals granted via AddPermission are session-only.
+-- Re-sync ACE from it on every connect, and backfill a row for anyone granted
+-- straight through server.cfg so they show up on the Admins page too. Only
+-- backfills when no row exists, so it never overwrites a role changed in the panel.
 local function SyncAdminRole(Player)
     local citizenid = Player.PlayerData.citizenid
     local src = Player.PlayerData.source
@@ -35,11 +16,10 @@ local function SyncAdminRole(Player)
         for _, level in ipairs(RSGCore.Config.Server.Permissions) do
             if RSGCore.Functions.HasPermission(src, level) then
                 local name = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
-                local discord = RSGCore.Functions.GetIdentifier(src, 'discord')
                 MySQL.insert([[
                     INSERT INTO admin_roles (citizenid, license, discord, name, role, granted_by) VALUES (?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE role = role
-                ]], { citizenid, nil, discord, name, level, 'server.cfg' })
+                ]], { citizenid, nil, RSGCore.Functions.GetIdentifier(src, 'discord'), name, level, 'server.cfg' })
                 break
             end
         end
@@ -49,19 +29,17 @@ end
 AddEventHandler('RSGCore:Server:PlayerLoaded', SyncAdminRole)
 
 -- PlayerLoaded only fires on connect, so anyone already online when this
--- resource (re)starts needs the same backfill check run once at startup
-CreateThread(function()
-    Wait(2000)
+-- resource (re)starts gets the same sync once the tables are ready
+OnDatabaseReady(function()
     for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
         local Player = RSGCore.Functions.GetPlayer(playerId)
         if Player then SyncAdminRole(Player) end
     end
 end)
 
--- friendly display names for the raw ACE role strings — global (not local) so
--- server.lua's getplayerinfo can reuse it too. Falls back to a capitalized
--- version of the raw string for any role added later that isn't listed here.
-RoleLabels = {
+-- friendly display names for the raw ACE role strings; unknown roles fall back
+-- to a capitalised version of the raw string
+local RoleLabels = {
     god = locale('sv_role_owner'),
     headadmin = locale('sv_role_headadmin'),
     developer = locale('sv_role_developer'),
@@ -71,39 +49,35 @@ RoleLabels = {
 }
 
 function LabelForRole(role)
-    if not role or role == '' then return locale('sv_role_user') end
+    if not role or role == '' or role == 'user' then return locale('sv_role_user') end
     return RoleLabels[role] or (role:sub(1, 1):upper() .. role:sub(2))
 end
 
--- ordered role list this server actually has configured — first entry is
--- treated as the highest level, matching GetPlayerRole's first-match-wins scan
-local function GetRoleLevels()
-    local levels = {}
-    local count = #RSGCore.Config.Server.Permissions
-    for i, role in ipairs(RSGCore.Config.Server.Permissions) do
-        levels[role] = count - i + 1
+-- first entry of RSGCore.Config.Server.Permissions is the highest level,
+-- matching GetPlayerRole's first-match-wins scan; non-staff are level 0
+function GetRoleLevel(role)
+    local list = RSGCore.Config.Server.Permissions
+    for i, r in ipairs(list) do
+        if r == role then return #list - i + 1 end
     end
-    return levels
+    return 0
 end
 
-local function GetRoleLevel(role)
-    return GetRoleLevels()[role] or 0
+local function ActorLevel(src)
+    if IsPlayerAceAllowed(src, 'god') then return math.huge end
+    return GetRoleLevel(GetPlayerRole(src))
 end
 
--- staff can only grant, change or remove roles strictly below their own.
--- The 'god' ACE (server owner) can manage everything.
-function CanManageRole(src, role)
-    if IsPlayerAceAllowed(src, 'god') then return true end
-    if not role or role == '' or role == 'user' then return true end
-    return GetRoleLevel(role) < GetRoleLevel(GetPlayerRole(src))
+-- global: true when src may use a punitive/protected action on target
+-- (yourself, anyone below your rank, or anyone at all for the Owner)
+function CanActOn(src, target)
+    if src == target then return true end
+    return GetRoleLevel(GetPlayerRole(target)) < ActorLevel(src)
 end
 
--- shared path for every role change in the panel (the Admins page's "Change
--- Role"/"Add Admin" and PlayerManageModal's "Set Permission" both call this)
--- so the persisted table and live ACE state can never drift apart
-function SetAdminRole(targetCitizenid, targetSrc, role, adminName, adminDiscord, targetName)
-    if not GetRoleLevels()[role] then return false end
-
+-- shared path for every role change in the panel so the persisted table and
+-- live ACE state never drift apart (no rank checks here: see ChangeAdminRole)
+local function SetAdminRole(targetCitizenid, targetSrc, role, adminName, targetDiscord, targetName)
     if targetSrc then
         for _, lvl in ipairs(RSGCore.Config.Server.Permissions) do
             RSGCore.Functions.RemovePermission(targetSrc, lvl)
@@ -113,21 +87,52 @@ function SetAdminRole(targetCitizenid, targetSrc, role, adminName, adminDiscord,
 
     MySQL.insert([[
         INSERT INTO admin_roles (citizenid, license, discord, name, role, granted_by) VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE role = ?, granted_by = ?, name = ?
-    ]], {
-        targetCitizenid, nil, adminDiscord, targetName, role, adminName,
-        role, adminName, targetName,
-    })
-    return true
+        ON DUPLICATE KEY UPDATE role = VALUES(role), granted_by = VALUES(granted_by), name = COALESCE(VALUES(name), name)
+    ]], { targetCitizenid, nil, targetDiscord, targetName, role, adminName })
 end
 
-function RemoveAdminRole(targetCitizenid, targetSrc)
+local function RemoveAdminRole(targetCitizenid, targetSrc)
     if targetSrc then
         for _, lvl in ipairs(RSGCore.Config.Server.Permissions) do
             RSGCore.Functions.RemovePermission(targetSrc, lvl)
         end
+        -- a demoted admin with the panel open would otherwise get auto-banned on their next click
+        TriggerClientEvent('rsg-adminmenu:client:forceclose', targetSrc)
     end
     MySQL.update('DELETE FROM admin_roles WHERE citizenid = ?', { targetCitizenid })
+end
+
+-- global: grant (role) or remove (role = nil) a staff role, enforcing the
+-- hierarchy: you can't grant a role at or above your own, or change anyone at
+-- or above your own rank (yourself included). The Owner ('god' ACE) bypasses both.
+-- Returns ok, errorMessage.
+function ChangeAdminRole(src, targetCitizenid, targetSrc, role, targetName)
+    if type(targetCitizenid) ~= 'string' or targetCitizenid == '' then return false, locale('sv_invalid_role') end
+    local actorLevel = ActorLevel(src)
+
+    if role then
+        local roleLevel = GetRoleLevel(role)
+        if roleLevel == 0 then return false, locale('sv_invalid_role') end
+        if roleLevel >= actorLevel then return false, locale('sv_cannot_grant_role') end
+    end
+
+    local targetLevel
+    if targetSrc then
+        targetLevel = GetRoleLevel(GetPlayerRole(targetSrc))
+    else
+        targetLevel = GetRoleLevel(MySQL.scalar.await('SELECT role FROM admin_roles WHERE citizenid = ?', { targetCitizenid }))
+    end
+    if targetLevel >= actorLevel then return false, locale('sv_target_higher_rank') end
+
+    if role then
+        local admin = RSGCore.Functions.GetPlayer(src)
+        local adminName = admin and (admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname) or GetPlayerName(src)
+        local targetDiscord = targetSrc and RSGCore.Functions.GetIdentifier(targetSrc, 'discord') or nil
+        SetAdminRole(targetCitizenid, targetSrc, role, adminName, targetDiscord, targetName)
+    else
+        RemoveAdminRole(targetCitizenid, targetSrc)
+    end
+    return true
 end
 
 -----------------------------------------------------------------------
@@ -135,46 +140,31 @@ end
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getroleconfig', function(source, cb)
     if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
-    local levels = GetRoleLevels()
     local roles = {}
     for _, role in ipairs(RSGCore.Config.Server.Permissions) do
-        roles[#roles + 1] = { role = role, level = levels[role], label = LabelForRole(role) }
+        roles[#roles + 1] = { role = role, level = GetRoleLevel(role), label = LabelForRole(role) }
     end
     cb(roles)
 end)
 
 -----------------------------------------------------------------------
--- roster
+-- roster: 3 queries total regardless of staff headcount
 -----------------------------------------------------------------------
 local function Placeholders(n)
-    local parts = {}
-    for i = 1, n do parts[i] = '?' end
-    return table.concat(parts, ', ')
+    return ('?, '):rep(n):sub(1, -3)
 end
 
--- batched: 3 queries total regardless of staff headcount, not 1 + 2 per
--- admin. The old version fired a `player_playtime` lookup and an
--- `admin_reports` count separately for every single row, which is fine with
--- a handful of staff but turns into a real N+1 query storm on a server with
--- a large admin team, on every single Admins page load/refresh.
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(source, cb)
-    local src = source
-    if not HasAdminPermission(src, 'playerinfo') then
-        cb(nil)
-        return
-    end
+    if not HasAdminPermission(source, 'playerinfo') then return cb(nil) end
 
     MySQL.query('SELECT * FROM admin_roles ORDER BY created_at ASC', {}, function(rows)
         rows = rows or {}
-        if #rows == 0 then
-            cb({})
-            return
-        end
+        if #rows == 0 then return cb({}) end
 
         local citizenids, names = {}, {}
         for _, row in ipairs(rows) do
             citizenids[#citizenids + 1] = row.citizenid
-            names[#names + 1] = row.name
+            names[#names + 1] = row.name or ''
         end
 
         MySQL.query('SELECT citizenid, last_seen FROM player_playtime WHERE citizenid IN (' .. Placeholders(#citizenids) .. ')', citizenids, function(ptRows)
@@ -183,8 +173,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(sour
                 lastSeenByCitizen[r.citizenid] = r.last_seen
             end
 
-            -- assigned_admin_id is only a live server-id snapshot, not reliably
-            -- joinable once that admin has disconnected, so match by stored name
+            -- assigned_admin_id is only a live server-id snapshot, so match by stored name
             local reportParams = { 'resolved' }
             for _, n in ipairs(names) do reportParams[#reportParams + 1] = n end
             MySQL.query(
@@ -199,9 +188,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(sour
                     local result = {}
                     for _, row in ipairs(rows) do
                         local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(row.citizenid)
+                        local onlineSrc = onlinePlayer and onlinePlayer.PlayerData.source or nil
                         local discordId, discordName, discordAvatarUrl = nil, nil, nil
-                        if onlinePlayer then
-                            discordId, discordName, discordAvatarUrl = GetCachedDiscordIdentity(onlinePlayer.PlayerData.source)
+                        if onlineSrc then
+                            discordId, discordName, discordAvatarUrl = GetCachedDiscordIdentity(onlineSrc)
                         end
                         result[#result + 1] = {
                             citizenid = row.citizenid,
@@ -210,9 +200,9 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(sour
                             roleLabel = LabelForRole(row.role),
                             grantedBy = row.granted_by,
                             createdAt = row.created_at,
-                            serverId = onlinePlayer and onlinePlayer.PlayerData.source or nil,
-                            online = onlinePlayer ~= nil,
-                            steamHex = onlinePlayer and RSGCore.Functions.GetIdentifier(onlinePlayer.PlayerData.source, 'steam') or nil,
+                            serverId = onlineSrc,
+                            online = onlineSrc ~= nil,
+                            steamHex = onlineSrc and RSGCore.Functions.GetIdentifier(onlineSrc, 'steam') or nil,
                             lastSeen = lastSeenByCitizen[row.citizenid],
                             discordId = discordId,
                             discordName = discordName,
@@ -228,55 +218,38 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadmins', function(sour
 end)
 
 -----------------------------------------------------------------------
--- add admin — only works for a currently-online player (there's no stored
--- steam-hex column on `players` to resolve an offline identifier against)
+-- add admin — target must be online (players has no stored steam hex to resolve offline)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addadmin', function(source, cb, data)
     local src = source
-    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
-        cb({ success = false, message = locale('sv_not_allowed') })
-        return
+    if not HasAdminPermission(src, 'setpermission') then
+        return cb({ success = false, message = locale('sv_not_allowed') })
     end
+    data = type(data) == 'table' and data or {}
 
-    if not CanManageRole(src, data.role) then
-        cb({ success = false, message = locale('sv_role_too_high') })
-        return
-    end
-
-    local steamHex = data.steamHex
-    if type(steamHex) ~= 'string' or steamHex == '' then
-        cb({ success = false, message = locale('sv_invalid_input') })
-        return
-    end
     local targetSrc = nil
-    for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
-        if RSGCore.Functions.GetIdentifier(playerId, 'steam') == steamHex then
-            targetSrc = playerId
-            break
+    if type(data.steamHex) == 'string' and data.steamHex ~= '' then
+        for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
+            if RSGCore.Functions.GetIdentifier(playerId, 'steam') == data.steamHex then
+                targetSrc = playerId
+                break
+            end
         end
     end
-
-    if not targetSrc then
-        cb({ success = false, message = locale('sv_admin_must_be_online') })
-        return
+    local target = targetSrc and RSGCore.Functions.GetPlayer(targetSrc)
+    if not target then
+        return cb({ success = false, message = locale('sv_admin_must_be_online') })
     end
 
-    local target = RSGCore.Functions.GetPlayer(targetSrc)
-    if not target or not CanManageRole(src, GetPlayerRole(targetSrc)) then
-        cb({ success = false, message = locale('sv_role_too_high') })
-        return
-    end
-    local admin = RSGCore.Functions.GetPlayer(src)
-    local adminName = admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname
     local targetName = target.PlayerData.charinfo.firstname .. ' ' .. target.PlayerData.charinfo.lastname
-    local targetDiscord = RSGCore.Functions.GetIdentifier(targetSrc, 'discord')
+    local role = type(data.role) == 'string' and data.role or nil
+    if not role then return cb({ success = false, message = locale('sv_invalid_role') }) end
 
-    if SetAdminRole(target.PlayerData.citizenid, targetSrc, data.role, adminName, targetDiscord, targetName) then
-        LogAdminAction('admin_action', 'high', src, locale('sv_log_granted_role', LabelForRole(data.role), targetName), locale('sv_log_target', targetName), targetName, targetSrc)
-        cb({ success = true })
-    else
-        cb({ success = false, message = locale('sv_invalid_role') })
-    end
+    local ok, message = ChangeAdminRole(src, target.PlayerData.citizenid, targetSrc, role, targetName)
+    if not ok then return cb({ success = false, message = message }) end
+
+    LogAdminAction('admin_action', 'high', src, locale('sv_log_granted_role', LabelForRole(role), targetName), locale('sv_log_target', targetName), targetName, targetSrc)
+    cb({ success = true })
 end)
 
 -----------------------------------------------------------------------
@@ -284,27 +257,20 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:changeadminrole', function(source, cb, data)
     local src = source
-    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
-        cb({ success = false })
-        return
-    end
+    if not HasAdminPermission(src, 'setpermission') then return cb({ success = false }) end
+    data = type(data) == 'table' and data or {}
+    local role = type(data.role) == 'string' and data.role or nil
+    if not role then return cb({ success = false, message = locale('sv_invalid_role') }) end
 
-    local currentRole = MySQL.scalar.await('SELECT role FROM admin_roles WHERE citizenid = ?', { tostring(data.citizenid) })
-    if not CanManageRole(src, data.role) or not CanManageRole(src, currentRole) then
-        cb({ success = false, message = locale('sv_role_too_high') })
-        return
-    end
-
-    local admin = RSGCore.Functions.GetPlayer(src)
-    local adminName = admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname
     local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(data.citizenid)
+    local onlineSrc = onlinePlayer and onlinePlayer.PlayerData.source or nil
+    local name = SanitizeText(data.name, 255)
 
-    if SetAdminRole(data.citizenid, onlinePlayer and onlinePlayer.PlayerData.source or nil, data.role, adminName, nil, data.name) then
-        LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_role', (data.name or data.citizenid), LabelForRole(data.role)), nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
-        cb({ success = true })
-    else
-        cb({ success = false })
-    end
+    local ok, message = ChangeAdminRole(src, data.citizenid, onlineSrc, role, name)
+    if not ok then return cb({ success = false, message = message }) end
+
+    LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_role', (name or data.citizenid), LabelForRole(role)), nil, name, onlineSrc)
+    cb({ success = true })
 end)
 
 -----------------------------------------------------------------------
@@ -312,19 +278,16 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removeadmin', function(source, cb, data)
     local src = source
-    if not HasAdminPermission(src, 'setpermission') or type(data) ~= 'table' then
-        cb({ success = false })
-        return
-    end
-
-    local currentRole = MySQL.scalar.await('SELECT role FROM admin_roles WHERE citizenid = ?', { tostring(data.citizenid) })
-    if not CanManageRole(src, currentRole) then
-        cb({ success = false, message = locale('sv_role_too_high') })
-        return
-    end
+    if not HasAdminPermission(src, 'setpermission') then return cb({ success = false }) end
+    data = type(data) == 'table' and data or {}
 
     local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(data.citizenid)
-    RemoveAdminRole(data.citizenid, onlinePlayer and onlinePlayer.PlayerData.source or nil)
-    LogAdminAction('admin_action', 'high', src, locale('sv_log_removed_admin_access', (data.name or data.citizenid)), nil, data.name, onlinePlayer and onlinePlayer.PlayerData.source or nil)
+    local onlineSrc = onlinePlayer and onlinePlayer.PlayerData.source or nil
+    local name = SanitizeText(data.name, 255)
+
+    local ok, message = ChangeAdminRole(src, data.citizenid, onlineSrc, nil, name)
+    if not ok then return cb({ success = false, message = message }) end
+
+    LogAdminAction('admin_action', 'high', src, locale('sv_log_removed_admin_access', (name or data.citizenid)), nil, name, onlineSrc)
     cb({ success = true })
 end)

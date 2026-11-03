@@ -274,24 +274,24 @@ function AdminProfileModal({
   };
 
   const changeRole = async () => {
-    const res = await fetchNui<{ success: boolean }>('changeAdminRole', { citizenid: admin.citizenid, name: admin.name, role: newRole }, { success: true });
+    const res = await fetchNui<{ success: boolean; message?: string }>('changeAdminRole', { citizenid: admin.citizenid, name: admin.name, role: newRole }, { success: true });
     if (res.success) {
       toast.push({ type: 'success', title: locale('ui_role_updated') });
       setChangingRole(false);
       onChanged();
     } else {
-      toast.push({ type: 'error', title: locale('ui_failed_to_update_role') });
+      toast.push({ type: 'error', title: locale('ui_failed_to_update_role'), description: res.message });
     }
   };
 
   const removeAdmin = async () => {
-    const res = await fetchNui<{ success: boolean }>('removeAdmin', { citizenid: admin.citizenid, name: admin.name }, { success: true });
+    const res = await fetchNui<{ success: boolean; message?: string }>('removeAdmin', { citizenid: admin.citizenid, name: admin.name }, { success: true });
     if (res.success) {
       toast.push({ type: 'success', title: locale('ui_admin_access_removed') });
       onChanged();
       onClose();
     } else {
-      toast.push({ type: 'error', title: locale('ui_failed_to_remove_admin') });
+      toast.push({ type: 'error', title: locale('ui_failed_to_remove_admin'), description: res.message });
     }
   };
 

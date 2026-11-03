@@ -11,46 +11,38 @@ RegisterNuiCallback('setOnFire', function(data, cb)
 end)
 
 -------------------------------------------------------------------
--- wild attack troll action
+-- both effects run on the target's own client, so they work at any
+-- distance from the admin who triggered them
+-- (wolf / bear / dog models as used by the original version of this action)
 -------------------------------------------------------------------
-local attackAnimals = {
-    joaat("a_c_wolf_small"),
-    joaat("a_c_bearblack_01"),
-    joaat("a_c_dogrufus_01")
-}
+local attackAnimals = { joaat('a_c_wolf_small'), joaat('a_c_bearblack_01'), joaat('a_c_dogrufus_01') }
+local ANIMAL_DESPAWN_MS = 60000
 
-local animalGroupHash = joaat("Animal")
-local playerGroupHash = joaat("PLAYER")
-
-local function TargetPed(serverId)
-    local player = GetPlayerFromServerId(serverId)
-    if player == -1 then return nil end
-    local ped = GetPlayerPed(player)
-    return ped ~= 0 and ped or nil
-end
-
-RegisterNetEvent('rsg-adminmenu:client:wildattack', function(serverId)
-    local playerPed = TargetPed(serverId)
-    if not playerPed then return end
+RegisterNetEvent('rsg-adminmenu:client:wildattack', function()
+    local playerPed = PlayerPedId()
     local animalHash = attackAnimals[math.random(#attackAnimals)]
+    local spawn = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, -15.0, 0.0)
+    local _, groundZ = GetGroundZAndNormalFor_3dCoord(spawn.x, spawn.y, spawn.z + 10.0)
+
     if not pcall(RSGCore.Functions.RequestModel, animalHash, 5000) then return end
 
-    local spawn = GetOffsetFromEntityInWorldCoords(playerPed, 100.0, -15.0, 0.0)
-    local _, groundZ = GetGroundZAndNormalFor_3dCoord(spawn.x, spawn.y, spawn.z + 50.0)
-    local animalPed = CreatePed(animalHash, spawn.x, spawn.y, groundZ or spawn.z, GetEntityHeading(playerPed), true, false)
+    local animalPed = CreatePed(animalHash, spawn.x, spawn.y, groundZ ~= 0 and groundZ or spawn.z, GetEntityHeading(playerPed), true, false, false, false)
     SetModelAsNoLongerNeeded(animalHash)
-    if animalPed == 0 then return end
+    if not DoesEntityExist(animalPed) then return end
 
-    EquipMetaPedOutfitPreset(animalPed, 1, false)
+    SetRandomOutfitVariation(animalPed, true)
     SetPedFleeAttributes(animalPed, 0, false)
-    SetPedRelationshipGroupHash(animalPed, animalGroupHash)
-    SetRelationshipBetweenGroups(5, animalGroupHash, playerGroupHash)
-    SetRelationshipBetweenGroups(5, playerGroupHash, animalGroupHash)
-    TaskPutPedDirectlyIntoMelee(animalPed, playerPed, 0.0, -1.0, 0.0, false)
-    SetPedAsNoLongerNeeded(animalPed)
+    SetBlockingOfNonTemporaryEvents(animalPed, true)
+    TaskCombatPed(animalPed, playerPed, 0, 16)
+
+    -- don't leave the animal in the world forever
+    SetTimeout(ANIMAL_DESPAWN_MS, function()
+        if DoesEntityExist(animalPed) then
+            SetEntityAsNoLongerNeeded(animalPed)
+        end
+    end)
 end)
 
-RegisterNetEvent('rsg-adminmenu:client:playerfire', function(serverId)
-    local playerPed = TargetPed(serverId)
-    if playerPed then StartEntityFire(playerPed) end
+RegisterNetEvent('rsg-adminmenu:client:playerfire', function()
+    StartEntityFire(PlayerPedId(), 1.0, 0, 0)
 end)

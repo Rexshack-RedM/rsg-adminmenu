@@ -1,39 +1,16 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+local CONFIG_FILE = 'server/sv_config.lua'
+
 local function CanUseMasterAdmin(src)
     return HasAdminPermission(src, 'serversettings')
 end
 
-local CONFIG_FILE = 'server/sv_config.lua'
-
 -----------------------------------------------------------------------
--- persisted settings (webhook URLs, etc.) — a generic key/value store so
--- edits made in the Master Admin section survive a resource restart. On
--- start, each stored key is written back into the live Config table so
--- every other file that reads Config.* picks up the override transparently.
+-- persisted settings (webhook URLs) — a key/value store so edits made in
+-- Master Actions survive a restart. On start each stored key is written
+-- back into the live Config table.
 -----------------------------------------------------------------------
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `adminmenu_settings` (
-        `setting_key` VARCHAR(64) NOT NULL,
-        `setting_value` TEXT,
-        PRIMARY KEY (`setting_key`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `adminmenu_custom_items` (
-        `name` VARCHAR(64) NOT NULL,
-        `label` VARCHAR(100) NOT NULL,
-        `description` VARCHAR(255) DEFAULT NULL,
-        `weight` INT(11) NOT NULL DEFAULT 0,
-        `type` VARCHAR(20) NOT NULL DEFAULT 'item',
-        `image` VARCHAR(150) NOT NULL,
-        `created_by` VARCHAR(255) DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`name`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-
 -- maps a stored setting key to where it lives in the global Config table
 local settingsConfigPath = {
     webhook_adminlogs = { 'Webhooks', 'AdminLogs' },
@@ -41,6 +18,14 @@ local settingsConfigPath = {
     webhook_worldsettings = { 'Webhooks', 'WorldSettings' },
     webhook_reports = { 'Reports', 'Webhooks', 'Main' },
 }
+
+local function GetSetting(key)
+    local node = Config
+    for _, part in ipairs(settingsConfigPath[key]) do
+        node = node and node[part]
+    end
+    return type(node) == 'string' and node or ''
+end
 
 local function ApplySetting(key, value)
     local path = settingsConfigPath[key]
@@ -53,229 +38,112 @@ local function ApplySetting(key, value)
     node[path[#path]] = value
 end
 
--- writes a setting straight into server/sv_config.lua's source text (not just the live
--- Config table + DB) so it's visible in the file and stays the default on a
--- fresh migration. Only safe because config.lua lives inside THIS resource's
--- own folder — SaveResourceFile can't write outside the calling resource,
--- unlike e.g. rsg-core's or rsg-inventory's files.
+-- also writes the value into server/sv_config.lua so it stays the default on a
+-- fresh database (SaveResourceFile can only write inside this resource)
 local function WriteConfigFile(key, value)
     local path = settingsConfigPath[key]
     if not path then return false end
-    local fieldName = path[#path]
 
-    local content = LoadResourceFile(GetCurrentResourceName(), CONFIG_FILE)
+    local resource = GetCurrentResourceName()
+    local content = LoadResourceFile(resource, CONFIG_FILE)
     if not content then return false end
 
-    -- keep the value a valid single-line Lua string literal
-    local literal = tostring(value):gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', ' ')
-    -- gsub's replacement string treats % specially, so escape it separately
-    local replacement = literal:gsub('%%', '%%%%')
-
-    local pattern = '(' .. fieldName .. '%s*=%s*")[^"]*(")'
+    -- value is already validated as a plain URL (no quotes/newlines); % must be escaped for gsub
+    local replacement = tostring(value):gsub('%%', '%%%%')
+    local pattern = '(' .. path[#path] .. '%s*=%s*")[^"]*(")'
     local newContent, count = content:gsub(pattern, '%1' .. replacement .. '%2', 1)
     if count == 0 then return false end
 
-    SaveResourceFile(GetCurrentResourceName(), CONFIG_FILE, newContent, -1)
-    return true
+    return SaveResourceFile(resource, CONFIG_FILE, newContent, -1)
 end
 
-MySQL.query('SELECT * FROM adminmenu_settings', {}, function(rows)
-    for _, row in ipairs(rows or {}) do
-        ApplySetting(row.setting_key, row.setting_value)
-    end
-end)
+-- accepts '' (disabled) or a Discord webhook URL
+local function IsValidWebhook(url)
+    if url == '' then return true end
+    return #url <= 300
+        and (url:match('^https://discord%.com/api/webhooks/[%w/_%-]+$') or url:match('^https://discordapp%.com/api/webhooks/[%w/_%-]+$')
+            or url:match('^https://ptb%.discord%.com/api/webhooks/[%w/_%-]+$') or url:match('^https://canary%.discord%.com/api/webhooks/[%w/_%-]+$')) ~= nil
+end
 
-local function BuildItemData(name, label, weight, itemType, image, description)
+local function BuildItemData(row)
     return {
-        name = name,
-        label = label,
-        weight = weight,
-        type = itemType,
-        image = image,
+        name = row.name,
+        label = row.label,
+        weight = tonumber(row.weight) or 0,
+        type = row.type,
+        image = row.image,
         unique = false,
         useable = true,
         shouldClose = true,
-        description = description,
+        description = row.description,
     }
 end
 
--- registers (or re-registers) an item through rsg-core's own AddItem/UpdateItem
--- exports — NOT a direct RSGCore.Shared.Items[name] = ... write. GetCoreObject()
--- hands back a disconnected snapshot of that table, so a plain field write on
--- it only mutates our own local copy and is invisible to rsg-core and every
--- other resource (that's why custom items weren't showing up anywhere). These
--- exports run inside rsg-core's own resource and correctly sync everywhere,
--- including a live client push (RSGCore:Client:OnSharedUpdate).
-local function RegisterItem(itemData)
-    local ok, reason = RSGCore.Functions.AddItem(itemData.name, itemData)
-    if not ok and reason == 'item_exists' then
-        ok, reason = RSGCore.Functions.UpdateItem(itemData.name, itemData)
-    end
-    return ok, reason
-end
+OnDatabaseReady(function()
+    MySQL.query('SELECT * FROM adminmenu_settings', {}, function(rows)
+        for _, row in ipairs(rows or {}) do
+            ApplySetting(row.setting_key, row.setting_value)
+        end
+    end)
 
--- replays every stored custom item through rsg-core's real item API on every
--- start — this resource never touches rsg-core's own items.lua file
-MySQL.query('SELECT * FROM adminmenu_custom_items', {}, function(rows)
-    for _, row in ipairs(rows or {}) do
-        RegisterItem(BuildItemData(row.name, row.label, tonumber(row.weight) or 0, row.type, row.image, row.description))
-    end
+    -- custom items added from older versions of the panel are re-registered
+    -- through rsg-core's item API on every start (never touches items.lua)
+    MySQL.query('SELECT * FROM adminmenu_custom_items', {}, function(rows)
+        for _, row in ipairs(rows or {}) do
+            local item = BuildItemData(row)
+            local ok, reason = RSGCore.Functions.AddItem(item.name, item)
+            if not ok and reason == 'item_exists' then
+                RSGCore.Functions.UpdateItem(item.name, item)
+            end
+        end
+    end)
 end)
 
 -----------------------------------------------------------------------
 -- webhook settings
 -----------------------------------------------------------------------
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getwebhooksettings', function(source, cb)
-    local src = source
-    if not CanUseMasterAdmin(src) then
-        cb({})
-        return
-    end
-    cb({
-        adminLogs = Config.Webhooks.AdminLogs or '',
-        playerManagement = Config.Webhooks.PlayerManagement or '',
-        worldSettings = Config.Webhooks.WorldSettings or '',
-        reports = Config.Reports.Webhooks.Main or '',
-    })
-end)
-
-local webhookFieldLabels = {
-    webhook_adminlogs = locale('sv_webhook_label_adminlogs'),
-    webhook_playermanagement = locale('sv_webhook_label_playermanagement'),
-    webhook_worldsettings = locale('sv_webhook_label_worldsettings'),
-    webhook_reports = locale('sv_webhook_label_reports'),
+local webhookFields = {
+    { key = 'webhook_adminlogs', field = 'adminLogs', label = 'sv_webhook_label_adminlogs' },
+    { key = 'webhook_playermanagement', field = 'playerManagement', label = 'sv_webhook_label_playermanagement' },
+    { key = 'webhook_worldsettings', field = 'worldSettings', label = 'sv_webhook_label_worldsettings' },
+    { key = 'webhook_reports', field = 'reports', label = 'sv_webhook_label_reports' },
 }
+
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getwebhooksettings', function(source, cb)
+    if not CanUseMasterAdmin(source) then return cb({}) end
+    local result = {}
+    for _, f in ipairs(webhookFields) do result[f.field] = GetSetting(f.key) end
+    cb(result)
+end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:savewebhooksettings', function(source, cb, data)
     local src = source
-    if not CanUseMasterAdmin(src) then
-        cb({ success = false })
-        return
-    end
-    if type(data) ~= 'table' then
-        cb({ success = false })
-        return
-    end
-    -- only accept empty values or real Discord webhook URLs
-    local function webhook(value)
-        value = CleanText(value, 300) or ''
-        if value ~= '' and not value:match('^https://discord%.com/api/webhooks/%d+/[%w_%-]+$')
-            and not value:match('^https://discordapp%.com/api/webhooks/%d+/[%w_%-]+$') then
-            return nil
+    if not CanUseMasterAdmin(src) or type(data) ~= 'table' then return cb({ success = false }) end
+
+    local values = {}
+    for _, f in ipairs(webhookFields) do
+        local value = type(data[f.field]) == 'string' and data[f.field]:gsub('^%s+', ''):gsub('%s+$', '') or ''
+        if not IsValidWebhook(value) then
+            return cb({ success = false, message = locale('sv_invalid_webhook', locale(f.label)) })
         end
-        return value
+        values[f.key] = value
     end
-    local map = {
-        webhook_adminlogs = webhook(data.adminLogs),
-        webhook_playermanagement = webhook(data.playerManagement),
-        webhook_worldsettings = webhook(data.worldSettings),
-        webhook_reports = webhook(data.reports),
-    }
-    for _, v in pairs(map) do
-        if v == nil then
-            cb({ success = false, message = locale('sv_invalid_input') })
-            return
-        end
-    end
-    -- capture the old value of each field before anything gets overwritten,
-    -- so the change log below can show a real from -> to, not just "updated"
-    local oldValues = {
-        webhook_adminlogs = Config.Webhooks.AdminLogs or '',
-        webhook_playermanagement = Config.Webhooks.PlayerManagement or '',
-        webhook_worldsettings = Config.Webhooks.WorldSettings or '',
-        webhook_reports = Config.Reports.Webhooks.Main or '',
-    }
 
     local changeLines = {}
-    for key, value in pairs(map) do
-        local old = oldValues[key] or ''
+    for _, f in ipairs(webhookFields) do
+        local old, value = GetSetting(f.key), values[f.key]
         if old ~= value then
-            changeLines[#changeLines + 1] = locale('sv_log_webhook_change', webhookFieldLabels[key], (old ~= '' and old or locale('sv_empty')),
-                (value ~= '' and value or locale('sv_empty')))
+            -- only the tail of each URL goes in the log so the full secret never lands in Discord/DB logs
+            local function mask(url) return url ~= '' and ('...' .. url:sub(-6)) or locale('sv_empty') end
+            changeLines[#changeLines + 1] = locale('sv_log_webhook_change', locale(f.label), mask(old), mask(value))
+            MySQL.insert('INSERT INTO adminmenu_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)', { f.key, value })
+            ApplySetting(f.key, value)
+            WriteConfigFile(f.key, value)
         end
-        MySQL.query(
-            'INSERT INTO adminmenu_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
-            { key, value, value }
-        )
-        ApplySetting(key, value)
-        WriteConfigFile(key, value)
     end
 
     if #changeLines > 0 then
         LogAdminAction('admin_action', 'high', src, locale('sv_log_updated_webhook_settings'), table.concat(changeLines, '\n\n'), nil)
     end
     cb({ success = true })
-end)
-
------------------------------------------------------------------------
--- custom items — registers item data (name/label/weight/type/description/
--- image reference) live via rsg-core's own AddItem/UpdateItem/RemoveItem
--- exports, no restart needed. It cannot place the actual PNG file inside the
--- inventory resource's own
--- images folder (FXServer resources can't write outside their own folder) —
--- the image file itself still has to be copied there by hand.
------------------------------------------------------------------------
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getcustomitems', function(source, cb)
-    local src = source
-    if not CanUseMasterAdmin(src) then
-        cb({})
-        return
-    end
-    MySQL.query('SELECT * FROM adminmenu_custom_items ORDER BY name ASC', {}, function(rows)
-        cb(rows or {})
-    end)
-end)
-
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addcustomitem', function(source, cb, data)
-    local src = source
-    if not CanUseMasterAdmin(src) then
-        cb({ success = false })
-        return
-    end
-    if type(data) ~= 'table' then return cb({ success = false }) end
-    local name = CleanText(data.name, 64)
-    name = name and (name:lower():gsub('[^%w_]', '_')) or nil
-    local label = CleanText(data.label, 100)
-    local image = CleanText(data.image, 150)
-    local description = CleanText(data.description, 255)
-    if not name or not label or not image or not image:match('^[%w_%-%.]+%.png$') then
-        cb({ success = false, reason = 'invalid_input' })
-        return
-    end
-
-    local adminName = AdminDisplayName(src)
-    local weight = math.max(0, math.floor(tonumber(data.weight) or 0))
-    local itemType = data.itemType == 'weapon' and 'weapon' or 'item'
-
-    MySQL.insert([[
-        INSERT INTO adminmenu_custom_items (name, label, description, weight, type, image, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE label = VALUES(label), description = VALUES(description),
-            weight = VALUES(weight), type = VALUES(type), image = VALUES(image)
-    ]], { name, label, description, weight, itemType, image, adminName }, function()
-        local ok, reason = RegisterItem(BuildItemData(name, label, weight, itemType, image, description))
-        if not ok then
-            cb({ success = false, reason = reason })
-            return
-        end
-        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_custom_item', name), label, nil)
-        cb({ success = true })
-    end)
-end)
-
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deletecustomitem', function(source, cb, data)
-    local src = source
-    if not CanUseMasterAdmin(src) then
-        cb({ success = false })
-        return
-    end
-    local name = type(data) == 'table' and CleanText(data.name, 64) or nil
-    if not name then return cb({ success = false }) end
-    MySQL.update('DELETE FROM adminmenu_custom_items WHERE name = ?', { name }, function(affected)
-        if affected and affected > 0 then
-            RSGCore.Functions.RemoveItem(name)
-            LogAdminAction('admin_action', 'medium', src, locale('sv_log_removed_custom_item', tostring(name)), nil, nil)
-        end
-        cb({ success = affected and affected > 0 })
-    end)
 end)

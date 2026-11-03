@@ -3,52 +3,26 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 local resourceStartTime = os.time()
 
 -----------------------------------------------------------------------
--- self-migrating schema: don't depend on the SQL files having been run
--- by hand — create/repair everything this resource needs on startup.
+-- playtime tracking: one batched upsert per minute for everyone online
 -----------------------------------------------------------------------
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `player_playtime` (
-        `citizenid` VARCHAR(50) NOT NULL,
-        `minutes` INT(11) NOT NULL DEFAULT 0,
-        `last_seen` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`citizenid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
+OnDatabaseReady(function()
+    CreateThread(function()
+        while true do
+            Wait(60000)
 
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_activity_log` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `sample_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        `online_count` INT(11) NOT NULL DEFAULT 0,
-        `total_money` DECIMAL(15,2) NOT NULL DEFAULT 0,
-        PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-
--- covers installs that created admin_activity_log before total_money existed
-MySQL.query("ALTER TABLE `admin_activity_log` ADD COLUMN IF NOT EXISTS `total_money` DECIMAL(15,2) NOT NULL DEFAULT 0")
-
------------------------------------------------------------------------
--- playtime tracking (player_playtime, self-migrated above)
------------------------------------------------------------------------
-CreateThread(function()
-    while true do
-        Wait(60000)
-
-        -- one batched query per minute instead of one per online player
-        local rows, params = {}, {}
-        for _, Player in pairs(RSGCore.Functions.GetRSGPlayers()) do
-            local citizenid = Player.PlayerData.citizenid
-            if citizenid then
-                rows[#rows + 1] = '(?, 1, NOW())'
-                params[#params + 1] = citizenid
+            local params, rows = {}, {}
+            for _, Player in pairs(RSGCore.Functions.GetRSGPlayers()) do
+                if Player.PlayerData.citizenid then
+                    params[#params + 1] = Player.PlayerData.citizenid
+                    rows[#rows + 1] = '(?, 1, NOW())'
+                end
+            end
+            if #rows > 0 then
+                MySQL.insert('INSERT INTO player_playtime (citizenid, minutes, last_seen) VALUES ' .. table.concat(rows, ', ')
+                    .. ' ON DUPLICATE KEY UPDATE minutes = minutes + 1, last_seen = NOW()', params)
             end
         end
-        if #rows > 0 then
-            MySQL.insert('INSERT INTO player_playtime (citizenid, minutes, last_seen) VALUES ' .. table.concat(rows, ', ') ..
-                ' ON DUPLICATE KEY UPDATE minutes = minutes + 1, last_seen = NOW()', params)
-        end
-    end
+    end)
 end)
 
 -----------------------------------------------------------------------
@@ -101,7 +75,7 @@ local function GetAveragePing()
 end
 
 -----------------------------------------------------------------------
--- activity sampling (admin_activity_log, self-migrated above)
+-- activity sampling (admin_activity_log), every 15 minutes
 -----------------------------------------------------------------------
 local function SampleActivity()
     local onlineCount = #RSGCore.Functions.GetPlayers()
@@ -115,14 +89,14 @@ local function SampleActivity()
     end)
 end
 
-CreateThread(function()
-    Wait(5000) -- give the CREATE TABLE / ALTER TABLE queries above time to land first
-    SampleActivity()
-
-    while true do
-        Wait(15 * 60000)
+OnDatabaseReady(function()
+    CreateThread(function()
         SampleActivity()
-    end
+        while true do
+            Wait(15 * 60000)
+            SampleActivity()
+        end
+    end)
 end)
 
 -----------------------------------------------------------------------
@@ -198,7 +172,7 @@ end)
 -----------------------------------------------------------------------
 -- statistics page: player activity history, job distribution, economy, performance
 -----------------------------------------------------------------------
-local moneyTypes = { 'cash', 'bank', 'gold', 'bloodmoney' }
+local moneyTypes = { 'cash', 'bank', 'bloodmoney', 'valbank', 'rhobank', 'blkbank', 'armbank' }
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getstatistics', function(source, cb)
     if not HasAdminPermission(source, 'adminmenu') then return cb({}) end

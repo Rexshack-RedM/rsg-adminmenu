@@ -1,10 +1,8 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
------------------------------------------------------------------------
--- permissions: the minimum role each action needs. These are checked on the
--- server for every request; the roleFlags sent to the UI only hide buttons.
--- 'helper' = all staff, 'mod' = moderator+, 'admin' = admin+.
------------------------------------------------------------------------
+-- tiered by role: 'helper' = every staff role, 'mod' = moderator and above,
+-- 'admin' = admin and above, 'headadmin' = only Head Admin/Owner (Owner also
+-- holds 'headadmin' via server.cfg inheritance, so 'headadmin' alone covers both)
 permissions = {
     ['adminmenu'] = 'helper',
     ['revive'] = 'helper',
@@ -40,116 +38,104 @@ permissions = {
     ['horsebuck'] = 'mod',
     ['haunted'] = 'mod',
     ['everyoneattack'] = 'mod',
-    ['worldtools'] = 'mod',
-    -- rsg-core's default server.cfg has no headadmin group, so god/developer
-    -- are listed too (matches the UI's fullAccess flag)
-    ['serversettings'] = { 'god', 'headadmin', 'developer' },
+    ['reports'] = 'helper', -- view, claim, reply to and close player reports
+    ['selftools'] = 'helper', -- godmode, invisible, self revive, player blips, door IDs, teleport to marker
+    ['viewip'] = 'admin', -- see a player's IP in the manage modal
+    ['worldtools'] = 'mod', -- Live Map, Teleports, Blips, Spawner mutations (Coords/self-teleport is helper via 'playerinfo'/'goto')
+    -- 'headadmin' alone would lock this out on RSGCore's shipped server.cfg
+    -- template (it only wires up god/developer/admin/mod/helper groups), so
+    -- 'god' is the real top tier in practice.
+    ['serversettings'] = { 'god', 'headadmin', 'developer' }, -- server actions, time/weather/wind/timescale, resource management, Master Actions
 }
 
-local PERMANENT_BAN = 2524608000 -- 01/01/2050, treated as "permanent"
-local MAX_ITEM_AMOUNT = 1000
-local MAX_TEXT = 255
+local PERMANENT_BAN = 2524608000 -- expire timestamp used as "permanent" (matches RSGCore's ban check)
+local MAX_GIVE_AMOUNT = 1000
+-- cash and bloodmoney are items on this server: they must go through AddMoney (Finances), never AddItem
+local MONEY_ITEMS = { dollar = true, cent = true, blood_dollar = true, blood_cent = true }
 
 -----------------------------------------------------------------------
--- shared helpers (global so the other server files can use them)
+-- shared helpers (global so the other server files use the same checks)
 -----------------------------------------------------------------------
-function HasAdminPermission(src, key)
-    local perm = permissions[key]
-    if not perm then return false end
-    return RSGCore.Functions.HasPermission(src, perm) or IsPlayerAceAllowed(src, 'god')
+function HasAdminPermission(src, action)
+    return RSGCore.Functions.HasPermission(src, permissions[action]) or IsPlayerAceAllowed(src, 'god')
 end
 
--- server-side rsg-core notify
-function Notify(src, title, description, notifyType, duration)
-    TriggerClientEvent('RSGCore:Client:Notify', src, {
-        title = title,
-        description = description,
-        type = notifyType or 'inform',
-        duration = duration or 5000,
-    })
+function NotifyPlayer(src, title, description, notifyType, duration)
+    TriggerClientEvent('RSGCore:Client:Notify', src, { title = title, description = description, type = notifyType or 'inform', duration = duration })
 end
 
--- trims a client string and caps its length; returns nil when empty
-function CleanText(value, maxLen)
-    if type(value) ~= 'string' and type(value) ~= 'number' then return nil end
-    value = tostring(value):gsub('^%s+', ''):gsub('%s+$', '')
-    if value == '' then return nil end
-    return value:sub(1, maxLen or MAX_TEXT)
+-- trims, caps and stringifies free text coming from the NUI
+function SanitizeText(value, maxLength)
+    if value == nil then return nil end
+    local text = tostring(value):gsub('^%s+', ''):gsub('%s+$', '')
+    if text == '' then return nil end
+    return text:sub(1, maxLength or 255)
 end
 
--- resolves the { id = x } table (or bare id) the NUI sends into a live server id
-local function TargetId(player)
+-- accepts a raw server id or the { id = x } table the NUI sends; returns the id only if that player is online
+local function ResolveTarget(player)
     local id = tonumber(type(player) == 'table' and player.id or player)
-    if not id or not GetPlayerName(id) then return nil end
+    if not id or not RSGCore.Functions.GetPlayer(id) then return nil end
     return id
 end
 
-local function CharName(Player)
-    local info = Player and Player.PlayerData.charinfo or {}
-    local name = ((info.firstname or '') .. ' ' .. (info.lastname or '')):gsub('^%s+', ''):gsub('%s+$', '')
-    return name
+local function BanPlayer(src)
+    MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)', {
+        GetPlayerName(src),
+        RSGCore.Functions.GetIdentifier(src, 'license'),
+        RSGCore.Functions.GetIdentifier(src, 'discord'),
+        RSGCore.Functions.GetIdentifier(src, 'ip'),
+        locale('sv_system_banned_you'),
+        PERMANENT_BAN,
+        'rsg-adminmenu',
+    })
+    TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_a'), 'red',
+        string.format(locale('sv_b'), GetPlayerName(src), 'rsg-adminmenu', locale('sv_c')), true)
+    DropPlayer(src, locale('sv_105'))
 end
 
--- a client fired a staff-only event without the role for it
-local function DenyAndBan(src, action)
+-- a client fired an admin event it has no permission for: log and ban
+local function DenyAndBan(src)
     local Player = RSGCore.Functions.GetPlayer(src)
-    local name = Player and CharName(Player) or GetPlayerName(src) or tostring(src)
-    local citizenid = Player and Player.PlayerData.citizenid or 'n/a'
+    local name = Player and (Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname) or GetPlayerName(src)
+    local citizenid = Player and Player.PlayerData.citizenid or '?'
     TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_g'), 'red',
-        ('%s %s %s %s (%s)'):format(name, locale('sv_h'), citizenid, locale('sv_ban_k'), tostring(action)), true)
-    LogAdminAction('security', 'high', src, locale('sv_log_unauthorized_action_attempt_auto_banned'),
-        locale('sv_log_citizen_id', citizenid) .. ' | ' .. tostring(action), name)
-    exports['rsg-core']:ExploitBan(src, 'rsg-adminmenu: ' .. tostring(action))
+        name .. ' ' .. locale('sv_h') .. ' ' .. citizenid .. ' ' .. locale('sv_ban_k'), true)
+    LogAdminAction('security', 'high', src, locale('sv_log_unauthorized_action_attempt_auto_banned'), locale('sv_log_citizen_id', citizenid), name)
+    BanPlayer(src)
 end
 
--- permission gate for net events: bans on failure
-local function Authorise(src, key)
-    if HasAdminPermission(src, key) then return true end
-    DenyAndBan(src, key)
-    return false
-end
-
--- registers a staff action that targets an online player. `fn(src, targetId, ...)`
--- only runs once the caller is authorised and the target is a valid player.
-local function RegisterTargetAction(eventName, permKey, fn)
-    RegisterNetEvent('rsg-adminmenu:server:' .. eventName, function(player, ...)
+-- registers a net event that acts on another player: permission check (ban on
+-- failure), target must be online, and protected actions can't be used on
+-- staff of the same or a higher rank
+local function RegisterPlayerAction(event, action, protected, handler)
+    RegisterNetEvent('rsg-adminmenu:server:' .. event, function(player, ...)
         local src = source
-        if not Authorise(src, permKey) then return end
-        local targetId = TargetId(player)
-        if not targetId then
-            Notify(src, locale('sv_101'), locale('sv_invalid_input'), 'error')
-            return
+        if not HasAdminPermission(src, action) then return DenyAndBan(src) end
+        local target = ResolveTarget(player)
+        if not target then
+            return NotifyPlayer(src, locale('sv_101'), locale('sv_player_not_online'), 'error')
         end
-        fn(src, targetId, ...)
-    end)
-end
-
--- "tell a client to do X, then log it" actions. toCaller = run on the admin's
--- client (with the target id as argument) instead of the target's client.
-local function RegisterRelayAction(eventName, permKey, clientEvent, severity, logKey, toCaller)
-    RegisterTargetAction(eventName, permKey, function(src, targetId)
-        if toCaller then
-            TriggerClientEvent(clientEvent, src, targetId)
-        else
-            TriggerClientEvent(clientEvent, targetId)
+        if protected and not CanActOn(src, target) then
+            return NotifyPlayer(src, locale('sv_101'), locale('sv_target_higher_rank'), 'error')
         end
-        LogAdminAction('player_action', severity, src, locale(logKey), nil, GetPlayerName(targetId), targetId)
+        handler(src, target, ...)
     end)
 end
 
 -----------------------------------------------------------------------
--- players list (also feeds the player-blips toggle)
+-- get players function
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayers', function(source, cb)
     if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
     local players = {}
-    for _, id in pairs(RSGCore.Functions.GetPlayers()) do
-        local Player = RSGCore.Functions.GetPlayer(id)
+    for _, v in pairs(RSGCore.Functions.GetPlayers()) do
+        local Player = RSGCore.Functions.GetPlayer(v)
         if Player then
             players[#players + 1] = {
-                name = CharName(Player) .. ' | (' .. (GetPlayerName(id) or '?') .. ')',
-                id = id,
-                coords = GetEntityCoords(GetPlayerPed(id)),
+                name = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname .. ' | (' .. GetPlayerName(v) .. ')',
+                id = v,
+                coords = GetEntityCoords(GetPlayerPed(v)),
                 citizenid = Player.PlayerData.citizenid,
             }
         end
@@ -159,17 +145,18 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayers', function(sou
 end)
 
 -----------------------------------------------------------------------
--- Discord identity (name/avatar) lookups, cached
+-- resolve a discord:<id> identifier into the account's real Discord name
 -----------------------------------------------------------------------
 local discordNameCache = {}
 
-local function BotToken()
+local function GetBotToken()
     local token = Config.DiscordBot and Config.DiscordBot.Token
     if not token or token == '' or token == 'TOKEN HERE' or token == 'YOUR_DISCORD_BOT_TOKEN_HERE' then return nil end
     return token
 end
 
--- synchronous cache read; only returns a name once ResolveDiscordName has warmed it
+-- synchronous read for list/table rendering — only returns something once
+-- ResolveDiscordName has warmed the cache for this id (on join, or on-demand elsewhere)
 function GetCachedDiscordIdentity(source)
     local discordId = RSGCore.Functions.GetIdentifier(source, 'discord')
     if not discordId then return nil, nil, nil end
@@ -179,55 +166,68 @@ function GetCachedDiscordIdentity(source)
     return discordId, cached.name, cached.avatarUrl
 end
 
--- "By: ..." name for an acting admin: Discord name if known, else Rockstar name
+-- what shows as "By: ..." for an acting admin — Discord name when cached, else the account name
 function AdminDisplayName(source)
     local _, discordName = GetCachedDiscordIdentity(source)
     return discordName or GetPlayerName(source)
 end
 
-local function AvatarUrl(userId, avatar)
-    if not avatar then return nil end
-    local ext = avatar:sub(1, 2) == 'a_' and 'gif' or 'png'
-    return ('https://cdn.discordapp.com/avatars/%s/%s.%s?size=128'):format(userId, avatar, ext)
-end
-
 function ResolveDiscordName(discordId, cb)
     if not discordId or discordId == '' then return cb(nil, nil) end
+
     local cached = discordNameCache[discordId]
     if cached then return cb(cached.name, cached.avatarUrl) end
-    local token = BotToken()
+
+    local token = GetBotToken()
     if not token then return cb(nil, nil) end
 
     PerformHttpRequest('https://discord.com/api/v10/users/' .. discordId, function(statusCode, resultData)
         if statusCode ~= 200 or not resultData then return cb(nil, nil) end
+
         local ok, decoded = pcall(json.decode, resultData)
         if not ok or not decoded then return cb(nil, nil) end
+
         local name = decoded.global_name or decoded.username
-        local avatarUrl = AvatarUrl(discordId, decoded.avatar)
-        if name then discordNameCache[discordId] = { name = name, avatarUrl = avatarUrl } end
+        local avatarUrl = nil
+        if decoded.avatar then
+            local ext = decoded.avatar:sub(1, 2) == 'a_' and 'gif' or 'png'
+            avatarUrl = 'https://cdn.discordapp.com/avatars/' .. discordId .. '/' .. decoded.avatar .. '.' .. ext .. '?size=128'
+        end
+
+        if name then
+            discordNameCache[discordId] = { name = name, avatarUrl = avatarUrl }
+        end
         cb(name, avatarUrl)
-    end, 'GET', '', { ['Authorization'] = 'Bot ' .. token, ['Content-Type'] = 'application/json' })
+    end, 'GET', '', {
+        ['Authorization'] = 'Bot ' .. token,
+        ['Content-Type'] = 'application/json',
+    })
 end
 
--- warm the cache on join, throttled (~6/s) so a reconnect burst after a
--- restart can't trip Discord's rate limit
-local discordWarmQueue, discordWarmRunning = {}, false
+-----------------------------------------------------------------------
+-- warm the discord name/avatar cache on connect, throttled to ~6/s so a
+-- burst of joins (e.g. after a restart) never trips Discord's rate limit
+-----------------------------------------------------------------------
+local discordWarmQueue = {}
+local discordWarmQueueRunning = false
 
 local function ProcessDiscordWarmQueue()
-    if discordWarmRunning then return end
-    discordWarmRunning = true
+    if discordWarmQueueRunning then return end
+    discordWarmQueueRunning = true
     CreateThread(function()
         while #discordWarmQueue > 0 do
             local discordId = table.remove(discordWarmQueue, 1)
-            if not discordNameCache[discordId] then ResolveDiscordName(discordId, function() end) end
+            if not discordNameCache[discordId] then
+                ResolveDiscordName(discordId, function() end)
+            end
             Wait(150)
         end
-        discordWarmRunning = false
+        discordWarmQueueRunning = false
     end)
 end
 
 AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
-    if not BotToken() then return end
+    if not GetBotToken() then return end
     local discordId = RSGCore.Functions.GetIdentifier(Player.PlayerData.source, 'discord')
     if discordId then
         discordWarmQueue[#discordWarmQueue + 1] = discordId:gsub('discord:', '')
@@ -235,32 +235,46 @@ AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
     end
 end)
 
+-----------------------------------------------------------------------
 -- the bot's own avatar, used as the sidebar logo
+-----------------------------------------------------------------------
 local botIdentityCache = nil
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getbotlogo', function(source, cb)
-    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
-    if botIdentityCache then return cb(botIdentityCache) end
-    local token = BotToken()
+    if botIdentityCache ~= nil then return cb(botIdentityCache) end
+
+    local token = GetBotToken()
     if not token then return cb({}) end
 
     PerformHttpRequest('https://discord.com/api/v10/users/@me', function(statusCode, resultData)
         local ok, decoded = false, nil
-        if statusCode == 200 and resultData then ok, decoded = pcall(json.decode, resultData) end
+        if statusCode == 200 and resultData then
+            ok, decoded = pcall(json.decode, resultData)
+        end
         if not ok or not decoded then
             botIdentityCache = {}
-        else
-            botIdentityCache = { logoUrl = AvatarUrl(decoded.id, decoded.avatar), name = decoded.username }
+            return cb(botIdentityCache)
         end
+
+        local logoUrl = nil
+        if decoded.avatar then
+            local ext = decoded.avatar:sub(1, 2) == 'a_' and 'gif' or 'png'
+            logoUrl = 'https://cdn.discordapp.com/avatars/' .. decoded.id .. '/' .. decoded.avatar .. '.' .. ext .. '?size=128'
+        end
+
+        botIdentityCache = { logoUrl = logoUrl, name = decoded.username }
         cb(botIdentityCache)
-    end, 'GET', '', { ['Authorization'] = 'Bot ' .. token, ['Content-Type'] = 'application/json' })
+    end, 'GET', '', {
+        ['Authorization'] = 'Bot ' .. token,
+        ['Content-Type'] = 'application/json',
+    })
 end)
 
 -----------------------------------------------------------------------
--- all registered players (online + offline) for the Players page
+-- all registered players (online + offline), for the Players management page
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallplayersmanaged', function(source, cb)
-    if not HasAdminPermission(source, 'playerinfo') then return cb({}) end
+    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
 
     MySQL.query('SELECT id, license, reason, expire, bannedby FROM bans WHERE expire > ?', { os.time() }, function(banRows)
         local banByLicense = {}
@@ -283,30 +297,32 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallplayersmanaged', fu
                 job = ok2 and type(job) == 'table' and job or {}
                 money = ok3 and type(money) == 'table' and money or {}
 
-                local online = RSGCore.Functions.GetPlayerByCitizenId(row.citizenid)
-                -- DB money is only as fresh as the last autosave; prefer live data
-                local liveMoney = (online and online.PlayerData.money) or money
+                local onlinePlayer = RSGCore.Functions.GetPlayerByCitizenId(row.citizenid)
+
+                -- an online player's DB row is only as fresh as their last autosave
+                local liveMoney = (onlinePlayer and onlinePlayer.PlayerData.money) or money
                 local moneyTotal = 0
                 for _, v in pairs(liveMoney) do
                     if type(v) == 'number' then moneyTotal = moneyTotal + v end
                 end
 
-                local discordId, discordName, discordAvatarUrl
-                if online then
-                    discordId, discordName, discordAvatarUrl = GetCachedDiscordIdentity(online.PlayerData.source)
+                local discordId, discordName, discordAvatarUrl = nil, nil, nil
+                if onlinePlayer then
+                    discordId, discordName, discordAvatarUrl = GetCachedDiscordIdentity(onlinePlayer.PlayerData.source)
                 end
 
                 local ban = row.license and banByLicense[row.license] or nil
+
                 result[#result + 1] = {
                     citizenid = row.citizenid,
-                    serverId = online and online.PlayerData.source or nil,
+                    serverId = onlinePlayer and onlinePlayer.PlayerData.source or nil,
                     name = (charinfo.firstname or '?') .. ' ' .. (charinfo.lastname or ''),
                     accountName = row.name or '',
-                    job = online and online.PlayerData.job.label or (job.label or locale('sv_unemployed')),
+                    job = onlinePlayer and onlinePlayer.PlayerData.job.label or (job.label or locale('sv_unemployed')),
                     money = moneyTotal,
                     playtimeMinutes = row.minutes or 0,
                     lastSeen = row.last_seen,
-                    online = online ~= nil,
+                    online = onlinePlayer ~= nil,
                     discordId = discordId,
                     discordName = discordName,
                     discordAvatarUrl = discordAvatarUrl,
@@ -323,10 +339,14 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallplayersmanaged', fu
     end)
 end)
 
+-----------------------------------------------------------------------
+-- unban (same DELETE RSGCore's own IsPlayerBanned does when a ban expires)
+-----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:unbanplayer', function(source, cb, data)
     local src = source
-    local banId = tonumber(type(data) == 'table' and data.banId)
-    if not HasAdminPermission(src, 'ban') or not banId then return cb({ success = false }) end
+    if not HasAdminPermission(src, 'ban') then return cb({ success = false }) end
+    local banId = tonumber(data and data.banId)
+    if not banId then return cb({ success = false }) end
 
     MySQL.update('DELETE FROM bans WHERE id = ?', { banId }, function(affected)
         local success = (affected or 0) > 0
@@ -338,7 +358,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:unbanplayer', function(so
 end)
 
 -----------------------------------------------------------------------
--- /adminmenu
+-- admin menu command
 -----------------------------------------------------------------------
 RSGCore.Commands.Add('adminmenu', locale('sv_100'), {}, false, function(source)
     local src = source
@@ -347,23 +367,21 @@ RSGCore.Commands.Add('adminmenu', locale('sv_100'), {}, false, function(source)
 
     if not HasAdminPermission(src, 'adminmenu') then
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', locale('sv_d'), 'red',
-            CharName(Player) .. ' ' .. locale('sv_e') .. ' ' .. Player.PlayerData.citizenid .. ' ' .. locale('sv_f'), true)
-        Notify(src, locale('sv_101'), locale('sv_102'), 'error')
-        return
+            Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname .. ' ' .. locale('sv_e') .. ' ' .. Player.PlayerData.citizenid .. ' ' .. locale('sv_f'), true)
+        return NotifyPlayer(src, locale('sv_101'), locale('sv_102'), 'error')
     end
 
     local discordId = RSGCore.Functions.GetIdentifier(src, 'discord')
     if discordId then discordId = discordId:gsub('discord:', '') end
 
-    local isGod = IsPlayerAceAllowed(src, 'god')
     local canManageHistory = CanManageHistory(src)
-    -- UI-only flags; the permissions table above is the real gate
+    -- role-tier flags only drive what the UI shows; every action is re-checked on the server
     local roleFlags = {
         canManageHistory = canManageHistory,
         canManageAdmins = canManageHistory,
-        atLeastMod = isGod or RSGCore.Functions.HasPermission(src, 'mod'),
-        atLeastAdmin = isGod or RSGCore.Functions.HasPermission(src, 'admin'),
-        fullAccess = isGod or RSGCore.Functions.HasPermission(src, { 'headadmin', 'developer' }),
+        atLeastMod = RSGCore.Functions.HasPermission(src, 'mod') or IsPlayerAceAllowed(src, 'god'),
+        atLeastAdmin = RSGCore.Functions.HasPermission(src, 'admin') or IsPlayerAceAllowed(src, 'god'),
+        fullAccess = HasAdminPermission(src, 'serversettings'),
     }
     ResolveDiscordName(discordId, function(discordName, discordAvatar)
         TriggerClientEvent('rsg-adminmenu:client:openadminmenu', src, { discordName = discordName, discordAvatar = discordAvatar, roleFlags = roleFlags })
@@ -371,146 +389,151 @@ RSGCore.Commands.Add('adminmenu', locale('sv_100'), {}, false, function(source)
 end)
 
 -----------------------------------------------------------------------
--- core player actions
+-- revive / heal / inventory / goto / bring / spectate
 -----------------------------------------------------------------------
-RegisterTargetAction('playerrevive', 'revive', function(src, targetId)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if Target then Target.Functions.SetMetaData('isdead', false) end
-    TriggerClientEvent('rsg-medic:client:revive', targetId)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(targetId), targetId)
+RegisterPlayerAction('playerrevive', 'revive', false, function(src, target)
+    RSGCore.Functions.GetPlayer(target).Functions.SetMetaData('isdead', false)
+    TriggerClientEvent('rsg-medic:client:revive', target)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(target), target)
 end)
 
-RegisterNetEvent('rsg-adminmenu:server:selfrevive', function()
-    local src = source
-    if not Authorise(src, 'revive') then return end
-    local Player = RSGCore.Functions.GetPlayer(src)
-    if Player then Player.Functions.SetMetaData('isdead', false) end
-    TriggerClientEvent('rsg-medic:client:revive', src)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(src), src)
+RegisterPlayerAction('healplayer', 'heal', false, function(src, target)
+    TriggerClientEvent('rsg-medic:client:heal', target, -1)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_healed_player'), nil, GetPlayerName(target), target)
 end)
 
-RegisterTargetAction('openinventory', 'inventory', function(src, targetId)
-    exports['rsg-inventory']:OpenInventoryById(src, targetId)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_opened_player_inventory'), nil, GetPlayerName(targetId), targetId)
+RegisterPlayerAction('openinventory', 'inventory', false, function(src, target)
+    exports['rsg-inventory']:OpenInventoryById(src, target)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_opened_player_inventory'), nil, GetPlayerName(target), target)
 end)
 
-RegisterTargetAction('kickplayer', 'kick', function(src, targetId, reason)
-    reason = CleanText(reason) or locale('sv_no_reason')
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if Target then
-        LogPlayerHistory(Target.PlayerData.citizenid, 'kick', reason, AdminDisplayName(src), nil)
+RegisterPlayerAction('gotoplayer', 'goto', false, function(src, target)
+    SetEntityCoords(GetPlayerPed(src), GetEntityCoords(GetPlayerPed(target)))
+    LogAdminAction('player_action', 'low', src, locale('sv_log_teleported_to_player'), nil, GetPlayerName(target), target)
+end)
+
+RegisterPlayerAction('bringplayer', 'bring', true, function(src, target)
+    SetEntityCoords(GetPlayerPed(target), GetEntityCoords(GetPlayerPed(src)))
+    LogAdminAction('player_action', 'low', src, locale('sv_log_brought_player_to_self'), nil, GetPlayerName(target), target)
+end)
+
+RegisterPlayerAction('spectateplayer', 'spectate', false, function(src, target)
+    if target == src then return end
+    TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, target, GetEntityCoords(GetPlayerPed(target)))
+    LogAdminAction('player_action', 'low', src, locale('sv_log_started_spectating_player'), nil, GetPlayerName(target), target)
+end)
+
+-----------------------------------------------------------------------
+-- freeze (toggle, tracked per target and cleared when they leave)
+-----------------------------------------------------------------------
+local frozenPlayers = {}
+
+RegisterPlayerAction('freezeplayer', 'freeze', true, function(src, target)
+    local name = GetPlayerName(target)
+    local freeze = not frozenPlayers[target]
+    frozenPlayers[target] = freeze or nil
+    FreezeEntityPosition(GetPlayerPed(target), freeze)
+    if freeze then
+        NotifyPlayer(src, locale('sv_111'), locale('sv_112') .. name, 'inform')
+        LogAdminAction('player_action', 'low', src, locale('sv_log_froze_player'), nil, name, target)
+    else
+        NotifyPlayer(src, locale('sv_113'), locale('sv_114') .. name, 'inform')
+        LogAdminAction('player_action', 'low', src, locale('sv_log_unfroze_player'), nil, name, target)
     end
-    local targetName = GetPlayerName(targetId)
+end)
+
+AddEventHandler('playerDropped', function()
+    frozenPlayers[source] = nil
+end)
+
+-----------------------------------------------------------------------
+-- kick / ban
+-----------------------------------------------------------------------
+RegisterPlayerAction('kickplayer', 'kick', true, function(src, target, reason)
+    reason = SanitizeText(reason, 255) or locale('sv_no_reason')
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    LogPlayerHistory(targetPlayer.PlayerData.citizenid, 'kick', reason, AdminDisplayName(src), nil)
     TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_kicked'), 'red',
-        locale('sv_kicked_a', targetName, GetPlayerName(src), reason), true)
-    LogAdminAction('player_action', 'medium', src, locale('sv_log_kicked_player'), reason, targetName, targetId)
-    DropPlayer(targetId, locale('sv_103') .. ':\n' .. reason .. '\n\n' .. locale('sv_104') .. (RSGCore.Config.Server.Discord or ''))
+        string.format(locale('sv_kicked_a'), GetPlayerName(target), GetPlayerName(src), reason), true)
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_kicked_player'), reason, GetPlayerName(target), target)
+    DropPlayer(target, locale('sv_103') .. ':\n' .. reason .. '\n\n' .. locale('sv_104') .. (RSGCore.Config.Server.Discord or ''))
 end)
 
-RegisterTargetAction('banplayer', 'ban', function(src, targetId, duration, reason)
-    duration = tonumber(duration)
-    if not duration or duration <= 0 then
-        Notify(src, locale('sv_101'), locale('sv_invalid_input'), 'error')
-        return
+RegisterPlayerAction('banplayer', 'ban', true, function(src, target, duration, reason)
+    duration = math.floor(tonumber(duration) or 0)
+    if duration <= 0 then
+        return NotifyPlayer(src, locale('sv_101'), locale('sv_invalid_ban_duration'), 'error')
     end
-    duration = math.floor(duration)
-    reason = CleanText(reason) or locale('sv_no_reason')
-    local banTime = math.min(os.time() + duration, PERMANENT_BAN)
-    local targetName = GetPlayerName(targetId)
+    reason = SanitizeText(reason, 255) or locale('sv_no_reason')
 
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if Target then
-        LogPlayerHistory(Target.PlayerData.citizenid, 'ban', reason, AdminDisplayName(src), duration)
-    end
+    local banTime = math.min(os.time() + duration, PERMANENT_BAN)
+    local permanent = banTime >= PERMANENT_BAN
+    local targetName = GetPlayerName(target)
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+
+    -- duration_seconds is INT(11): permanent bans store NULL instead of overflowing it
+    LogPlayerHistory(targetPlayer.PlayerData.citizenid, 'ban', reason, AdminDisplayName(src), not permanent and duration or nil)
     MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)', {
         targetName,
-        RSGCore.Functions.GetIdentifier(targetId, 'license'),
-        RSGCore.Functions.GetIdentifier(targetId, 'discord'),
-        RSGCore.Functions.GetIdentifier(targetId, 'ip'),
+        RSGCore.Functions.GetIdentifier(target, 'license'),
+        RSGCore.Functions.GetIdentifier(target, 'discord'),
+        RSGCore.Functions.GetIdentifier(target, 'ip'),
         reason,
         banTime,
         GetPlayerName(src),
     })
-    -- name and reason go through {0}/{1} args so chat escapes them
     TriggerClientEvent('chat:addMessage', -1, {
-        template = "<div class='chat-message server'><strong>" .. locale('sv_ban') .. ' | {0} ' .. locale('sv_ban_a') .. ':</strong> {1}</div>',
+        template = "<div class='chat-message server'><strong>" .. locale('sv_ban') .. " | {0} " .. locale('sv_ban_a') .. ":</strong> {1}</div>",
         args = { targetName, reason },
     })
-    TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_a'), 'red', locale('sv_b', targetName, GetPlayerName(src), reason), true)
-    LogAdminAction('player_action', 'high', src, locale('sv_log_banned_player'), locale('sv_log_ban_details', reason, tostring(duration)), targetName, targetId)
+    TriggerEvent('rsg-log:server:CreateLog', 'bans', locale('sv_a'), 'red',
+        string.format(locale('sv_b'), targetName, GetPlayerName(src), reason), true)
+    LogAdminAction('player_action', 'high', src, locale('sv_log_banned_player'), locale('sv_log_ban_details', reason, permanent and locale('sv_permanent') or tostring(duration)), targetName, target)
 
     local discord = RSGCore.Config.Server.Discord or ''
-    if banTime >= PERMANENT_BAN then
-        DropPlayer(targetId, locale('sv_106') .. '\n' .. reason .. '\n\n' .. locale('sv_107') .. '\n' .. locale('sv_108') .. discord)
+    if permanent then
+        DropPlayer(target, locale('sv_106') .. '\n' .. reason .. '\n\n' .. locale('sv_107') .. '\n' .. locale('sv_108') .. discord)
     else
-        DropPlayer(targetId, locale('sv_106') .. '\n' .. reason .. '\n\n' .. locale('sv_109') .. os.date('%d/%m/%Y %H:%M', banTime) .. '\n' .. locale('sv_110') .. discord)
+        DropPlayer(target, locale('sv_106') .. '\n' .. reason .. '\n\n' .. locale('sv_109') .. os.date('%d/%m/%Y %H:%M', banTime) .. '\n' .. locale('sv_110') .. discord)
     end
 end)
 
-RegisterTargetAction('gotoplayer', 'goto', function(src, targetId)
-    SetEntityCoords(GetPlayerPed(src), GetEntityCoords(GetPlayerPed(targetId)))
-    LogAdminAction('player_action', 'low', src, locale('sv_log_teleported_to_player'), nil, GetPlayerName(targetId), targetId)
-end)
-
-RegisterTargetAction('bringplayer', 'bring', function(src, targetId)
-    SetEntityCoords(GetPlayerPed(targetId), GetEntityCoords(GetPlayerPed(src)))
-    LogAdminAction('player_action', 'low', src, locale('sv_log_brought_player_to_self'), nil, GetPlayerName(targetId), targetId)
-end)
-
-local frozenPlayers = {}
-AddEventHandler('playerDropped', function() frozenPlayers[source] = nil end)
-
-RegisterTargetAction('freezeplayer', 'freeze', function(src, targetId)
-    local targetName = GetPlayerName(targetId)
-    local freeze = not frozenPlayers[targetId]
-    frozenPlayers[targetId] = freeze or nil
-    FreezeEntityPosition(GetPlayerPed(targetId), freeze)
-    if freeze then
-        Notify(src, locale('sv_111'), locale('sv_112') .. targetName)
-        LogAdminAction('player_action', 'low', src, locale('sv_log_froze_player'), nil, targetName, targetId)
-    else
-        Notify(src, locale('sv_113'), locale('sv_114') .. targetName)
-        LogAdminAction('player_action', 'low', src, locale('sv_log_unfroze_player'), nil, targetName, targetId)
-    end
-end)
-
-RegisterTargetAction('spectateplayer', 'spectate', function(src, targetId)
-    if targetId == src then return end
-    TriggerClientEvent('rsg-adminmenu:client:spectateplayer', src, targetId, GetEntityCoords(GetPlayerPed(targetId)))
-    LogAdminAction('player_action', 'low', src, locale('sv_log_started_spectating_player'), nil, GetPlayerName(targetId), targetId)
-end)
-
-RegisterTargetAction('giveitem', 'giveitem', function(src, targetId, item, amount)
+-----------------------------------------------------------------------
+-- give item (validated against the item list, capacity checked first)
+-----------------------------------------------------------------------
+RegisterPlayerAction('giveitem', 'giveitem', false, function(src, target, item, amount)
     item = type(item) == 'string' and item:lower() or nil
     amount = math.floor(tonumber(amount) or 0)
-    if not item or not RSGCore.Shared.Items[item] then
-        Notify(src, locale('sv_101'), locale('sv_invalid_item'), 'error')
-        return
+    local itemDef = item and RSGCore.Shared.Items[item]
+    if not itemDef or amount < 1 or amount > MAX_GIVE_AMOUNT then
+        return NotifyPlayer(src, locale('sv_135'), locale('sv_invalid_item_or_amount', MAX_GIVE_AMOUNT), 'error')
     end
-    if amount < 1 or amount > MAX_ITEM_AMOUNT then
-        Notify(src, locale('sv_101'), locale('sv_invalid_input'), 'error')
-        return
+    if MONEY_ITEMS[item] then
+        return NotifyPlayer(src, locale('sv_135'), locale('sv_use_finances_for_money'), 'error')
     end
-    if not exports['rsg-inventory']:CanAddItem(targetId, item, amount) then
-        Notify(src, locale('sv_101'), locale('sv_target_inventory_full'), 'error')
-        return
+    if not exports['rsg-inventory']:CanAddItem(target, item, amount) then
+        return NotifyPlayer(src, locale('sv_135'), locale('sv_inventory_full'), 'error')
     end
-    if exports['rsg-inventory']:AddItem(targetId, item, amount, nil, nil, 'rsg-adminmenu:giveitem') then
-        Notify(src, locale('sv_135'), locale('sv_136'), 'success')
-        LogAdminAction('player_action', 'medium', src, locale('sv_log_gave_item_to_player'), item .. ' x' .. amount, GetPlayerName(targetId), targetId)
+    if not exports['rsg-inventory']:AddItem(target, item, amount, nil, nil, locale('sv_admin_gave_item')) then
+        return NotifyPlayer(src, locale('sv_135'), locale('sv_inventory_full'), 'error')
     end
+    NotifyPlayer(src, locale('sv_135'), locale('sv_136'), 'success')
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_gave_item_to_player'), item .. ' x' .. amount, GetPlayerName(target), target)
 end)
 
 -----------------------------------------------------------------------
--- player info (manage modal)
+-- player info
 -----------------------------------------------------------------------
-RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
-    if not HasAdminPermission(source, 'playerinfo') then return cb(nil) end
-    local id = TargetId(player)
-    local Target = id and RSGCore.Functions.GetPlayer(id)
-    if not Target then return cb(nil) end
+local moneyTypes = { 'cash', 'bloodmoney', 'bank', 'valbank', 'rhobank', 'blkbank', 'armbank' }
 
-    local pd = Target.PlayerData
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
+    local src = source
+    if not HasAdminPermission(src, 'playerinfo') then return cb({}) end
+    local id = ResolveTarget(player)
+    if not id then return cb({}) end
+
+    local targetPlayer = RSGCore.Functions.GetPlayer(id)
+    local pd = targetPlayer.PlayerData
     local discordId, discordName, discordAvatarUrl = GetCachedDiscordIdentity(id)
 
     local availablePermissions = {}
@@ -520,30 +543,26 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
 
     local items = {}
     for _, item in pairs(pd.items or {}) do
-        if item and item.name then
-            local def = RSGCore.Shared.Items[item.name:lower()]
+        if item then
+            local itemDef = RSGCore.Shared.Items[item.name:lower()]
             items[#items + 1] = {
                 slot = item.slot,
                 name = item.name,
-                label = (def and def.label) or item.name,
-                image = def and def.image or nil,
+                label = (itemDef and itemDef.label) or item.name,
+                image = itemDef and itemDef.image or nil,
                 amount = item.amount,
-                weight = (def and def.weight) or 0,
+                weight = (itemDef and itemDef.weight) or 0,
             }
         end
     end
 
     local role = GetPlayerRole(id)
-    cb({
+    local info = {
         firstname = pd.charinfo.firstname,
         lastname = pd.charinfo.lastname,
         job = pd.job.label,
         grade = pd.job.grade.level,
         jobGradeName = pd.job.grade.name,
-        cash = pd.money.cash or 0,
-        bloodmoney = pd.money.bloodmoney or 0,
-        bank = pd.money.bank or 0,
-        gold = pd.money.gold or 0,
         citizenid = pd.citizenid,
         serverid = id,
         role = role,
@@ -551,181 +570,173 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(
         availablePermissions = availablePermissions,
         ping = GetPlayerPing(id),
         steamHex = RSGCore.Functions.GetIdentifier(id, 'steam'),
-        ip = RSGCore.Functions.GetIdentifier(id, 'ip'),
+        ip = HasAdminPermission(src, 'viewip') and RSGCore.Functions.GetIdentifier(id, 'ip') or nil,
         discordId = discordId,
         discordName = discordName,
         discordAvatarUrl = discordAvatarUrl,
         items = items,
-    })
+    }
+    for _, t in ipairs(moneyTypes) do info[t] = pd.money[t] end
+    cb(info)
 end)
 
 -----------------------------------------------------------------------
--- status-effect / troll actions (natives that only work on the target's
--- own client are relayed via client_playeractions.lua)
+-- kill / status effects / trolls (natives that only work on the target's
+-- own client are relayed there; see client_playeractions.lua)
 -----------------------------------------------------------------------
-RegisterTargetAction('healplayer', 'heal', function(src, targetId)
-    TriggerClientEvent('rsg-medic:client:heal', targetId, -1)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_healed_player'), nil, GetPlayerName(targetId), targetId)
-end)
+local relayActions = {
+    { event = 'killplayer', action = 'kill', severity = 'medium', log = 'sv_log_killed_player' },
+    { event = 'ragdollplayer', action = 'ragdoll', severity = 'low', log = 'sv_log_ragdolled_player' },
+    { event = 'lightningplayer', action = 'lightning', severity = 'low', log = 'sv_log_struck_player_with_lightning' },
+    { event = 'drainstaminaplayer', action = 'drainstamina', severity = 'low', log = 'sv_log_drained_player_stamina' },
+    { event = 'drunkplayer', action = 'drunk', severity = 'low', log = 'sv_log_applied_drunk_effect_to_player' },
+    { event = 'jumpscareplayer', action = 'jumpscare', severity = 'low', log = 'sv_log_jump_scared_player' },
+    { event = 'horsebuckplayer', action = 'horsebuck', severity = 'low', log = 'sv_log_bucked_player_from_horse' },
+    { event = 'hauntedplayer', action = 'haunted', severity = 'low', log = 'sv_log_applied_haunted_effect_to_player' },
+    { event = 'everyoneattackplayer', action = 'everyoneattack', severity = 'medium', log = 'sv_log_made_everyone_attack_player' },
+    { event = 'wildattack', action = 'wildattack', severity = 'medium', log = 'sv_log_triggered_wild_animal_attack_on_player' },
+    { event = 'playerfire', action = 'setonfire', severity = 'medium', log = 'sv_log_set_player_on_fire' },
+}
 
-RegisterRelayAction('killplayer', 'kill', 'rsg-adminmenu:client:killplayer', 'medium', 'sv_log_killed_player')
-RegisterRelayAction('ragdollplayer', 'ragdoll', 'rsg-adminmenu:client:ragdollplayer', 'low', 'sv_log_ragdolled_player')
-RegisterRelayAction('lightningplayer', 'lightning', 'rsg-adminmenu:client:lightningplayer', 'low', 'sv_log_struck_player_with_lightning')
-RegisterRelayAction('drainstaminaplayer', 'drainstamina', 'rsg-adminmenu:client:drainstaminaplayer', 'low', 'sv_log_drained_player_stamina')
-RegisterRelayAction('drunkplayer', 'drunk', 'rsg-adminmenu:client:drunkplayer', 'low', 'sv_log_applied_drunk_effect_to_player')
-RegisterRelayAction('jumpscareplayer', 'jumpscare', 'rsg-adminmenu:client:jumpscareplayer', 'low', 'sv_log_jump_scared_player')
-RegisterRelayAction('horsebuckplayer', 'horsebuck', 'rsg-adminmenu:client:horsebuckplayer', 'low', 'sv_log_bucked_player_from_horse')
-RegisterRelayAction('hauntedplayer', 'haunted', 'rsg-adminmenu:client:hauntedplayer', 'low', 'sv_log_applied_haunted_effect_to_player')
-RegisterRelayAction('everyoneattackplayer', 'everyoneattack', 'rsg-adminmenu:client:everyoneattackplayer', 'medium', 'sv_log_made_everyone_attack_player')
--- these two run on the admin's client (it spawns the animal / starts the fire on the target ped)
-RegisterRelayAction('wildattack', 'wildattack', 'rsg-adminmenu:client:wildattack', 'medium', 'sv_log_triggered_wild_animal_attack_on_player', true)
-RegisterRelayAction('playerfire', 'setonfire', 'rsg-adminmenu:client:playerfire', 'medium', 'sv_log_set_player_on_fire', true)
+for _, def in ipairs(relayActions) do
+    RegisterPlayerAction(def.event, def.action, true, function(src, target)
+        TriggerClientEvent('rsg-adminmenu:client:' .. def.event, target)
+        LogAdminAction('player_action', def.severity, src, locale(def.log), nil, GetPlayerName(target), target)
+    end)
+end
 
-RegisterTargetAction('toheavenplayer', 'toheaven', function(src, targetId)
-    local ped = GetPlayerPed(targetId)
+-- position is server-authoritative, so this is a direct coord bump
+RegisterPlayerAction('toheavenplayer', 'toheaven', true, function(src, target)
+    local ped = GetPlayerPed(target)
     local coords = GetEntityCoords(ped)
     SetEntityCoords(ped, coords.x, coords.y, coords.z + 300.0)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_launched_player_skyward'), nil, GetPlayerName(targetId), targetId)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_launched_player_skyward'), nil, GetPlayerName(target), target)
 end)
 
--- reuses rsg-lawman's cuff flow (it owns the toggle + ishandcuffed metadata)
-RegisterTargetAction('handcuffplayer', 'handcuff', function(src, targetId)
-    TriggerClientEvent('rsg-lawman:client:getcuffed', targetId, src, false)
-    LogAdminAction('player_action', 'low', src, locale('sv_log_handcuffed_uncuffed_player'), nil, GetPlayerName(targetId), targetId)
+-- reuses rsg-lawman's cuff flow (it owns the toggle state and 'ishandcuffed' metadata)
+RegisterPlayerAction('handcuffplayer', 'handcuff', true, function(src, target)
+    TriggerClientEvent('rsg-lawman:client:getcuffed', target, src, false)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_handcuffed_uncuffed_player'), nil, GetPlayerName(target), target)
 end)
 
 -----------------------------------------------------------------------
--- moderation
+-- warn player — logged to admin_player_history, no kick
 -----------------------------------------------------------------------
 local allowedSeverities = { low = true, medium = true, high = true }
 
-RegisterTargetAction('warnplayer', 'warn', function(src, targetId, reason, severity)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    reason = CleanText(reason)
-    if not Target or not reason then return end
+RegisterPlayerAction('warnplayer', 'warn', true, function(src, target, reason, severity)
+    reason = SanitizeText(reason, 255)
+    if not reason then return NotifyPlayer(src, locale('sv_101'), locale('sv_reason_required'), 'error') end
     severity = allowedSeverities[severity] and severity or 'medium'
-    LogPlayerHistory(Target.PlayerData.citizenid, 'warn', reason, AdminDisplayName(src), nil, severity)
-    Notify(targetId, locale('sv_you_have_been_warned'), reason, 'error', 10000)
-    LogAdminAction('player_action', severity, src, locale('sv_log_warned_player'), reason, GetPlayerName(targetId), targetId)
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    LogPlayerHistory(targetPlayer.PlayerData.citizenid, 'warn', reason, AdminDisplayName(src), nil, severity)
+    NotifyPlayer(target, locale('sv_you_have_been_warned'), reason, 'error', 10000)
+    LogAdminAction('player_action', severity, src, locale('sv_log_warned_player'), reason, GetPlayerName(target), target)
 end)
 
--- replaces (doesn't stack) the target's role
-RegisterTargetAction('setpermission', 'setpermission', function(src, targetId, level)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if not Target then return end
+-----------------------------------------------------------------------
+-- set permission level (replaces rather than stacks; shares the Admins page path)
+-----------------------------------------------------------------------
+RegisterPlayerAction('setpermission', 'setpermission', true, function(src, target, level)
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    local targetName = targetPlayer.PlayerData.charinfo.firstname .. ' ' .. targetPlayer.PlayerData.charinfo.lastname
     level = (type(level) == 'string' and level ~= '') and level or nil
 
-    -- can't touch someone at/above your own role, or hand out a role at/above it
-    if not CanManageRole(src, GetPlayerRole(targetId)) or (level and not CanManageRole(src, level)) then
-        Notify(src, locale('sv_101'), locale('sv_role_too_high'), 'error')
-        return
-    end
-
-    local admin = RSGCore.Functions.GetPlayer(src)
-    local targetName = CharName(Target)
-    if level then
-        if not SetAdminRole(Target.PlayerData.citizenid, targetId, level, CharName(admin), RSGCore.Functions.GetIdentifier(targetId, 'discord'), targetName) then
-            Notify(src, locale('sv_101'), locale('sv_invalid_role'), 'error')
-            return
-        end
-    else
-        RemoveAdminRole(Target.PlayerData.citizenid, targetId)
+    local ok, message = ChangeAdminRole(src, targetPlayer.PlayerData.citizenid, target, level, targetName)
+    if not ok then
+        return NotifyPlayer(src, locale('sv_101'), message, 'error')
     end
 
     local levelLabel = level and LabelForRole(level) or locale('sv_role_user')
-    Notify(src, locale('sv_permission_updated'), locale('sv_permission_set_to', levelLabel), 'success')
-    LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_player_permission_level'), locale('sv_log_new_level', levelLabel), targetName, targetId)
+    NotifyPlayer(src, locale('sv_permission_updated'), locale('sv_permission_set_to', levelLabel), 'success')
+    LogAdminAction('admin_action', 'high', src, locale('sv_log_changed_player_permission_level'), locale('sv_log_new_level', levelLabel), targetName, target)
 end)
 
 -----------------------------------------------------------------------
--- character / job / xp
+-- set job (jobs live in the database; SetJob rejects unknown jobs/grades)
 -----------------------------------------------------------------------
-RegisterTargetAction('setjob', 'setjob', function(src, targetId, job, grade)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
+RegisterPlayerAction('setjob', 'setjob', true, function(src, target, job, grade)
     job = type(job) == 'string' and job:lower() or nil
     grade = math.floor(tonumber(grade) or 0)
-    if not Target or not job then return end
-
-    -- multi-job lives in rsg-core: make sure the job is held, then make it active
-    exports['rsg-core']:AddPlayerJob(targetId, job, grade, true)
-    if not Target.Functions.SetJob(job, grade) then
-        Notify(src, locale('sv_101'), locale('sv_job_set_failed'), 'error')
-        return
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    if not job or not targetPlayer.Functions.SetJob(job, grade) then
+        return NotifyPlayer(src, locale('sv_101'), locale('sv_invalid_job'), 'error')
     end
-    LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_job'), locale('sv_log_job_grade', job, tostring(grade)), GetPlayerName(targetId), targetId)
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_job'), locale('sv_log_job_grade', job, tostring(grade)), GetPlayerName(target), target)
 end)
 
--- charinfo is free-form JSON, so these keys need no migration (value = max length)
-local allowedCharFields = { nickname = 50, firstname = 50, lastname = 50, age = 3, description = 255 }
+-----------------------------------------------------------------------
+-- set charinfo field (charinfo is free-form JSON, so new keys need no migration)
+-----------------------------------------------------------------------
+local charFieldLimits = { nickname = 50, firstname = 50, lastname = 50, age = 3, description = 500 }
 
-RegisterTargetAction('setcharfield', 'setcharfield', function(src, targetId, field, value)
-    local maxLen = allowedCharFields[field]
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if not maxLen or not Target then return end
-    value = CleanText(value, maxLen)
+RegisterPlayerAction('setcharfield', 'setcharfield', true, function(src, target, field, value)
+    local limit = charFieldLimits[field]
+    if not limit then return end
+    value = SanitizeText(value, limit)
     if field == 'age' then value = tonumber(value) and math.floor(tonumber(value)) or nil end
-    if (field == 'firstname' or field == 'lastname') and not value then
-        Notify(src, locale('sv_101'), locale('sv_invalid_input'), 'error')
-        return
+    if (field == 'firstname' or field == 'lastname' or field == 'age') and not value then
+        return NotifyPlayer(src, locale('sv_101'), locale('sv_invalid_value'), 'error')
     end
 
-    Target.PlayerData.charinfo[field] = value
-    Target.Functions.SetPlayerData('charinfo', Target.PlayerData.charinfo)
-    Target.Functions.Save()
-    LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_character_field'), field .. ' = ' .. tostring(value), GetPlayerName(targetId), targetId)
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    targetPlayer.PlayerData.charinfo[field] = value
+    targetPlayer.Functions.UpdatePlayerData()
+    targetPlayer.Functions.Save()
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_changed_player_character_field'), field .. ' = ' .. tostring(value), GetPlayerName(target), target)
 end)
 
--- no levelling system in rsg-core: stored as metadata.xp
-RegisterTargetAction('adjustxp', 'xp', function(src, targetId, direction, amount)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
+-----------------------------------------------------------------------
+-- add/remove xp (stored in PlayerData.metadata.xp)
+-----------------------------------------------------------------------
+RegisterPlayerAction('adjustxp', 'xp', true, function(src, target, direction, amount)
     local delta = math.floor(tonumber(amount) or 0)
-    if not Target or delta <= 0 or delta > 1000000 then
-        Notify(src, locale('sv_101'), locale('sv_invalid_input'), 'error')
-        return
-    end
-    local current = tonumber(Target.Functions.GetMetaData('xp')) or 0
+    if delta <= 0 then return NotifyPlayer(src, locale('sv_101'), locale('sv_invalid_value'), 'error') end
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    local current = tonumber(targetPlayer.Functions.GetMetaData('xp')) or 0
     local newXp = direction == 'remove' and math.max(0, current - delta) or current + delta
-    Target.Functions.SetMetaData('xp', newXp)
-    LogAdminAction('economy', 'low', src, locale('sv_log_adjusted_player_xp'),
-        (direction == 'remove' and '-' or '+') .. delta .. ' (new: ' .. newXp .. ')', GetPlayerName(targetId), targetId)
+    targetPlayer.Functions.SetMetaData('xp', newXp)
+    LogAdminAction('economy', 'low', src, locale('sv_log_adjusted_player_xp'), (direction == 'remove' and '-' or '+') .. delta .. ' (new: ' .. newXp .. ')', GetPlayerName(target), target)
 end)
 
 -----------------------------------------------------------------------
--- clear weapons / items
+-- clear weapons / clear items
 -----------------------------------------------------------------------
-RegisterTargetAction('clearweapons', 'clearweapons', function(src, targetId)
-    local Target = RSGCore.Functions.GetPlayer(targetId)
-    if not Target then return end
-    for _, item in pairs(Target.PlayerData.items or {}) do
-        local def = item and item.name and RSGCore.Shared.Items[item.name:lower()]
-        if def and def.type == 'weapon' then
-            exports['rsg-inventory']:RemoveItem(targetId, item.name, item.amount, item.slot, 'rsg-adminmenu:clearweapons')
+RegisterPlayerAction('clearweapons', 'clearweapons', true, function(src, target)
+    local targetPlayer = RSGCore.Functions.GetPlayer(target)
+    for _, item in pairs(targetPlayer.PlayerData.items or {}) do
+        local itemDef = item and RSGCore.Shared.Items[item.name:lower()]
+        if itemDef and itemDef.type == 'weapon' then
+            exports['rsg-inventory']:RemoveItem(target, item.name, item.amount, item.slot, locale('sv_admin_cleared_weapons'))
         end
     end
-    TriggerClientEvent('rsg-adminmenu:client:clearweapons', targetId)
-    LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_weapons'), nil, GetPlayerName(targetId), targetId)
+    TriggerClientEvent('rsg-adminmenu:client:clearweapons', target)
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_weapons'), nil, GetPlayerName(target), target)
 end)
 
-RegisterTargetAction('clearitems', 'clearitems', function(src, targetId)
-    exports['rsg-inventory']:ClearInventory(targetId)
-    LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_items'), nil, GetPlayerName(targetId), targetId)
+RegisterPlayerAction('clearitems', 'clearitems', true, function(src, target)
+    exports['rsg-inventory']:ClearInventory(target)
+    LogAdminAction('player_action', 'medium', src, locale('sv_log_cleared_player_items'), nil, GetPlayerName(target), target)
 end)
 
 -----------------------------------------------------------------------
--- item catalogue (give-item picker) + per-slot removal
+-- item catalog (for the "select item to add" picker) + per-slot removal
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getallitems', function(source, cb)
     if not HasAdminPermission(source, 'giveitem') then return cb({}) end
+
     local items = {}
     for name, item in pairs(RSGCore.Shared.Items) do
-        items[#items + 1] = {
-            name = name,
-            label = item.label or name,
-            image = item.image,
-            type = item.type or 'item',
-            weight = item.weight or 0,
-            category = item.category,
-        }
+        if not MONEY_ITEMS[name] then
+            items[#items + 1] = {
+                name = name,
+                label = item.label or name,
+                image = item.image,
+                type = item.type or 'item',
+                weight = item.weight or 0,
+                category = item.category,
+            }
+        end
     end
     table.sort(items, function(a, b) return a.label < b.label end)
     cb(items)
@@ -733,21 +744,58 @@ end)
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removeplayeritem', function(source, cb, data)
     local src = source
-    if not HasAdminPermission(src, 'giveitem') or type(data) ~= 'table' then return cb({ success = false }) end
-    local targetId = TargetId(data.id)
+    if not HasAdminPermission(src, 'giveitem') then return cb({ success = false }) end
+    data = type(data) == 'table' and data or {}
+    local target = ResolveTarget(data.id)
     local amount = math.floor(tonumber(data.amount) or 0)
-    if not targetId or type(data.item) ~= 'string' or amount < 1 then return cb({ success = false }) end
+    local slot = tonumber(data.slot)
+    if not target or type(data.item) ~= 'string' or amount < 1 or not slot then return cb({ success = false }) end
+    if not CanActOn(src, target) then return cb({ success = false }) end
 
-    local removed = exports['rsg-inventory']:RemoveItem(targetId, data.item, amount, tonumber(data.slot), 'rsg-adminmenu:removeitem')
+    local removed = exports['rsg-inventory']:RemoveItem(target, data.item, amount, slot, locale('sv_admin_removed_item'))
     if removed then
-        LogAdminAction('player_action', 'medium', src, locale('sv_log_removed_item_from_player'), data.item .. ' x' .. amount, GetPlayerName(targetId), targetId)
+        LogAdminAction('player_action', 'medium', src, locale('sv_log_removed_item_from_player'), data.item .. ' x' .. amount, GetPlayerName(target), target)
     end
     cb({ success = removed and true or false })
 end)
 
 -----------------------------------------------------------------------
--- /report (any player)
+-- report command (any player)
 -----------------------------------------------------------------------
 RSGCore.Commands.Add('report', locale('sv_report_command_desc'), {}, false, function(source)
     TriggerClientEvent('rsg-adminmenu:client:openreportmenu', source)
+end)
+
+-----------------------------------------------------------------------
+-- self tools: the server authorises and logs, the client applies the effect
+-----------------------------------------------------------------------
+local selfToolLogs = {
+    godmode = 'sv_log_toggled_godmode',
+    invisible = 'sv_log_toggled_invisible',
+    playerblips = 'sv_log_toggled_player_blips',
+    doorids = 'sv_log_toggled_door_ids',
+    marker = 'sv_log_teleported_to_marker',
+}
+
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:selftool', function(source, cb, data)
+    local src = source
+    local tool = type(data) == 'table' and data.tool or nil
+    if not selfToolLogs[tool] then return cb({ success = false }) end
+    if not HasAdminPermission(src, 'selftools') then return cb({ success = false }) end
+    if tool == 'playerblips' and not Config.EnablePlayerBlips then return cb({ success = false }) end
+
+    local details = data.enabled ~= nil and (data.enabled and locale('sv_on') or locale('sv_off')) or nil
+    LogAdminAction('admin_action', 'low', src, locale(selfToolLogs[tool]), details, nil)
+    cb({ success = true })
+end)
+
+-- self revive (server-side so rsg-medic's isdead metadata is cleared)
+RSGCore.Functions.CreateCallback('rsg-adminmenu:server:selfrevive', function(source, cb)
+    local src = source
+    if not HasAdminPermission(src, 'revive') then return cb({ success = false }) end
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if Player then Player.Functions.SetMetaData('isdead', false) end
+    TriggerClientEvent('rsg-medic:client:revive', src)
+    LogAdminAction('player_action', 'low', src, locale('sv_log_revived_player'), nil, GetPlayerName(src), src)
+    cb({ success = true })
 end)

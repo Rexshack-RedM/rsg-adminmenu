@@ -1,8 +1,7 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
 -------------------------------------------------------------------
--- admin-side NUI callbacks — forward into the server events added in
--- server.lua, same 1:1 pattern as every other RegisterNuiCallback in client.lua
+-- admin-side NUI callbacks — forward into the server events in server.lua
 -------------------------------------------------------------------
 RegisterNuiCallback('healPlayer', function(data, cb)
     TriggerServerEvent('rsg-adminmenu:server:healplayer', { id = data.id })
@@ -128,7 +127,7 @@ end)
 -- client since ragdoll/stamina/camera natives only apply locally
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:killplayer', function()
-    SetEntityHealth(PlayerPedId(), 0)
+    SetEntityHealth(PlayerPedId(), 0, 0)
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:ragdollplayer', function()
@@ -138,11 +137,12 @@ end)
 RegisterNetEvent('rsg-adminmenu:client:lightningplayer', function()
     local ped = PlayerPedId()
     ShakeGameplayCam('LARGE_EXPLOSION_SHAKE', 1.5)
-    SetEntityHealth(ped, math.max(1, GetEntityHealth(ped) - 50))
+    SetEntityHealth(ped, math.max(1, GetEntityHealth(ped) - 50), 0)
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:drainstaminaplayer', function()
-    SetPlayerStamina(PlayerId(), 0.0)
+    -- _CHANGE_PED_STAMINA (SetPlayerStamina is a GTA-only native and did nothing here)
+    Citizen.InvokeNative(0xC3D4B754C0E86B9E, PlayerPedId(), -1000.0)
 end)
 
 RegisterNetEvent('rsg-adminmenu:client:drunkplayer', function()
@@ -174,9 +174,13 @@ end)
 
 RegisterNetEvent('rsg-adminmenu:client:horsebuckplayer', function()
     local ped = PlayerPedId()
+    if IsPedOnMount(ped) then
+        -- ragdolling a rider throws them off the horse
+        SetPedToRagdoll(ped, 2500, 2500, 0, false, false, false)
+        return
+    end
     if IsPedInAnyVehicle(ped, false) then
-        local mount = GetVehiclePedIsIn(ped, false)
-        TaskLeaveVehicle(ped, mount, 4160) -- 4160 = bail out / forced abrupt exit
+        TaskLeaveVehicle(ped, GetVehiclePedIsIn(ped, false), 4160) -- 4160 = bail out / forced abrupt exit
         Wait(300)
     end
     SetEntityVelocity(ped, 0.0, 0.0, 3.5)
@@ -202,16 +206,10 @@ RegisterNetEvent('rsg-adminmenu:client:everyoneattackplayer', function()
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)
 
-    local handle, entity = FindFirstPed()
-    local success
-    repeat
-        if DoesEntityExist(entity) and entity ~= ped and not IsPedAPlayer(entity) and not IsEntityDead(entity) then
-            if #(GetEntityCoords(entity) - coords) < 40.0 then
-                ClearPedTasks(entity)
-                TaskCombatPed(entity, ped, 0, 16)
-            end
+    for _, entity in ipairs(GetGamePool('CPed')) do
+        if entity ~= ped and not IsPedAPlayer(entity) and not IsEntityDead(entity) and #(GetEntityCoords(entity) - coords) < 40.0 then
+            ClearPedTasks(entity)
+            TaskCombatPed(entity, ped, 0, 16)
         end
-        success, entity = FindNextPed(handle)
-    until not success
-    EndFindPed(handle)
+    end
 end)

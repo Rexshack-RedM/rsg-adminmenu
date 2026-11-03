@@ -25,7 +25,7 @@ interface PlayerManageModalProps {
 
 const mockDetail: PlayerDetail = {
   firstname: 'Test', lastname: 'Player', job: 'Sheriff', grade: 1, jobGradeName: 'Deputy',
-  cash: 910, bloodmoney: 0, bank: 1200, gold: 0,
+  cash: 910, bloodmoney: 0, bank: 1200, valbank: 0, rhobank: 0, blkbank: 0, armbank: 0,
   citizenid: 'DEV1234', serverid: 1, role: 'admin', roleLabel: 'Admin',
   availablePermissions: [
     { value: 'god', label: 'Owner' }, { value: 'headadmin', label: 'Head Admin' }, { value: 'developer', label: 'Developer' },
@@ -69,7 +69,7 @@ export function PlayerManageModal({ player, permissions, onClose }: PlayerManage
     if (successMsg) toast.push({ type: 'success', title: successMsg });
   };
 
-  const totalBank = detail ? (detail.bank ?? 0) : 0;
+  const totalBank = detail ? detail.bank + detail.valbank + detail.rhobank + detail.blkbank + detail.armbank : 0;
 
   return (
     <div
@@ -497,7 +497,8 @@ function PermissionForm({ levels, current, onCancel, onSubmit }: { levels: { val
 }
 
 const moneyTypeOptions = [
-  { value: 'cash', label: locale('ui_cash') }, { value: 'bank', label: locale('ui_std_bank') },
+  { value: 'cash', label: locale('ui_cash') }, { value: 'bank', label: locale('ui_std_bank') }, { value: 'valbank', label: locale('ui_val_bank') },
+  { value: 'rhobank', label: locale('ui_rho_bank') }, { value: 'blkbank', label: locale('ui_blk_bank') }, { value: 'armbank', label: locale('ui_arm_bank') },
   { value: 'bloodmoney', label: locale('ui_blood_money') },
 ];
 

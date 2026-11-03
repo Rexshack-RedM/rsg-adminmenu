@@ -1,48 +1,23 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_chat_messages` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `sender_citizenid` VARCHAR(50) DEFAULT NULL,
-        `sender_name` VARCHAR(255) NOT NULL,
-        `sender_role` VARCHAR(20) DEFAULT NULL,
-        `sender_discord_name` VARCHAR(255) DEFAULT NULL,
-        `sender_discord_avatar_url` VARCHAR(500) DEFAULT NULL,
-        `message` VARCHAR(500) NOT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-MySQL.query("ALTER TABLE admin_chat_messages ADD COLUMN IF NOT EXISTS sender_discord_name VARCHAR(255) DEFAULT NULL")
-MySQL.query("ALTER TABLE admin_chat_messages ADD COLUMN IF NOT EXISTS sender_discord_avatar_url VARCHAR(500) DEFAULT NULL")
-
-local function GetOnlineAdmins()
-    local admins = {}
-    for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
-        if HasAdminPermission(playerId, 'adminmenu') then
-            admins[#admins + 1] = playerId
-        end
-    end
-    return admins
-end
+local CHAT_COOLDOWN = 1 -- seconds between messages from one admin
+local lastMessage = {}
 
 -----------------------------------------------------------------------
 -- post a message — broadcast in realtime to every online admin
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:createadminchatmessage', function(source, cb, data)
     local src = source
-    if not HasAdminPermission(src, 'adminmenu') then
-        cb({ success = false })
-        return
-    end
+    if not HasAdminPermission(src, 'adminmenu') then return cb({ success = false }) end
 
-    local message = type(data) == 'table' and CleanText(data.message, 500)
-    if not message then
-        cb({ success = false })
-        return
-    end
-
+    local message = SanitizeText(type(data) == 'table' and data.message, 500)
     local Player = RSGCore.Functions.GetPlayer(src)
+    local now = os.time()
+    if not message or not Player or (lastMessage[src] and now - lastMessage[src] < CHAT_COOLDOWN) then
+        return cb({ success = false })
+    end
+    lastMessage[src] = now
+
     local senderName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname
     local senderRole = GetPlayerRole(src)
     local _, discordName, discordAvatarUrl = GetCachedDiscordIdentity(src)
@@ -61,8 +36,10 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:createadminchatmessage', 
             message = message,
             created_at = os.date('%Y-%m-%d %H:%M:%S'),
         }
-        for _, adminId in ipairs(GetOnlineAdmins()) do
-            TriggerClientEvent('rsg-adminmenu:client:adminchatmessage', adminId, payload)
+        for _, playerId in ipairs(RSGCore.Functions.GetPlayers()) do
+            if HasAdminPermission(playerId, 'adminmenu') then
+                TriggerClientEvent('rsg-adminmenu:client:adminchatmessage', playerId, payload)
+            end
         end
         cb({ success = true })
     end)
@@ -72,11 +49,7 @@ end)
 -- recent history
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadminchatmessages', function(source, cb)
-    local src = source
-    if not HasAdminPermission(src, 'adminmenu') then
-        cb({})
-        return
-    end
+    if not HasAdminPermission(source, 'adminmenu') then return cb({}) end
 
     MySQL.query('SELECT * FROM admin_chat_messages ORDER BY created_at DESC LIMIT 50', {}, function(rows)
         rows = rows or {}
@@ -88,4 +61,8 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getadminchatmessages', fu
         end
         cb(ordered)
     end)
+end)
+
+AddEventHandler('playerDropped', function()
+    lastMessage[source] = nil
 end)

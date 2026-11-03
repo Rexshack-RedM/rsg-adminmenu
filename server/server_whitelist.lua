@@ -1,53 +1,57 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
--- self-migrating: don't depend on the SQL file having been run by hand
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_whitelist` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `citizenid` VARCHAR(50) NOT NULL,
-        `player_name` VARCHAR(255) NOT NULL,
-        `account_name` VARCHAR(255) DEFAULT NULL,
-        `status` VARCHAR(20) NOT NULL DEFAULT 'active',
-        `reason` VARCHAR(255) DEFAULT NULL,
-        `added_by_name` VARCHAR(255) DEFAULT NULL,
-        `expires_at` TIMESTAMP NULL DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        UNIQUE KEY `citizenid` (`citizenid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
+local allowedStatuses = { active = true, suspended = true }
 
 local function IsWhitelistAdmin(src)
     return HasAdminPermission(src, 'whitelist')
 end
 
+local function ParseTimestamp(value)
+    if type(value) == 'number' then
+        -- oxmysql returns TIMESTAMP columns as epoch milliseconds
+        return value > 1e11 and math.floor(value / 1000) or value
+    end
+    local year, month, day, hour, min, sec = tostring(value or ''):match('(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)')
+    if not year then return nil end
+    return os.time({ year = tonumber(year), month = tonumber(month), day = tonumber(day), hour = tonumber(hour), min = tonumber(min), sec = tonumber(sec) })
+end
+
+local function IsEntryActive(row, now)
+    if not row or row.status ~= 'active' then return false end
+    local expiresAt = row.expires_at and ParseTimestamp(row.expires_at)
+    return not expiresAt or expiresAt >= now
+end
+
+-----------------------------------------------------------------------
+-- optional enforcement: characters without an active entry are dropped
+-- once loaded (staff are exempt). Off by default, see Config.Whitelist.
+-----------------------------------------------------------------------
+AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
+    if not (Config.Whitelist and Config.Whitelist.Enforce) then return end
+    local src = Player.PlayerData.source
+    if HasAdminPermission(src, 'adminmenu') then return end
+
+    MySQL.single('SELECT status, expires_at FROM admin_whitelist WHERE citizenid = ?', { Player.PlayerData.citizenid }, function(row)
+        if not IsEntryActive(row, os.time()) then
+            DropPlayer(src, locale('sv_not_whitelisted'))
+        end
+    end)
+end)
+
 -----------------------------------------------------------------------
 -- list (status is computed here: an active row past its expiry reads as expired)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getwhitelist', function(source, cb)
-    local src = source
-    if not IsWhitelistAdmin(src) then
-        cb(nil)
-        return
-    end
+    if not IsWhitelistAdmin(source) then return cb(nil) end
 
     MySQL.query('SELECT * FROM admin_whitelist ORDER BY created_at DESC', {}, function(rows)
         local now = os.time()
         for _, row in ipairs(rows or {}) do
-            if row.status == 'active' and row.expires_at then
-                local expiresAt = type(row.expires_at) == 'number' and row.expires_at or nil
-                if not expiresAt then
-                    local year, month, day, hour, min, sec = tostring(row.expires_at):match("(%d+)%-(%d+)%-(%d+) (%d+):(%d+):(%d+)")
-                    if year then
-                        expiresAt = os.time({ year = tonumber(year), month = tonumber(month), day = tonumber(day), hour = tonumber(hour), min = tonumber(min), sec = tonumber(sec) })
-                    end
-                end
-                if expiresAt and expiresAt < now then
-                    row.status = 'expired'
-                end
+            if row.status == 'active' and not IsEntryActive(row, now) then
+                row.status = 'expired'
             end
         end
-        cb(rows)
+        cb(rows or {})
     end)
 end)
 
@@ -57,34 +61,31 @@ end)
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:addwhitelist', function(source, cb, data)
     local src = source
     if not IsWhitelistAdmin(src) then
-        cb({ success = false, message = locale('sv_not_allowed') })
-        return
+        return cb({ success = false, message = locale('sv_not_allowed') })
     end
+    data = type(data) == 'table' and data or {}
 
-    local citizenid = type(data) == 'table' and CleanText(data.citizenid, 50)
-    local playerName = type(data) == 'table' and CleanText(data.playerName)
+    local citizenid = SanitizeText(data.citizenid, 50)
+    local playerName = SanitizeText(data.playerName, 255)
     if not citizenid or not playerName then
-        cb({ success = false, message = locale('sv_invalid_input') })
-        return
+        return cb({ success = false, message = locale('sv_invalid_value') })
     end
-    data.reason, data.accountName = CleanText(data.reason), CleanText(data.accountName)
-    local admin = RSGCore.Functions.GetPlayer(src)
-    local adminName = admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname
+    local accountName = SanitizeText(data.accountName, 255)
+    local reason = SanitizeText(data.reason, 255)
 
-    local expiresAt = nil
-    if data.expiresInDays and tonumber(data.expiresInDays) and tonumber(data.expiresInDays) > 0 then
-        expiresAt = os.date('%Y-%m-%d %H:%M:%S', os.time() + (tonumber(data.expiresInDays) * 86400))
-    end
+    local admin = RSGCore.Functions.GetPlayer(src)
+    local adminName = admin and (admin.PlayerData.charinfo.firstname .. ' ' .. admin.PlayerData.charinfo.lastname) or GetPlayerName(src)
+
+    local days = tonumber(data.expiresInDays)
+    local expiresAt = (days and days > 0) and os.date('%Y-%m-%d %H:%M:%S', os.time() + math.floor(days * 86400)) or nil
 
     MySQL.insert([[
         INSERT INTO admin_whitelist (citizenid, player_name, account_name, status, reason, added_by_name, expires_at)
         VALUES (?, ?, ?, 'active', ?, ?, ?)
-        ON DUPLICATE KEY UPDATE status = 'active', player_name = ?, account_name = ?, reason = ?, added_by_name = ?, expires_at = ?
-    ]], {
-        citizenid, playerName, data.accountName, data.reason, adminName, expiresAt,
-        playerName, data.accountName, data.reason, adminName, expiresAt,
-    }, function()
-        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_player_to_whitelist'), data.reason, data.playerName)
+        ON DUPLICATE KEY UPDATE status = 'active', player_name = VALUES(player_name), account_name = VALUES(account_name),
+            reason = VALUES(reason), added_by_name = VALUES(added_by_name), expires_at = VALUES(expires_at)
+    ]], { citizenid, playerName, accountName, reason, adminName, expiresAt }, function()
+        LogAdminAction('admin_action', 'medium', src, locale('sv_log_added_player_to_whitelist'), reason, playerName)
         cb({ success = true })
     end)
 end)
@@ -94,17 +95,14 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:setwhiteliststatus', function(source, cb, data)
     local src = source
-    if not IsWhitelistAdmin(src) then
-        cb({ success = false })
-        return
-    end
+    data = type(data) == 'table' and data or {}
+    local id = tonumber(data.id)
+    if not IsWhitelistAdmin(src) or not id or not allowedStatuses[data.status] then return cb({ success = false }) end
 
-    local allowedStatus = { active = true, suspended = true }
-    if type(data) ~= 'table' or not allowedStatus[data.status] or not tonumber(data.id) then return cb({ success = false }) end
-    MySQL.update('UPDATE admin_whitelist SET status = ? WHERE id = ?', { data.status, tonumber(data.id) }, function(affected)
+    MySQL.update('UPDATE admin_whitelist SET status = ? WHERE id = ?', { data.status, id }, function(affected)
         local success = (affected or 0) > 0
         if success then
-            LogAdminAction('admin_action', 'medium', src, locale('sv_log_changed_whitelist_status'), locale('sv_log_new_status', tostring(data.status)), nil)
+            LogAdminAction('admin_action', 'medium', src, locale('sv_log_changed_whitelist_status'), locale('sv_log_new_status', data.status), nil)
         end
         cb({ success = success })
     end)
@@ -115,13 +113,10 @@ end)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:removewhitelist', function(source, cb, data)
     local src = source
-    if not IsWhitelistAdmin(src) then
-        cb({ success = false })
-        return
-    end
+    local id = tonumber(type(data) == 'table' and data.id)
+    if not IsWhitelistAdmin(src) or not id then return cb({ success = false }) end
 
-    if type(data) ~= 'table' or not tonumber(data.id) then return cb({ success = false }) end
-    MySQL.update('DELETE FROM admin_whitelist WHERE id = ?', { tonumber(data.id) }, function(affected)
+    MySQL.update('DELETE FROM admin_whitelist WHERE id = ?', { id }, function(affected)
         local success = (affected or 0) > 0
         if success then
             LogAdminAction('admin_action', 'medium', src, locale('sv_log_removed_player_from_whitelist'), nil, nil)

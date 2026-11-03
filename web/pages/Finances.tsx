@@ -10,6 +10,10 @@ import type { FinanceData, ManagedPlayer, MoneyType, Permissions } from '../type
 
 const moneyTypes: { value: MoneyType; label: string }[] = [
   { value: 'bank', label: locale('ui_std_bank') },
+  { value: 'valbank', label: locale('ui_val_bank') },
+  { value: 'rhobank', label: locale('ui_rho_bank') },
+  { value: 'blkbank', label: locale('ui_blk_bank') },
+  { value: 'armbank', label: locale('ui_arm_bank') },
   { value: 'cash', label: locale('ui_cash') },
   { value: 'bloodmoney', label: locale('ui_blood_money') },
 ];
@@ -34,7 +38,7 @@ export function Finances({ permissions }: { permissions: Permissions | null }) {
 
   const loadData = (id: number) => {
     fetchNui<FinanceData>('getFinanceData', { id }, {
-      bank: 1200, gold: 0, cash: 250, bloodmoney: 0,
+      bank: 1200, valbank: 0, rhobank: 0, blkbank: 0, armbank: 0, cash: 250, bloodmoney: 0,
     }).then(setData);
   };
 

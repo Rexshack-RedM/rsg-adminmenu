@@ -1,25 +1,6 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
--- self-migrating: don't depend on the SQL file having been run by hand
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_player_history` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `citizenid` VARCHAR(50) NOT NULL,
-        `action` VARCHAR(20) NOT NULL,
-        `reason` VARCHAR(255) DEFAULT NULL,
-        `admin_name` VARCHAR(255) DEFAULT NULL,
-        `duration_seconds` INT(11) DEFAULT NULL,
-        `severity` VARCHAR(20) DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        KEY `citizenid` (`citizenid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
-
--- covers installs from before the `severity` column existed
-MySQL.query("ALTER TABLE `admin_player_history` ADD COLUMN IF NOT EXISTS `severity` VARCHAR(20) DEFAULT NULL")
-
--- global (not local) so server.lua's kick/ban/warn handlers can call into it without a require system
+-- global so server.lua's kick/ban/warn handlers can call into it
 function LogPlayerHistory(citizenid, action, reason, adminName, durationSeconds, severity)
     if not citizenid then return end
     MySQL.insert('INSERT INTO admin_player_history (citizenid, action, reason, admin_name, duration_seconds, severity) VALUES (?, ?, ?, ?, ?, ?)', {
@@ -27,8 +8,8 @@ function LogPlayerHistory(citizenid, action, reason, adminName, durationSeconds,
     })
 end
 
--- no persisted per-citizen role table exists in RSGCore (permissions are ACE-only), so this
--- checks the server's configured permission levels in priority order and falls back to 'user'
+-- RSGCore permissions are ACE-only, so this scans the configured levels in
+-- priority order and falls back to 'user'
 function GetPlayerRole(source)
     for _, level in ipairs(RSGCore.Config.Server.Permissions) do
         if IsPlayerAceAllowed(source, level) then
@@ -39,20 +20,16 @@ function GetPlayerRole(source)
 end
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerhistory', function(source, cb, data)
-    local src = source
-    if not HasAdminPermission(src, 'playerinfo') then
-        cb(nil)
-        return
-    end
+    if not HasAdminPermission(source, 'playerinfo') then return cb(nil) end
+    local citizenid = type(data) == 'table' and data.citizenid or nil
+    if type(citizenid) ~= 'string' then return cb({}) end
 
-    if type(data) ~= 'table' or not data.citizenid then return cb({}) end
-    MySQL.query('SELECT * FROM admin_player_history WHERE citizenid = ? ORDER BY created_at DESC LIMIT 50', { tostring(data.citizenid) }, function(rows)
+    MySQL.query('SELECT * FROM admin_player_history WHERE citizenid = ? ORDER BY created_at DESC LIMIT 50', { citizenid }, function(rows)
         cb(rows or {})
     end)
 end)
 
--- only Owner ('god') and Head Admin may erase punishment history — every
--- other role is rejected here too, independent of the frontend hiding the button
+-- only Owner ('god') and Head Admin may erase punishment history
 function CanManageHistory(src)
     local role = GetPlayerRole(src)
     return role == 'god' or role == 'headadmin' or IsPlayerAceAllowed(src, 'god')
@@ -60,23 +37,19 @@ end
 
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:deletehistoryentry', function(source, cb, data)
     local src = source
-    if not CanManageHistory(src) then
-        cb({ success = false })
-        return
-    end
+    local id = tonumber(type(data) == 'table' and data.id)
+    if not CanManageHistory(src) or not id then return cb({ success = false }) end
 
-    MySQL.single('SELECT * FROM admin_player_history WHERE id = ?', { data.id }, function(entry)
-        if not entry then
-            cb({ success = false })
-            return
-        end
+    MySQL.single('SELECT * FROM admin_player_history WHERE id = ?', { id }, function(entry)
+        if not entry then return cb({ success = false }) end
 
-        MySQL.update('DELETE FROM admin_player_history WHERE id = ?', { data.id }, function(affected)
-            if affected > 0 then
-                LogAdminAction('admin_action', 'high', src, locale('sv_log_deleted_history', tostring(data.id)),
+        MySQL.update('DELETE FROM admin_player_history WHERE id = ?', { id }, function(affected)
+            local success = (affected or 0) > 0
+            if success then
+                LogAdminAction('admin_action', 'high', src, locale('sv_log_deleted_history', tostring(id)),
                     entry.action .. ': ' .. (entry.reason or locale('sv_no_reason')), nil)
             end
-            cb({ success = affected > 0 })
+            cb({ success = success })
         end)
     end)
 end)

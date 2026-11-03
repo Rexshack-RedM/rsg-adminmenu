@@ -4,7 +4,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 game 'rdr3'
 
 description 'rsg-adminmenu'
-version '3.1.0'
+version '3.1.1'
 
 ui_page 'web/dist/index.html'
 
@@ -19,20 +19,21 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/sv_config.lua',
+    'server/sv_config.lua', -- secrets (bot token, webhooks): server only, never sent to clients
+    'server/server_database.lua',
     'server/server.lua',
-    'server/server_logs.lua',
-    'server/server_history.lua',
-    'server/server_admins.lua',
     'server/server_finances.lua',
     'server/server_stats.lua',
     'server/server_whitelist.lua',
+    'server/server_history.lua',
+    'server/versionchecker.lua',
     'server/server_reports.lua',
+    'server/server_logs.lua',
+    'server/server_admins.lua',
     'server/server_adminchat.lua',
     'server/server_world.lua',
     'server/server_devtools.lua',
     'server/server_masteradmin.lua',
-    'server/versionchecker.lua',
 }
 
 files {

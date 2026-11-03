@@ -1,23 +1,9 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
--- self-migrating: don't depend on the SQL file having been run by hand
-MySQL.query([[
-    CREATE TABLE IF NOT EXISTS `admin_logs` (
-        `id` INT(11) NOT NULL AUTO_INCREMENT,
-        `category` VARCHAR(20) NOT NULL,
-        `severity` VARCHAR(10) NOT NULL DEFAULT 'low',
-        `admin_citizenid` VARCHAR(50) DEFAULT NULL,
-        `admin_name` VARCHAR(255) DEFAULT NULL,
-        `action` VARCHAR(255) NOT NULL,
-        `details` VARCHAR(500) DEFAULT NULL,
-        `target_name` VARCHAR(255) DEFAULT NULL,
-        `ip` VARCHAR(50) DEFAULT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (`id`),
-        KEY `category` (`category`),
-        KEY `admin_citizenid` (`admin_citizenid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-]])
+-- global: false for empty URLs and the placeholder text older configs shipped with
+function IsWebhookSet(url)
+    return type(url) == 'string' and url:find('^https://') ~= nil
+end
 
 -- category -> which Config.Webhooks entry it posts to. 'system' (resource
 -- start/stop) is deliberately unmapped: those never have an acting admin, so
@@ -40,7 +26,7 @@ local severityColor = { low = 3447003, medium = 16776960, high = 16711680 }
 -- both actually work instead of the button depending on a separate,
 -- unverified rsg-essentials webhook pipeline.
 function SendDiscordEmbed(url, title, adminName, body, color, targetName)
-    if not url or url == '' or url == 'YOUR_WEBHOOK_URL_HERE' then return end
+    if not IsWebhookSet(url) then return end
 
     local fields = {}
     if targetName then
@@ -51,7 +37,7 @@ function SendDiscordEmbed(url, title, adminName, body, color, targetName)
         embeds = { {
             title = title,
             author = { name = adminName or locale('sv_system') },
-            description = '```\n' .. tostring(body or locale('sv_no_additional_details')):sub(1, 3900) .. '\n```',
+            description = '```\n' .. (body or locale('sv_no_additional_details')) .. '\n```',
             color = color or 3447003,
             fields = fields,
             timestamp = os.date('!%Y-%m-%dT%H:%M:%SZ'),
@@ -82,9 +68,13 @@ function LogAdminAction(category, severity, src, action, details, targetName, ta
         if targetDiscordName then targetName = targetDiscordName end
     end
 
-    if details ~= nil then details = tostring(details):sub(1, 500) end
+    -- match the column sizes so a long reason can't make the insert fail
+    action = tostring(action):sub(1, 255)
+    details = details and tostring(details):sub(1, 500) or nil
+    targetName = targetName and tostring(targetName):sub(1, 255) or nil
+
     MySQL.insert('INSERT INTO admin_logs (category, severity, admin_citizenid, admin_name, action, details, target_name, ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', {
-        category, severity, adminCitizenid, adminName, tostring(action):sub(1, 255), details, targetName, ip,
+        category, severity, adminCitizenid, adminName, action, details, targetName, ip,
     })
 
     -- system events (src == nil, e.g. resource start/stop) aren't "something
@@ -112,34 +102,32 @@ end)
 -- list / filter / paginate
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getlogs', function(source, cb, data)
-    local src = source
-    if not HasAdminPermission(src, 'playerinfo') then
-        cb(nil)
-        return
-    end
+    if not HasAdminPermission(source, 'playerinfo') then return cb(nil) end
 
-    data = data or {}
+    data = type(data) == 'table' and data or {}
     local where = {}
     local params = {}
 
-    if data.category and data.category ~= 'all' then
+    if type(data.category) == 'string' and data.category ~= 'all' then
         where[#where + 1] = 'category = ?'
         params[#params + 1] = data.category
     end
-    if data.adminCitizenid then
+    if type(data.adminCitizenid) == 'string' then
         where[#where + 1] = 'admin_citizenid = ?'
         params[#params + 1] = data.adminCitizenid
     end
-    if data.search and data.search ~= '' then
+    local search = SanitizeText(data.search, 100)
+    if search then
         where[#where + 1] = '(action LIKE ? OR details LIKE ? OR admin_name LIKE ?)'
-        local like = '%' .. data.search .. '%'
+        -- escape LIKE wildcards so a search for "100%" matches literally
+        local like = '%' .. search:gsub('[\\%%_]', '\\%0') .. '%'
         params[#params + 1] = like
         params[#params + 1] = like
         params[#params + 1] = like
     end
 
     local whereSql = #where > 0 and ('WHERE ' .. table.concat(where, ' AND ')) or ''
-    local page = tonumber(data.page) or 1
+    local page = math.max(1, math.floor(tonumber(data.page) or 1))
     local perPage = 20
     local offset = (page - 1) * perPage
 
@@ -173,13 +161,10 @@ end)
 -- this panel has no visibility into and can't guarantee is even set up)
 -----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendlogtodiscord', function(source, cb, data)
-    local src = source
-    if not HasAdminPermission(src, 'playerinfo') then
-        cb({ success = false })
-        return
-    end
+    local logId = tonumber(type(data) == 'table' and data.logId)
+    if not HasAdminPermission(source, 'playerinfo') or not logId then return cb({ success = false }) end
 
-    MySQL.single('SELECT * FROM admin_logs WHERE id = ?', { data.logId }, function(log)
+    MySQL.single('SELECT * FROM admin_logs WHERE id = ?', { logId }, function(log)
         if not log then
             cb({ success = false, reason = 'log_not_found' })
             return
@@ -189,7 +174,7 @@ RSGCore.Functions.CreateCallback('rsg-adminmenu:server:sendlogtodiscord', functi
         -- with no dedicated mapping (e.g. 'system') — fall back to Admin Logs
         local webhookKey = categoryWebhookKey[log.category] or 'AdminLogs'
         local url = Config.Webhooks[webhookKey]
-        if not url or url == '' or url == 'YOUR_WEBHOOK_URL_HERE' then
+        if not IsWebhookSet(url) then
             cb({ success = false, reason = 'webhook_not_configured' })
             return
         end

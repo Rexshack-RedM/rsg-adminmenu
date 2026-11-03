@@ -13,7 +13,7 @@ const PIE_COLORS = ['#c8892b', '#3b6ea5', '#5e8f4f', '#a5463b', '#7a5ea8', '#3b8
 
 const moneyLabels: Record<MoneyType, string> = {
   cash: locale('ui_cash'), bank: locale('ui_bank'), bloodmoney: locale('ui_blood_money'),
-  gold: locale('ui_gold'),
+  valbank: locale('ui_val_bank'), rhobank: locale('ui_rho_bank'), blkbank: locale('ui_blk_bank'), armbank: locale('ui_arm_bank'),
 };
 
 const mockStats: StatisticsData = {
@@ -36,7 +36,7 @@ const mockStats: StatisticsData = {
     ],
     moneyByType: [
       { type: 'cash', total: 1200 }, { type: 'bank', total: 3000 }, { type: 'bloodmoney', total: 50 },
-      { type: 'gold', total: 0 },
+      { type: 'valbank', total: 0 }, { type: 'rhobank', total: 0 }, { type: 'blkbank', total: 0 }, { type: 'armbank', total: 0 },
     ],
   },
   performance: {

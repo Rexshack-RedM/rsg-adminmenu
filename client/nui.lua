@@ -2,16 +2,15 @@ NUI = {}
 
 local isOpen = false
 local notebookActive = false
-local NOTEBOOK_SCENARIO = GetHashKey('world_human_write_notebook')
+local NOTEBOOK_SCENARIO = joaat('world_human_write_notebook')
 
 local function StartMenuNotebook()
     local ped = PlayerPedId()
-    if not DoesEntityExist(ped) or IsPedDeadOrDying(ped, true) then return end
+    if not DoesEntityExist(ped) or IsPedDeadOrDying(ped, true) or IsPedOnMount(ped) or IsPedInAnyVehicle(ped, false) then return end
 
     FreezeEntityPosition(ped, true)
     SetBlockingOfNonTemporaryEvents(ped, true)
-    SetNuiFocusKeepInput(false)
-    Citizen.InvokeNative(0x524B54361229154F, ped, NOTEBOOK_SCENARIO, -1, true, false, false, false)
+    TaskStartScenarioInPlaceHash(ped, NOTEBOOK_SCENARIO, -1, true, false, false, false)
     notebookActive = true
 end
 
@@ -25,18 +24,15 @@ local function StopMenuNotebook()
 end
 
 function NUI.SendMessage(action, data)
-    SendNuiMessage(json.encode({ action = action, data = data or {} }))
-end
-
-function NUI.SetFocus(hasFocus, hasCursor)
-    SetNuiFocusKeepInput(false)
-    SetNuiFocus(hasFocus, hasCursor ~= false and hasFocus)
+    SendNUIMessage({ action = action, data = data or {} })
 end
 
 function NUI.Open(data)
+    if isOpen then return end
     isOpen = true
-    NUI.SetFocus(true, true)
-    NUI.SendMessage('open', data or {})
+    SetNuiFocusKeepInput(false)
+    SetNuiFocus(true, true)
+    NUI.SendMessage('open', data)
     StartMenuNotebook()
 
     CreateThread(function()
@@ -50,7 +46,7 @@ end
 function NUI.Close()
     if not isOpen then return end
     isOpen = false
-    NUI.SetFocus(false, false)
+    SetNuiFocus(false, false)
     NUI.SendMessage('close')
     StopMenuNotebook()
 end
@@ -64,13 +60,14 @@ RegisterNuiCallback('close', function(_, cb)
     cb({ success = true })
 end)
 
--- hands the active locale dictionary (rsg-core locale loader) to the React UI
+-- hands the active rsg-core locale dictionary (rsg:locale convar, en fallback
+-- is bundled in the UI) to the React app at boot
 RegisterNuiCallback('getLocales', function(_, cb)
-    cb(locale() or {})
+    cb(locale())
 end)
 
-AddEventHandler('onClientResourceStop', function(resourceName)
-    if resourceName == GetCurrentResourceName() and isOpen then
-        NUI.Close()
-    end
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    SetNuiFocus(false, false)
+    StopMenuNotebook()
 end)

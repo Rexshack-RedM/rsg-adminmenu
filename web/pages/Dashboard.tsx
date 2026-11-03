@@ -4,7 +4,8 @@ import { useNuiData } from '../hooks/useNui';
 import { StatCard } from '../components/StatCard';
 import { Button } from '../components/Button';
 import { Avatar } from '../components/Avatar';
-import type { DashboardStats, SelfInfo } from '../types';
+import { SelfTools } from '../components/SelfTools';
+import type { DashboardStats, Permissions, SelfInfo } from '../types';
 
 function formatMoney(n: number) {
   return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -40,10 +41,11 @@ const mockStats: DashboardStats = {
 
 interface DashboardProps {
   self: SelfInfo | null;
+  permissions: Permissions | null;
   onViewAllPlayers: () => void;
 }
 
-export function Dashboard({ self, onViewAllPlayers }: DashboardProps) {
+export function Dashboard({ self, permissions, onViewAllPlayers }: DashboardProps) {
   const [stats] = useNuiData<DashboardStats>('getDashboardStats', {}, mockStats);
 
   const firstName = self?.name?.split(' ')[0] || locale('ui_admin');
@@ -61,6 +63,8 @@ export function Dashboard({ self, onViewAllPlayers }: DashboardProps) {
         <StatCard label={locale('ui_server_uptime')} value={stats ? formatUptime(stats.serverUptimeSeconds) : '-'} icon={<Clock size={18} />} iconBg="rgba(122,94,168,0.25)" iconColor="#b39ddb" />
         <StatCard label={locale('ui_top_player')} value={stats?.topPlayer?.name ?? '-'} icon={<Crown size={18} />} iconBg="rgba(200,137,43,0.25)" iconColor="var(--rdr-accent-bright)" />
       </div>
+
+      <SelfTools permissions={permissions} />
 
       <div className="rounded-lg p-5" style={{ background: 'var(--rdr-surface)', border: '1px solid var(--rdr-border)' }}>
         <div className="flex items-center justify-between mb-4">

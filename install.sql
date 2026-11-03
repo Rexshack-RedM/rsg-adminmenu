@@ -1,10 +1,8 @@
 -- rsg-adminmenu: full install SQL
 --
--- Every table below is also created automatically the first time the
--- resource starts (self-migrating schema: every CREATE TABLE across the
--- server/*.lua files uses IF NOT EXISTS), so running this file is optional.
--- It's provided for admins who prefer to set the schema up explicitly
--- before first start, review it, or run it as part of a scripted deploy.
+-- With Config.AutoDatabase = true (the default) every table below is created
+-- automatically on start by server/server_database.lua, which holds the same
+-- schema. Set Config.AutoDatabase = false and import this file to install manually.
 -- Safe to run more than once, everything here is IF NOT EXISTS.
 
 -- ============================================================
@@ -74,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `admin_chat_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- Reports (NOT self-migrated, this file is the real source of truth)
+-- Reports
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS `admin_reports` (

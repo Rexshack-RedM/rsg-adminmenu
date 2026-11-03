@@ -8,11 +8,14 @@ RegisterNuiCallback('getCurrentCoords', function(_, cb)
 end)
 
 RegisterNuiCallback('teleportToCoords', function(data, cb)
-    if not tonumber(data.x) or not tonumber(data.y) or not tonumber(data.z) then return cb({ success = false }) end
+    local x, y, z = tonumber(data.x), tonumber(data.y), tonumber(data.z)
+    if not x or not y or not z then return cb({ success = false }) end
+    -- moves the mount too when riding, so the horse isn't left behind
     local ped = PlayerPedId()
-    SetEntityCoordsNoOffset(ped, data.x + 0.0, data.y + 0.0, data.z + 0.0, false, false, false)
-    if data.heading then
-        SetEntityHeading(ped, data.heading + 0.0)
+    local entity = IsPedOnMount(ped) and GetMount(ped) or ped
+    SetEntityCoordsNoOffset(entity, x + 0.0, y + 0.0, z + 0.0, false, false, false)
+    if tonumber(data.heading) then
+        SetEntityHeading(entity, tonumber(data.heading) + 0.0)
     end
     cb({ success = true })
 end)
@@ -61,18 +64,18 @@ end)
 
 local activeBlipHandles = {}
 
-RegisterNetEvent('rsg-adminmenu:client:syncblips', function(blips)
-
+local function ClearSyncedBlips()
     for _, handle in ipairs(activeBlipHandles) do
         RemoveBlip(handle)
     end
     activeBlipHandles = {}
+end
 
+RegisterNetEvent('rsg-adminmenu:client:syncblips', function(blips)
+    ClearSyncedBlips()
     for _, b in ipairs(blips or {}) do
-
-        local blip = BlipAddForCoords(GetHashKey('BLIP_STYLE_POI'), b.x + 0.0, b.y + 0.0, b.z + 0.0)
-  
-        SetBlipSprite(blip, GetHashKey(b.sprite), true)
+        local blip = BlipAddForCoords(joaat('BLIP_STYLE_POI'), b.x + 0.0, b.y + 0.0, b.z + 0.0)
+        SetBlipSprite(blip, joaat(b.sprite), true)
         SetBlipScale(blip, (tonumber(b.scale) or 1.0) + 0.0)
         SetBlipName(blip, b.name)
         activeBlipHandles[#activeBlipHandles + 1] = blip
@@ -80,6 +83,15 @@ RegisterNetEvent('rsg-adminmenu:client:syncblips', function(blips)
 end)
 
 local spawnedByMenu = {}
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    ClearSyncedBlips()
+end)
+
+local function Notify(description, notifyType, title)
+    RSGCore.Functions.Notify({ title = title or locale('cl_world_spawner'), description = description, type = notifyType })
+end
 
 RegisterNuiCallback('spawnEntity', function(data, cb)
     RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:spawnentity', function(result)
@@ -144,8 +156,7 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     local kind = entityType == 'horse' and 'animal' or entityType
     local model = loadModel(hash, kind == 'prop')
     if not model then
-        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_load_model', tostring(hash)), type = 'error' })
-        return
+        return Notify(locale('cl_world_failed_load_model', tostring(hash)), 'error')
     end
 
     local ped = PlayerPedId()
@@ -181,11 +192,11 @@ RegisterNetEvent('rsg-adminmenu:client:spawnentity', function(entityType, hash)
     SetModelAsNoLongerNeeded(model)
 
     if not waitForEntity(entity) then
-        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_failed_spawn_as', tostring(kind), tostring(hash)), type = 'error' })
+        Notify(locale('cl_world_failed_spawn_as', tostring(kind), tostring(hash)), 'error')
     else
         SetEntityAsMissionEntity(entity, true, true)
         spawnedByMenu[entity] = true
-        RSGCore.Functions.Notify({ title = locale('cl_world_spawner'), description = locale('cl_world_spawned', tostring(kind), tostring(hash)), type = 'success' })
+        Notify(locale('cl_world_spawned', tostring(kind), tostring(hash)), 'success')
     end
 end)
 
@@ -282,15 +293,6 @@ RegisterNetEvent('rsg-adminmenu:client:cleararea', function(radius)
         end
     end
 
-    RSGCore.Functions.Notify({
-        title = locale('cl_world_clear_area'),
-        description = removed > 0 and locale('cl_world_removed_entities', removed) or locale('cl_world_nothing_to_clear'),
-        type = removed > 0 and 'success' or 'inform',
-    })
-end)
-
-AddEventHandler('onResourceStop', function(resourceName)
-    if resourceName ~= GetCurrentResourceName() then return end
-    for _, handle in ipairs(activeBlipHandles) do RemoveBlip(handle) end
-    activeBlipHandles = {}
+    Notify(removed > 0 and locale('cl_world_removed_entities', removed) or locale('cl_world_nothing_to_clear'),
+        removed > 0 and 'success' or 'inform', locale('cl_world_clear_area'))
 end)

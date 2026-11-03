@@ -96,7 +96,10 @@ export interface PlayerInfo {
   cash: number;
   bloodmoney: number;
   bank: number;
-  gold: number;
+  valbank: number;
+  rhobank: number;
+  blkbank: number;
+  armbank: number;
   citizenid: string;
   serverid: number;
 }
@@ -146,7 +149,10 @@ export interface PlayerDetail extends PlayerInfo {
 
 export interface FinanceData {
   bank: number;
-  gold: number;
+  valbank: number;
+  rhobank: number;
+  blkbank: number;
+  armbank: number;
   cash: number;
   bloodmoney: number;
 }

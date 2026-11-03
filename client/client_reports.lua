@@ -1,5 +1,6 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+-- client-side copy of the cooldown only gives instant feedback; the server enforces it
 local reportCooldown = false
 
 -----------------------------------------------------------------------
