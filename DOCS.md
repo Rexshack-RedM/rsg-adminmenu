@@ -188,6 +188,7 @@ The full schema is in `install.sql` and is identical to `server/server_database.
 | Webhooks don't post | URLs must start with `https://discord.com/api/webhooks/` (or discordapp.com) |
 | Give item says the inventory is full | The target lacks weight or slots; `CanAddItem` refused it |
 | Time/weather keeps resetting | A frozen setting is re-applied every 5 s; untick Freeze, or let rsg-weather manage it |
+| Weather set in rsg-weather not showing | Fixed: when rsg-weather is started, the panel's time/weather/wind are sent through `exports['rsg-weather']` (setWeather/setTime/setWind) and are no longer applied natively or re-forced, so the two can't fight. Timescale (game speed) is still applied by the admin menu |
 | Report image rejected | Only Imgur, Discord CDN, Gyazo and prnt.sc links are accepted |
 
 ---

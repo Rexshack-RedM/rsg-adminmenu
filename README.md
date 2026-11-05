@@ -36,7 +36,7 @@ A full staff admin panel for **RSG Framework (RedM)**: a React NUI with tiered s
 - **Spawner**: spawn peds, animals, wagons and props, and clear an area.
 
 ### Developer (Head Admin / Developer / Owner)
-- **Server settings**: close/open the server, kick all players, refresh resources, send announcements, and set time, weather (with snow mode), wind and timescale.
+- **Server settings**: close/open the server, kick all players, refresh resources, send announcements, and set time, weather (with snow mode), wind and timescale. When rsg-weather is running, time/weather/wind are passed to rsg-weather so they stay in sync and don't conflict.
 - **Resource lookup**: browse server resources with versions and dependencies.
 - **Master actions**: edit Discord webhook URLs in game (saved to the database and written back into `server/sv_config.lua`).
 

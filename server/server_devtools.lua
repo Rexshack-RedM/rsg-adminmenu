@@ -95,8 +95,40 @@ AddEventHandler('RSGCore:Server:PlayerLoaded', function(Player)
     BroadcastWorldSettings(Player.PlayerData.source)
 end)
 
+-- when rsg-weather is running it owns time/weather/wind: send the change through its
+-- exports so it syncs to everyone (with regional translation) instead of fighting it
+local DAY_INDEX = { Sunday = 0, Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5, Saturday = 6 }
+local function WeatherResourceRunning() return GetResourceState('rsg-weather') == 'started' end
+
+local function RouteToRsgWeather(key, v)
+    if not WeatherResourceRunning() then return false end
+    local rw = exports['rsg-weather']
+    if key == 'weather' then
+        return rw:setWeather(v.type:lower(), math.max(0.1, v.transition), v.freeze, v.snow) ~= false
+    elseif key == 'time' then
+        local day = DAY_INDEX[v.day] or rw:getTime().day
+        rw:setTime(day, v.hour, v.minute, v.second, math.floor(v.transition * 1000), v.freeze)
+        return true
+    elseif key == 'wind' then
+        rw:setWind(v.direction, (v.speed / 100) * 12.0, v.freeze)
+        return true
+    end
+    return false -- timescale (game speed) stays with the admin menu
+end
+
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getworldsettings', function(source, cb)
     if not CanUseServerSettings(source) then return cb(defaults) end
+    if WeatherResourceRunning() then
+        local rw = exports['rsg-weather']
+        local st, t, w = rw:getState(), rw:getTime(), rw:getWind()
+        local names = { 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' }
+        return cb({
+            time = { day = names[(t.day % 7) + 1], hour = t.hour, minute = t.minute, second = t.second, transition = 5, freeze = st.timeFrozen },
+            weather = { type = st.weather:upper(), transition = 5, freeze = st.weatherFrozen, snow = st.permanentSnow },
+            timescale = worldSettings.timescale or defaults.timescale,
+            wind = { direction = w.direction, speed = math.floor(w.speed / 12.0 * 100), freeze = st.windFrozen },
+        })
+    end
     cb({
         time = worldSettings.time or defaults.time,
         weather = worldSettings.weather or defaults.weather,
@@ -111,8 +143,10 @@ local function RegisterWorldSetting(callback, logKey, build)
         if not CanUseServerSettings(src) or type(data) ~= 'table' then return cb({ success = false }) end
         local key, value, details = build(data)
         if not key then return cb({ success = false }) end
-        worldSettings[key] = value
-        BroadcastWorldSettings()
+        if not RouteToRsgWeather(key, value) then
+            worldSettings[key] = value
+            BroadcastWorldSettings()
+        end
         LogAdminAction('server_event', 'low', src, locale(logKey), details, nil)
         cb({ success = true })
     end)
