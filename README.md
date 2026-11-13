@@ -164,7 +164,7 @@ setr rsg:locale "en"
 
 ---
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
 
 ## License
 

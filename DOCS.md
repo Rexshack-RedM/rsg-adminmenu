@@ -193,4 +193,4 @@ The full schema is in `install.sql` and is identical to `server/server_database.
 
 ---
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
