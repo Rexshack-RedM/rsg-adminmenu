@@ -194,3 +194,159 @@ The full schema is in `install.sql` and is identical to `server/server_database.
 ---
 
 Support the Project : https://rexshack.tebex.store/
+
+<!-- BEGIN AUTO-REFERENCE (generated from the code; re-run the generator instead of editing by hand) -->
+
+## Technical reference
+
+Generated from the source of **rsg-adminmenu 3.1.2**. Names, arguments and defaults below are read straight from the code.
+
+### Dependencies
+
+`rsg-core`, `rsg-inventory`, `oxmysql`
+
+### Database
+
+Tables: `admin_roles`, `admin_logs`, `admin_player_history`, `admin_chat_messages`, `admin_reports`, `admin_report_messages`, `admin_report_nearby_players`, `admin_whitelist`, `player_playtime`, `admin_activity_log`, `adminmenu_teleports`, `adminmenu_blips`, `adminmenu_settings`, `adminmenu_custom_items`.
+
+Tables are created automatically on start while `Config.AutoDatabase = true` (default). Nothing is ever dropped or overwritten.
+For a manual install set `Config.AutoDatabase = false` and import `install.sql` once.
+
+```lua
+-- shared/config.lua
+Config.AutoDatabase = true -- false = import the SQL file yourself
+```
+
+### Configuration
+
+| Option | Default | Notes |
+|---|---|---|
+| `Config.AutoDatabase` | `true` | create/upgrade the database tables on start; set false to import install.sql manually |
+| `Config.EnablePlayerBlips` | `true` |  |
+| `Config.Whitelist` | `table` |  |
+| `Config.Enforce` | `false` |  |
+| `Config.Reports` | `table` | (server only). Never put them here: this file is downloaded by every client. |
+| `Config.Discord` | `table` |  |
+| `Config.WebhookColors` | `table` |  |
+| `Config.NearbyDistance` | `50.0` |  |
+| `Config.Cooldown` | `60` |  |
+| `Config.DoorHashes` | `table` | https://raw.githubusercontent.com/femga/rdr3_discoveries/master/doorHashes/doorhashes.lua |
+
+### Callbacks
+
+| Callback | Side | Arguments | File |
+|---|---|---|---|
+| `rsg-adminmenu:server:getplayers` | server | `source, cb` | `server/server.lua` |
+| `rsg-adminmenu:server:getbotlogo` | server | `source, cb` | `server/server.lua` |
+| `rsg-adminmenu:server:getallplayersmanaged` | server | `source, cb` | `server/server.lua` |
+| `rsg-adminmenu:server:unbanplayer` | server | `source, cb, data` | `server/server.lua` |
+| `rsg-adminmenu:server:getplayerinfo` | server | `source, cb, player` | `server/server.lua` |
+| `rsg-adminmenu:server:getallitems` | server | `source, cb` | `server/server.lua` |
+| `rsg-adminmenu:server:removeplayeritem` | server | `source, cb, data` | `server/server.lua` |
+| `rsg-adminmenu:server:selftool` | server | `source, cb, data` | `server/server.lua` |
+| `rsg-adminmenu:server:selfrevive` | server | `source, cb` | `server/server.lua` |
+| `rsg-adminmenu:server:createadminchatmessage` | server | `source, cb, data` | `server/server_adminchat.lua` |
+| `rsg-adminmenu:server:getadminchatmessages` | server | `source, cb` | `server/server_adminchat.lua` |
+| `rsg-adminmenu:server:getroleconfig` | server | `source, cb` | `server/server_admins.lua` |
+| `rsg-adminmenu:server:getadmins` | server | `source, cb` | `server/server_admins.lua` |
+| `rsg-adminmenu:server:addadmin` | server | `source, cb, data` | `server/server_admins.lua` |
+| `rsg-adminmenu:server:changeadminrole` | server | `source, cb, data` | `server/server_admins.lua` |
+| `rsg-adminmenu:server:removeadmin` | server | `source, cb, data` | `server/server_admins.lua` |
+| `rsg-adminmenu:server:getserverstate` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:togglecloseserver` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:kickallplayers` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:refreshresources` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:sendannouncement` | server | `source, cb, data` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:getworldsettings` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:getresources` | server | `source, cb` | `server/server_devtools.lua` |
+| `rsg-adminmenu:server:getPlayerData` | server | `source, cb, player` | `server/server_finances.lua` |
+| `rsg-adminmenu:server:getplayerhistory` | server | `source, cb, data` | `server/server_history.lua` |
+| `rsg-adminmenu:server:deletehistoryentry` | server | `source, cb, data` | `server/server_history.lua` |
+| `rsg-adminmenu:server:getlogs` | server | `source, cb, data` | `server/server_logs.lua` |
+| `rsg-adminmenu:server:sendlogtodiscord` | server | `source, cb, data` | `server/server_logs.lua` |
+| `rsg-adminmenu:server:getwebhooksettings` | server | `source, cb` | `server/server_masteradmin.lua` |
+| `rsg-adminmenu:server:savewebhooksettings` | server | `source, cb, data` | `server/server_masteradmin.lua` |
+| `rsg-adminmenu:server:getmyreports` | server | `source, cb` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:getallreports` | server | `source, cb` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:getreportdetails` | server | `source, cb, reportId` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:getdashboardstats` | server | `source, cb` | `server/server_stats.lua` |
+| `rsg-adminmenu:server:getstatistics` | server | `source, cb` | `server/server_stats.lua` |
+| `rsg-adminmenu:server:getwhitelist` | server | `source, cb` | `server/server_whitelist.lua` |
+| `rsg-adminmenu:server:addwhitelist` | server | `source, cb, data` | `server/server_whitelist.lua` |
+| `rsg-adminmenu:server:setwhiteliststatus` | server | `source, cb, data` | `server/server_whitelist.lua` |
+| `rsg-adminmenu:server:removewhitelist` | server | `source, cb, data` | `server/server_whitelist.lua` |
+| `rsg-adminmenu:server:getteleportlocations` | server | `source, cb` | `server/server_world.lua` |
+| `rsg-adminmenu:server:addteleportlocation` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:deleteteleportlocation` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:getblips` | server | `source, cb` | `server/server_world.lua` |
+| `rsg-adminmenu:server:addblip` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:updateblip` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:deleteblip` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:spawnentity` | server | `source, cb, data` | `server/server_world.lua` |
+| `rsg-adminmenu:server:cleararea` | server | `source, cb, data` | `server/server_world.lua` |
+
+```lua
+-- client side
+RSGCore.Functions.TriggerCallback('rsg-adminmenu:server:getplayers', function(result)
+    -- use result
+end)
+```
+
+### Events
+
+Server events can be fired by any client, so every handler re-validates the player, the arguments and any permission, distance or cooldown on the server. Never add a reward to a handler without those checks.
+
+| Event | Side | Arguments | File |
+|---|---|---|---|
+| `rsg-adminmenu:client:openadminmenu` | client | `data` | `client/client.lua` |
+| `rsg-adminmenu:client:forceclose` | client | `` | `client/client.lua` |
+| `rsg-adminmenu:client:spectateplayer` | client | `targetServerId, targetCoords` | `client/client.lua` |
+| `rsg-adminmenu:client:adminchatmessage` | client | `payload` | `client/client_admins.lua` |
+| `rsg-adminmenu:client:applyworldsettings` | client | `settings` | `client/client_devtools.lua` |
+| `rsg-adminmenu:client:killplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:ragdollplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:lightningplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:drainstaminaplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:drunkplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:clearweapons` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:jumpscareplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:horsebuckplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:hauntedplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:everyoneattackplayer` | client | `` | `client/client_playeractions.lua` |
+| `rsg-adminmenu:client:openreportmenu` | client | `` | `client/client_reports.lua` |
+| `rsg-adminmenu:client:newreportnotification` | client | `reportData` | `client/client_reports.lua` |
+| `rsg-adminmenu:client:reportreplynotification` | client | `reportData` | `client/client_reports.lua` |
+| `rsg-adminmenu:client:wildattack` | client | `` | `client/client_troll.lua` |
+| `rsg-adminmenu:client:playerfire` | client | `` | `client/client_troll.lua` |
+| `rsg-adminmenu:client:syncblips` | client | `blips` | `client/client_world.lua` |
+| `rsg-adminmenu:client:spawnentity` | client | `entityType, hash` | `client/client_world.lua` |
+| `rsg-adminmenu:client:cleararea` | client | `radius` | `client/client_world.lua` |
+| `rsg-adminmenu:server:` | server | `` | `server/server.lua` |
+| `rsg-adminmenu:server:financeadd` | server | `player, moneyType, amount` | `server/server_finances.lua` |
+| `rsg-adminmenu:server:financeremove` | server | `player, moneyType, amount` | `server/server_finances.lua` |
+| `rsg-adminmenu:server:createreport` | server | `reportData` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:claimreport` | server | `data` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:releasereport` | server | `data` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:resolvereport` | server | `data` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:deletereport` | server | `reportId, reason` | `server/server_reports.lua` |
+| `rsg-adminmenu:server:replyreport` | server | `reportId, message` | `server/server_reports.lua` |
+
+```lua
+-- from a client script
+TriggerServerEvent('rsg-adminmenu:server:')
+-- from a server script
+TriggerClientEvent('rsg-adminmenu:client:openadminmenu', source, data)
+```
+
+### Commands
+
+| Command | Notes | File |
+|---|---|---|
+| `/adminmenu` | locale('sv_100') | `server/server.lua` |
+| `/report` | locale('sv_report_command_desc') | `server/server.lua` |
+
+### Locales
+
+Language files in `locales/`: `cs`, `de`, `el`, `en`, `es`, `fr`, `hu`, `it`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Set the language with `setr rsg:locale "en"`.
+
+<!-- END AUTO-REFERENCE -->
