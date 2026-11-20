@@ -157,7 +157,7 @@ end)
 
 ## Locales
 
-`locales/*.json`: en, de, el, es, fr, ja, nl, pl, pt-br, ro, ru (complete), plus partial cs, hu and it (missing keys fall back to English). Set the language in `server.cfg`:
+`locales/*.json`: en, de, el, es, fr, ja, nl, pl, pt-br, ro, ru (all complete). Set the language in `server.cfg`:
 ```cfg
 setr rsg:locale "en"
 ```
